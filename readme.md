@@ -1,6 +1,6 @@
 ## E-Koperasi
 
-Aplikasi manajemen deposit dan penarikan dengan jenis Simpanan Sukarela dengan bunga 6% per tahun.
+Aplikasi manajemen deposit dan penarikan dengan jenis Simpanan Sukarela.
 
 ## Requirements
 - PHP >= 7.2
