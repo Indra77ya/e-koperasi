@@ -1,21 +1,21 @@
 ## E-COOPERATIVE
 
-Deposit and withdrawal management application with the type of Voluntary Savings with an interest of 6% per year.
+Aplikasi manajemen deposit dan penarikan dengan jenis Simpanan Sukarela dengan bunga 6% per tahun.
 
-## Installation
+## Instalasi
 
-- Clone or download the project
-- Install Dependencies with Composer `composer install`
-- Copy environment `cp .env.example .env`
+- Clone atau unduh proyek
+- Instal dependensi dengan Composer `composer install`
+- Salin file environment `cp .env.example .env`
 - Generate key `php artisan key:generate`
-- Create database, for example `cooperative` and then change the DB_DATABASE value in .env
-- Migrate database `php artisan migrate`
-- Insert dummy data `php artisan db:seed`
-- Run app `php artisan serve`
+- Buat database, misalnya `cooperative`, lalu ubah nilai DB_DATABASE di file .env
+- Migrasi database `php artisan migrate`
+- Masukkan data dummy `php artisan db:seed`
+- Jalankan aplikasi `php artisan serve`
 
-## Usage
+## Penggunaan
 
-Default credential
+Kredensial bawaan:
 
 ```
 Email : ekoperasi@gmail.com
