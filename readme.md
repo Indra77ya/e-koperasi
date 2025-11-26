@@ -1,6 +1,11 @@
-## E-COOPERATIVE
+## E-Koperasi
 
 Aplikasi manajemen deposit dan penarikan dengan jenis Simpanan Sukarela dengan bunga 6% per tahun.
+
+## Requirements
+- PHP >= 7.2
+- Composer
+- Database MySQL/MariaDB 5.7+
 
 ## Instalasi
 
