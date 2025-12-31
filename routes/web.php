@@ -15,6 +15,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/dev/seed', function () {
+    if (!App::environment('local')) {
+        abort(403, 'This route is only available in local environment.');
+    }
+    try {
+        Artisan::call('db:seed');
+        return "Database seeded successfully!";
+    } catch (\Exception $e) {
+        return "Error seeding database: " . $e->getMessage();
+    }
+});
+
 Auth::routes(['register' => false, 'reset' => false, 'verify' => false]);
 
 Route::get('/home', 'HomeController@index')->name('home');
