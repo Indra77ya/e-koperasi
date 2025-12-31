@@ -64,16 +64,16 @@ class NasabahLoanController extends Controller
         $balance = $amount;
         $monthlyRate = ($rate / 100) / 12; // Assuming rate is yearly percentage
 
-        $totalPrincipal = 0;
-        $totalInterest = 0;
+        $totalPrincipalPaid = 0;
 
         for ($i = 1; $i <= $tenor; $i++) {
             $installment = [];
             $installment['number'] = $i;
 
+            // Standard calculations
             if ($type == 'flat') {
                 $principal = $amount / $tenor;
-                $interest = ($amount * ($rate/100)) / 12; // Flat on initial amount
+                $interest = ($amount * ($rate/100)) / 12;
                 $total = $principal + $interest;
             } elseif ($type == 'effective') {
                 $principal = $amount / $tenor;
@@ -89,22 +89,29 @@ class NasabahLoanController extends Controller
                 $principal = $total - $interest;
             }
 
-            // Adjustments for last installment to match exactly?
-            // Usually floating point errors exist. For simplicity here:
+            // Adjust last installment for rounding errors
+            if ($i == $tenor) {
+                $principal = $amount - $totalPrincipalPaid;
+                if ($type == 'flat' || $type == 'effective') {
+                    $total = $principal + $interest;
+                } elseif ($type == 'annuity') {
+                    // For annuity, if we adjust principal, total changes too
+                    $total = $principal + $interest;
+                }
+                $balance = 0;
+            } else {
+                $balance -= $principal;
+                if ($balance < 0) $balance = 0;
+            }
 
             $installment['principal'] = $principal;
             $installment['interest'] = $interest;
             $installment['total'] = $total;
-
-            $balance -= $principal;
-            if ($balance < 0) $balance = 0; // Floating point safety
-
             $installment['balance'] = $balance;
 
             $schedule[] = $installment;
 
-            $totalPrincipal += $principal;
-            $totalInterest += $interest;
+            $totalPrincipalPaid += $principal;
         }
 
         return $schedule;
@@ -222,9 +229,6 @@ class NasabahLoanController extends Controller
                 $loan->interest_type
             );
 
-            $loanDate = Carbon::parse($loan->loan_date); // Or disbursed_at if we want start from now
-            // Usually start from next month of disbursement or loan date
-            // Let's assume start next month from disbursement
             $startDate = Carbon::parse($loan->disbursed_at);
 
             foreach ($schedule as $item) {
@@ -242,5 +246,42 @@ class NasabahLoanController extends Controller
         });
 
         return back()->with('success', 'Dana pinjaman dicairkan dan jadwal angsuran dibuat.');
+    }
+
+    public function payInstallment(Request $request, $id)
+    {
+        $installment = NasabahLoanInstallment::with('loan')->findOrFail($id);
+
+        if ($installment->status == 'paid') {
+            return back()->with('error', 'Angsuran ini sudah lunas.');
+        }
+
+        $request->validate([
+            'payment_date' => 'required|date',
+            'amount_paid' => 'required|numeric|min:' . floor($installment->total_amount),
+            'penalty' => 'nullable|numeric|min:0'
+        ]);
+
+        DB::transaction(function () use ($installment, $request) {
+            $installment->status = 'paid';
+            $installment->paid_at = $request->payment_date;
+            $installment->amount_paid = $request->amount_paid;
+            $installment->penalty_amount = $request->penalty ?? 0;
+            $installment->notes = $request->notes;
+            $installment->save();
+
+            // Check if all installments are paid
+            $unpaidCount = NasabahLoanInstallment::where('nasabah_loan_id', $installment->nasabah_loan_id)
+                ->where('status', '!=', 'paid')
+                ->count();
+
+            if ($unpaidCount == 0) {
+                $loan = $installment->loan;
+                $loan->status = 'paid';
+                $loan->save();
+            }
+        });
+
+        return back()->with('success', 'Pembayaran angsuran berhasil disimpan.');
     }
 }

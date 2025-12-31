@@ -31,7 +31,7 @@
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <div class="form-control-plaintext">
-                            <span class="tag tag-{{ $loan->status == 'approved' ? 'primary' : ($loan->status == 'active' || $loan->status == 'disbursed' ? 'success' : ($loan->status == 'rejected' ? 'danger' : 'warning')) }}">
+                            <span class="tag tag-{{ $loan->status == 'approved' ? 'primary' : ($loan->status == 'active' || $loan->status == 'disbursed' || $loan->status == 'paid' ? 'success' : ($loan->status == 'rejected' || $loan->status == 'overdue' ? 'danger' : 'warning')) }}">
                                 {{ ucfirst($loan->status) }}
                             </span>
                         </div>
@@ -89,6 +89,7 @@
                                 <th>Bunga</th>
                                 <th>Total</th>
                                 <th>Status</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -102,14 +103,25 @@
                                 <td>
                                     @if($item->status == 'paid')
                                         <span class="tag tag-success">Lunas</span>
+                                        <div class="small text-muted">{{ $item->paid_at ? $item->paid_at->format('d M Y') : '' }}</div>
                                     @else
                                         <span class="tag tag-secondary">Belum Bayar</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($item->status != 'paid' && ($loan->status == 'disbursed' || $loan->status == 'active'))
+                                    <button class="btn btn-sm btn-success btn-pay"
+                                        data-id="{{ $item->id }}"
+                                        data-amount="{{ $item->total_amount }}"
+                                        data-number="{{ $item->installment_number }}">
+                                        Bayar
+                                    </button>
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Belum ada jadwal angsuran (Pinjaman belum cair)</td>
+                                <td colspan="7" class="text-center text-muted">Belum ada jadwal angsuran (Pinjaman belum cair)</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -144,4 +156,59 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Payment -->
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="paymentForm" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Bayar Angsuran Ke-<span id="modalInstallmentNumber"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Bayar</label>
+                        <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jumlah Pembayaran</label>
+                        <input type="number" name="amount_paid" id="modalAmount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Denda (Jika ada)</label>
+                        <input type="number" name="penalty" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Catatan</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    require(['jquery'], function($) {
+        $('.btn-pay').on('click', function() {
+            var id = $(this).data('id');
+            var amount = $(this).data('amount');
+            var number = $(this).data('number');
+
+            $('#modalInstallmentNumber').text(number);
+            $('#modalAmount').val(Math.round(amount)); // Pre-fill with installment amount
+            $('#paymentForm').attr('action', '/nasabah_loans/installments/' + id + '/pay');
+
+            $('#paymentModal').modal('show');
+        });
+    });
+</script>
 @endsection

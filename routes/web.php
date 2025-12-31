@@ -57,5 +57,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('nasabah_loans/{id}/approve', 'NasabahLoanController@approve')->name('nasabah_loans.approve');
     Route::post('nasabah_loans/{id}/reject', 'NasabahLoanController@reject')->name('nasabah_loans.reject');
     Route::post('nasabah_loans/{id}/disburse', 'NasabahLoanController@disburse')->name('nasabah_loans.disburse');
+    Route::post('nasabah_loans/installments/{id}/pay', 'NasabahLoanController@payInstallment')->name('nasabah_loans.pay_installment');
     Route::resource('nasabah_loans', 'NasabahLoanController');
 });
