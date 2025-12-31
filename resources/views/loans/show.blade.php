@@ -39,7 +39,10 @@
                         </tr>
                         <tr>
                             <th>Bunga</th>
-                            <td>{{ $loan->suku_bunga }}% / thn ({{ ucfirst($loan->jenis_bunga) }})</td>
+                            <td>
+                                {{ $loan->suku_bunga }}% / {{ $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun' }}
+                                <br><small>({{ ucfirst($loan->jenis_bunga) }})</small>
+                            </td>
                         </tr>
                         <tr>
                             <th>Denda Default</th>

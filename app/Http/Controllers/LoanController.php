@@ -22,7 +22,8 @@ class LoanController extends Controller
                     return 'Rp ' . number_format($loan->jumlah_pinjaman, 0, ',', '.');
                 })
                 ->editColumn('suku_bunga', function ($loan) {
-                    return $loan->suku_bunga . '% (' . ucfirst($loan->jenis_bunga) . ')';
+                    $unit = $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun';
+                    return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
                 })
                 ->addColumn('member_name', function ($loan) {
                     if ($loan->member) {
@@ -54,10 +55,11 @@ class LoanController extends Controller
     {
         $amount = $request->amount;
         $tenor = $request->tenor; // months
-        $rate = $request->rate; // yearly percentage
+        $rate = $request->rate; // percentage
         $type = $request->type; // flat, efektif, anuitas
+        $unit = $request->unit ?? 'tahun'; // tahun, bulan
 
-        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type);
+        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type, $unit);
 
         return response()->json($schedule);
     }
@@ -72,6 +74,7 @@ class LoanController extends Controller
             'jumlah_pinjaman' => 'required|numeric|min:0',
             'tenor' => 'required|integer|min:1',
             'suku_bunga' => 'required|numeric|min:0',
+            'satuan_bunga' => 'required|in:tahun,bulan',
             'jenis_bunga' => 'required|in:flat,efektif,anuitas',
             'tanggal_pengajuan' => 'required|date',
         ]);
@@ -84,6 +87,7 @@ class LoanController extends Controller
             'jumlah_pinjaman' => $request->jumlah_pinjaman,
             'tenor' => $request->tenor,
             'suku_bunga' => $request->suku_bunga,
+            'satuan_bunga' => $request->satuan_bunga,
             'jenis_bunga' => $request->jenis_bunga,
             'biaya_admin' => $request->biaya_admin ?? 0,
             'denda_keterlambatan' => $request->denda_keterlambatan ?? 0,
@@ -131,13 +135,13 @@ class LoanController extends Controller
             DB::transaction(function () use ($loan) {
                 $loan->update(['status' => 'berjalan']);
 
-                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga);
+                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga);
 
                 foreach ($schedule as $inst) {
                     LoanInstallment::create([
                         'pinjaman_id' => $loan->id,
                         'angsuran_ke' => $inst['month'],
-                        'tanggal_jatuh_tempo' => now()->addMonths($inst['month']), // Simplifying due date to +1 month from now
+                        'tanggal_jatuh_tempo' => now()->addMonths($inst['month']),
                         'total_angsuran' => $inst['total'],
                         'pokok' => $inst['principal'],
                         'bunga' => $inst['interest'],
@@ -197,25 +201,26 @@ class LoanController extends Controller
         return redirect()->back()->with('error', 'Angsuran sudah lunas atau tidak valid.');
     }
 
-    private function generateSchedule($amount, $tenor, $rate, $type)
+    private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun')
     {
         $schedule = [];
         $balance = $amount;
-        $ratePerMonth = ($rate / 100) / 12;
+
+        if ($unit == 'bulan') {
+             $ratePerMonth = $rate / 100;
+        } else {
+             $ratePerMonth = ($rate / 100) / 12;
+        }
 
         if ($type == 'flat') {
             $principal = $amount / $tenor;
-            $interest = ($amount * ($rate / 100)) / 12; // Flat interest based on original amount
-             // Or annual rate / 12 * principal? Usually Flat is (P * R * T) / N.
-             // If Rate is 12% p.a., monthly is 1%.
-             // Monthly Interest = Principal * (Rate/12).
+            $interest = $amount * $ratePerMonth;
             $total = $principal + $interest;
 
             for ($i = 1; $i <= $tenor; $i++) {
                 $balance -= $principal;
                 if ($i == $tenor && $balance != 0) {
-                     // Adjust last
-                     // But for simple flat, balance just goes down.
+                     // Adjust last? For now simple flat.
                 }
                 $schedule[] = [
                     'month' => $i,
@@ -227,8 +232,6 @@ class LoanController extends Controller
             }
 
         } elseif ($type == 'efektif') {
-             // Sliding: Interest on remaining balance. Principal is constant?
-             // Usually Principal is constant = Amount / Tenor.
             $principal = $amount / $tenor;
 
             for ($i = 1; $i <= $tenor; $i++) {
@@ -246,8 +249,12 @@ class LoanController extends Controller
             }
 
         } elseif ($type == 'anuitas') {
-             // PMT = P * r * (1+r)^n / ((1+r)^n - 1)
-            $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+            // PMT = P * r * (1+r)^n / ((1+r)^n - 1)
+            if ($ratePerMonth > 0) {
+                $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+            } else {
+                $pmt = $amount / $tenor;
+            }
 
             for ($i = 1; $i <= $tenor; $i++) {
                 $interest = $balance * $ratePerMonth;

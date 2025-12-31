@@ -16,6 +16,7 @@ class Loan extends Model
         'jumlah_pinjaman',
         'tenor',
         'suku_bunga',
+        'satuan_bunga',
         'jenis_bunga',
         'biaya_admin',
         'denda_keterlambatan',

@@ -59,8 +59,16 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Suku Bunga (% per tahun)</label>
-                                    <input type="number" name="suku_bunga" id="rate" class="form-control" required step="0.01">
+                                    <label>Suku Bunga (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="suku_bunga" id="rate" class="form-control" required step="0.01">
+                                        <div class="input-group-append">
+                                            <select name="satuan_bunga" id="unit" class="form-control">
+                                                <option value="tahun">Per Tahun</option>
+                                                <option value="bulan">Per Bulan</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Jenis Bunga</label>
@@ -144,6 +152,7 @@
                 var amount = $('#amount').val();
                 var tenor = $('#tenor').val();
                 var rate = $('#rate').val();
+                var unit = $('#unit').val();
                 var type = $('#type').val();
 
                 if (!amount || !tenor || !rate) {
@@ -159,6 +168,7 @@
                         amount: amount,
                         tenor: tenor,
                         rate: rate,
+                        unit: unit,
                         type: type
                     },
                     success: function(response) {
