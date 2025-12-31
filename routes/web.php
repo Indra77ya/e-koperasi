@@ -47,4 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('bankinterests/get-history-interests/{member}', 'BankInterestController@jsonHistoryInterests');
     Route::get('bankinterests/check-interest', 'BankInterestController@check_interest');
     Route::post('bankinterests', 'BankInterestController@store');
+
+    Route::get('nasabahs/get-json', 'NasabahController@jsonNasabah')->name('nasabahs.get-json');
+    Route::resource('nasabahs', 'NasabahController');
 });
