@@ -86,6 +86,7 @@ class LoanController extends Controller
             'suku_bunga' => $request->suku_bunga,
             'jenis_bunga' => $request->jenis_bunga,
             'biaya_admin' => $request->biaya_admin ?? 0,
+            'denda_keterlambatan' => $request->denda_keterlambatan ?? 0,
             'tanggal_pengajuan' => $request->tanggal_pengajuan,
             'status' => 'diajukan',
             'keterangan' => $request->keterangan,

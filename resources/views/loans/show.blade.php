@@ -42,6 +42,10 @@
                             <td>{{ $loan->suku_bunga }}% / thn ({{ ucfirst($loan->jenis_bunga) }})</td>
                         </tr>
                         <tr>
+                            <th>Denda Default</th>
+                            <td>Rp {{ number_format($loan->denda_keterlambatan, 0, ',', '.') }}</td>
+                        </tr>
+                        <tr>
                             <th>Status</th>
                             <td>
                                 @if($loan->status == 'diajukan')
@@ -204,6 +208,13 @@
             $('.btn-penalty').click(function() {
                 var id = $(this).data('id');
                 var denda = $(this).data('denda');
+                var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
+
+                // If existing denda is 0, suggest the default denda
+                if (denda == 0 && defaultDenda > 0) {
+                    denda = defaultDenda;
+                }
+
                 var action = '{{ url('loans/installments') }}/' + id + '/penalty';
 
                 $('#form-penalty').attr('action', action);

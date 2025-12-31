@@ -18,6 +18,7 @@ class Loan extends Model
         'suku_bunga',
         'jenis_bunga',
         'biaya_admin',
+        'denda_keterlambatan',
         'tanggal_pengajuan',
         'tanggal_persetujuan',
         'status',

@@ -75,6 +75,10 @@
                                     <input type="number" name="biaya_admin" class="form-control" value="0">
                                 </div>
                                 <div class="form-group">
+                                    <label>Denda Keterlambatan (Rp)</label>
+                                    <input type="number" name="denda_keterlambatan" class="form-control" value="0" min="0">
+                                </div>
+                                <div class="form-group">
                                     <label>Tanggal Pengajuan</label>
                                     <input type="date" name="tanggal_pengajuan" class="form-control" value="{{ date('Y-m-d') }}" required>
                                 </div>
