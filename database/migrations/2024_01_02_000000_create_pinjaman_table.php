@@ -16,7 +16,8 @@ class CreatePinjamanTable extends Migration
         Schema::create('pinjaman', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('kode_pinjaman')->unique();
-            $table->unsignedBigInteger('anggota_id');
+            $table->unsignedBigInteger('anggota_id')->nullable();
+            $table->unsignedBigInteger('nasabah_id')->nullable();
             $table->string('jenis_pinjaman'); // produktif, konsumtif
             $table->decimal('jumlah_pinjaman', 15, 2);
             $table->integer('tenor'); // in months
@@ -30,6 +31,7 @@ class CreatePinjamanTable extends Migration
             $table->timestamps();
 
             $table->foreign('anggota_id')->references('id')->on('anggota')->onDelete('cascade');
+            $table->foreign('nasabah_id')->references('id')->on('nasabahs')->onDelete('cascade');
         });
     }
 
