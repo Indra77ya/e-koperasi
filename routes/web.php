@@ -28,6 +28,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('members/get-json', 'MemberController@jsonMembers');
     Route::resource('members', 'MemberController');
 
+    Route::get('nasabah/get-json', 'NasabahController@jsonNasabah');
+    Route::resource('nasabah', 'NasabahController');
+
     Route::get('deposits/get-json', 'DepositController@jsonDeposits');
     Route::resource('deposits', 'DepositController')->only([
         'index', 'create', 'store', 'show'
