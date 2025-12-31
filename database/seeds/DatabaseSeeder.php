@@ -11,6 +11,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // Fix for "Target class [NasabahTableSeeder] does not exist" when composer dump-autoload hasn't been run
+        if (!class_exists('NasabahTableSeeder')) {
+            require_once __DIR__ . '/NasabahTableSeeder.php';
+        }
+
         $this->call([
             UsersTableSeeder::class,
             AnggotaTableSeeder::class,
