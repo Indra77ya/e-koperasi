@@ -11,6 +11,7 @@ class Loan extends Model
     protected $fillable = [
         'kode_pinjaman',
         'anggota_id',
+        'nasabah_id',
         'jenis_pinjaman',
         'jumlah_pinjaman',
         'tenor',
@@ -31,6 +32,11 @@ class Loan extends Model
     public function member()
     {
         return $this->belongsTo('App\Models\Member', 'anggota_id');
+    }
+
+    public function nasabah()
+    {
+        return $this->belongsTo('App\Models\Nasabah', 'nasabah_id');
     }
 
     public function installments()

@@ -20,7 +20,7 @@
                             <thead>
                                 <tr>
                                     <th>Kode</th>
-                                    <th>Anggota</th>
+                                    <th>Peminjam</th>
                                     <th>Jenis</th>
                                     <th>Jumlah</th>
                                     <th>Tenor</th>

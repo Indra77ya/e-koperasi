@@ -14,8 +14,16 @@
                 <div class="card-body">
                     <table class="table table-borderless">
                         <tr>
-                            <th>Anggota</th>
-                            <td>{{ $loan->member->nama }}</td>
+                            <th>Peminjam</th>
+                            <td>
+                                @if($loan->member)
+                                    {{ $loan->member->nama }} (Anggota)
+                                @elseif($loan->nasabah)
+                                    {{ $loan->nasabah->nama }} (Nasabah)
+                                @else
+                                    -
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <th>Jenis</th>

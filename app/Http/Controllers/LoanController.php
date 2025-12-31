@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Loan;
 use App\Models\LoanInstallment;
 use App\Models\Member;
+use App\Models\Nasabah;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
@@ -15,7 +16,7 @@ class LoanController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $loans = Loan::with('member')->select('pinjaman.*');
+            $loans = Loan::with(['member', 'nasabah'])->select('pinjaman.*');
             return DataTables::of($loans)
                 ->editColumn('jumlah_pinjaman', function ($loan) {
                     return 'Rp ' . number_format($loan->jumlah_pinjaman, 0, ',', '.');
@@ -24,7 +25,12 @@ class LoanController extends Controller
                     return $loan->suku_bunga . '% (' . ucfirst($loan->jenis_bunga) . ')';
                 })
                 ->addColumn('member_name', function ($loan) {
-                    return $loan->member->nama;
+                    if ($loan->member) {
+                        return $loan->member->nama . ' (Anggota)';
+                    } elseif ($loan->nasabah) {
+                        return $loan->nasabah->nama . ' (Nasabah)';
+                    }
+                    return '-';
                 })
                 ->addColumn('action', function ($loan) {
                     $btn = '<a href="' . route('loans.show', $loan->id) . '" class="btn btn-sm btn-info">Detail</a>';
@@ -40,7 +46,8 @@ class LoanController extends Controller
     public function create()
     {
         $members = Member::all();
-        return view('loans.create', compact('members'));
+        $nasabahs = Nasabah::all();
+        return view('loans.create', compact('members', 'nasabahs'));
     }
 
     public function calculate(Request $request)
@@ -58,7 +65,9 @@ class LoanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'anggota_id' => 'required|exists:anggota,id',
+            'tipe_peminjam' => 'required|in:anggota,nasabah',
+            'anggota_id' => 'required_if:tipe_peminjam,anggota|nullable|exists:anggota,id',
+            'nasabah_id' => 'required_if:tipe_peminjam,nasabah|nullable|exists:nasabahs,id',
             'jenis_pinjaman' => 'required',
             'jumlah_pinjaman' => 'required|numeric|min:0',
             'tenor' => 'required|integer|min:1',
@@ -69,7 +78,8 @@ class LoanController extends Controller
 
         $loan = Loan::create([
             'kode_pinjaman' => 'P-' . date('Ymd') . '-' . rand(100, 999),
-            'anggota_id' => $request->anggota_id,
+            'anggota_id' => $request->tipe_peminjam == 'anggota' ? $request->anggota_id : null,
+            'nasabah_id' => $request->tipe_peminjam == 'nasabah' ? $request->nasabah_id : null,
             'jenis_pinjaman' => $request->jenis_pinjaman,
             'jumlah_pinjaman' => $request->jumlah_pinjaman,
             'tenor' => $request->tenor,
@@ -86,7 +96,7 @@ class LoanController extends Controller
 
     public function show($id)
     {
-        $loan = Loan::with(['member', 'installments'])->findOrFail($id);
+        $loan = Loan::with(['member', 'nasabah', 'installments'])->findOrFail($id);
         return view('loans.show', compact('loan'));
     }
 

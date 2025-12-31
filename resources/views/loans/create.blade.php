@@ -17,11 +17,27 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label>Tipe Peminjam</label>
+                                    <div>
+                                        <label class="radio-inline"><input type="radio" name="tipe_peminjam" value="anggota" checked> Anggota</label>
+                                        <label class="radio-inline ml-3"><input type="radio" name="tipe_peminjam" value="nasabah"> Nasabah</label>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="anggota-group">
                                     <label>Anggota</label>
-                                    <select name="anggota_id" class="form-control select2" required>
+                                    <select name="anggota_id" class="form-control select2">
                                         <option value="">Pilih Anggota</option>
                                         @foreach ($members as $member)
                                             <option value="{{ $member->id }}">{{ $member->nik }} - {{ $member->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group" id="nasabah-group" style="display: none;">
+                                    <label>Nasabah</label>
+                                    <select name="nasabah_id" class="form-control select2">
+                                        <option value="">Pilih Nasabah</option>
+                                        @foreach ($nasabahs as $nasabah)
+                                            <option value="{{ $nasabah->id }}">{{ $nasabah->nik }} - {{ $nasabah->nama }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -107,6 +123,17 @@
                     theme: "bootstrap"
                 });
             }
+
+            $('input[name="tipe_peminjam"]').change(function() {
+                var val = $(this).val();
+                if (val == 'anggota') {
+                    $('#anggota-group').show();
+                    $('#nasabah-group').hide();
+                } else {
+                    $('#anggota-group').hide();
+                    $('#nasabah-group').show();
+                }
+            });
 
             $('#btn-simulate').click(function() {
                 var amount = $('#amount').val();
