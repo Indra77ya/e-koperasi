@@ -50,4 +50,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('nasabahs/get-json', 'NasabahController@jsonNasabah')->name('nasabahs.get-json');
     Route::resource('nasabahs', 'NasabahController');
+
+    // Loan Routes
+    Route::get('nasabah_loans/get-json', 'NasabahLoanController@jsonLoans')->name('nasabah_loans.get-json');
+    Route::post('nasabah_loans/simulate', 'NasabahLoanController@simulate')->name('nasabah_loans.simulate');
+    Route::post('nasabah_loans/{id}/approve', 'NasabahLoanController@approve')->name('nasabah_loans.approve');
+    Route::post('nasabah_loans/{id}/reject', 'NasabahLoanController@reject')->name('nasabah_loans.reject');
+    Route::post('nasabah_loans/{id}/disburse', 'NasabahLoanController@disburse')->name('nasabah_loans.disburse');
+    Route::resource('nasabah_loans', 'NasabahLoanController');
 });
