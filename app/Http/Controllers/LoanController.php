@@ -149,6 +149,32 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
     }
 
+    public function payInstallment(Request $request, $id)
+    {
+        $installment = LoanInstallment::findOrFail($id);
+
+        if ($installment->status == 'belum_lunas') {
+            DB::transaction(function () use ($installment) {
+                $installment->update([
+                    'status' => 'lunas',
+                    'tanggal_bayar' => now(),
+                ]);
+
+                // Check if all installments are paid
+                $loan = $installment->loan;
+                $remaining = $loan->installments()->where('status', 'belum_lunas')->count();
+
+                if ($remaining == 0) {
+                    $loan->update(['status' => 'lunas']);
+                }
+            });
+
+            return redirect()->back()->with('success', 'Angsuran berhasil dibayar.');
+        }
+
+        return redirect()->back()->with('error', 'Angsuran sudah lunas atau tidak valid.');
+    }
+
     private function generateSchedule($amount, $tenor, $rate, $type)
     {
         $schedule = [];

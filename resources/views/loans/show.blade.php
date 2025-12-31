@@ -106,6 +106,7 @@
                                         <th>Bunga</th>
                                         <th>Sisa</th>
                                         <th>Status</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -122,6 +123,16 @@
                                                     <span class="badge badge-success">Lunas</span>
                                                 @else
                                                     <span class="badge badge-secondary">Belum Lunas</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($inst->status == 'belum_lunas')
+                                                    <form action="{{ route('loans.installments.pay', $inst->id) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran angsuran ke-{{ $inst->angsuran_ke }}?')">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-success">Bayar</button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-muted"><i class="fe fe-check"></i> Terbayar</span>
                                                 @endif
                                             </td>
                                         </tr>

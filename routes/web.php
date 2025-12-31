@@ -68,5 +68,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('loans/{loan}/approve', 'LoanController@approve')->name('loans.approve');
     Route::post('loans/{loan}/reject', 'LoanController@reject')->name('loans.reject');
     Route::post('loans/{loan}/disburse', 'LoanController@disburse')->name('loans.disburse');
+    Route::post('loans/installments/{installment}/pay', 'LoanController@payInstallment')->name('loans.installments.pay');
     Route::resource('loans', 'LoanController');
 });
