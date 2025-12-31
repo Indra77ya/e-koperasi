@@ -120,7 +120,8 @@
         $(document).ready(function() {
             if ($('.select2').length) {
                 $('.select2').select2({
-                    theme: "bootstrap"
+                    theme: "bootstrap",
+                    width: '100%'
                 });
             }
 
