@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Nasabah;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
+use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -154,7 +154,7 @@ class NasabahController extends Controller
 
     public function jsonNasabah()
     {
-        $nasabah = Nasabah::query()->orderBy('id', 'desc');
+        $nasabah = Nasabah::orderBy('id', 'desc')->get();
         return DataTables::of($nasabah)
             ->addIndexColumn()
             ->addColumn('action', function($nasabah) {
