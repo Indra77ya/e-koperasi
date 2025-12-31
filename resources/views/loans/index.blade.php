@@ -39,23 +39,23 @@
 @endsection
 
 @section('js')
-    <script>
-        $(document).ready(function() {
-            $('#loans-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: '{{ route('loans.index') }}',
-                columns: [
-                    { data: 'kode_pinjaman', name: 'kode_pinjaman' },
-                    { data: 'member_name', name: 'member.nama' },
-                    { data: 'jenis_pinjaman', name: 'jenis_pinjaman' },
-                    { data: 'jumlah_pinjaman', name: 'jumlah_pinjaman' },
-                    { data: 'tenor', name: 'tenor' },
-                    { data: 'suku_bunga', name: 'suku_bunga' },
-                    { data: 'status', name: 'status' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ]
-            });
+<script>
+    require(['datatables', 'jquery'], function(datatable, $) {
+        $('#loans-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: '{{ route('loans.index') }}',
+            columns: [
+                { data: 'kode_pinjaman', name: 'kode_pinjaman' },
+                { data: 'member_name', name: 'member.nama' },
+                { data: 'jenis_pinjaman', name: 'jenis_pinjaman' },
+                { data: 'jumlah_pinjaman', name: 'jumlah_pinjaman' },
+                { data: 'tenor', name: 'tenor' },
+                { data: 'suku_bunga', name: 'suku_bunga' },
+                { data: 'status', name: 'status' },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
+            ]
         });
-    </script>
+    });
+</script>
 @endsection

@@ -97,10 +97,10 @@
 @endsection
 
 @section('js')
-    <script>
+<script>
+    require(['jquery', 'select2'], function($) {
         $(document).ready(function() {
-            // Check if select2 is available, otherwise ignore
-            if($('.select2').length) {
+            if ($('.select2').length) {
                 $('.select2').select2();
             }
 
@@ -142,5 +142,6 @@
                 });
             });
         });
-    </script>
+    });
+</script>
 @endsection
