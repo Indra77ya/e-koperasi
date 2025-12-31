@@ -52,6 +52,8 @@
                                     <span class="badge badge-primary">Berjalan</span>
                                 @elseif($loan->status == 'lunas')
                                     <span class="badge badge-success">Lunas</span>
+                                @elseif($loan->status == 'macet')
+                                    <span class="badge badge-danger">Macet / Bermasalah</span>
                                 @else
                                     <span class="badge badge-secondary">{{ $loan->status }}</span>
                                 @endif
@@ -83,6 +85,13 @@
                                 <button type="submit" class="btn btn-primary btn-block mt-2">Cairkan Dana</button>
                             </form>
                         @endif
+
+                        @if($loan->status == 'berjalan')
+                            <form action="{{ route('loans.markBadDebt', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai pinjaman ini sebagai MACET?')">
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-block mt-2">Tandai Macet</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -104,6 +113,7 @@
                                         <th>Total</th>
                                         <th>Pokok</th>
                                         <th>Bunga</th>
+                                        <th>Denda</th>
                                         <th>Sisa</th>
                                         <th>Status</th>
                                         <th>Aksi</th>
@@ -114,9 +124,17 @@
                                         <tr>
                                             <td>{{ $inst->angsuran_ke }}</td>
                                             <td>{{ $inst->tanggal_jatuh_tempo->format('d-m-Y') }}</td>
-                                            <td>Rp {{ number_format($inst->total_angsuran, 0, ',', '.') }}</td>
+                                            <td>
+                                                Rp {{ number_format($inst->total_angsuran + $inst->denda, 0, ',', '.') }}
+                                                @if($inst->denda > 0)
+                                                    <small class="d-block text-danger">(+Denda {{ number_format($inst->denda) }})</small>
+                                                @endif
+                                            </td>
                                             <td>Rp {{ number_format($inst->pokok, 0, ',', '.') }}</td>
                                             <td>Rp {{ number_format($inst->bunga, 0, ',', '.') }}</td>
+                                            <td>
+                                                Rp {{ number_format($inst->denda, 0, ',', '.') }}
+                                            </td>
                                             <td>Rp {{ number_format($inst->sisa_pinjaman, 0, ',', '.') }}</td>
                                             <td>
                                                 @if($inst->status == 'lunas')
@@ -126,13 +144,18 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($inst->status == 'belum_lunas')
-                                                    <form action="{{ route('loans.installments.pay', $inst->id) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran angsuran ke-{{ $inst->angsuran_ke }}?')">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-success">Bayar</button>
-                                                    </form>
-                                                @else
+                                                @if($inst->status == 'belum_lunas' && $loan->status != 'macet')
+                                                    <div class="btn-group">
+                                                        <form action="{{ route('loans.installments.pay', $inst->id) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran angsuran ke-{{ $inst->angsuran_ke }}?')" class="mr-1">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-sm btn-success">Bayar</button>
+                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-warning btn-penalty" data-id="{{ $inst->id }}" data-denda="{{ $inst->denda }}"><i class="fe fe-alert-circle"></i></button>
+                                                    </div>
+                                                @elseif($inst->status == 'lunas')
                                                     <span class="text-muted"><i class="fe fe-check"></i> Terbayar</span>
+                                                @else
+                                                    <span class="text-danger">Macet</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -147,4 +170,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Denda -->
+    <div class="modal fade" id="modal-penalty" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Atur Denda Angsuran</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="" method="POST" id="form-penalty">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Jumlah Denda (Rp)</label>
+                            <input type="number" name="denda" class="form-control" min="0" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('js')
+<script>
+    require(['jquery', 'bootstrap'], function($) {
+        $(document).ready(function() {
+            $('.btn-penalty').click(function() {
+                var id = $(this).data('id');
+                var denda = $(this).data('denda');
+                var action = '{{ url('loans/installments') }}/' + id + '/penalty';
+
+                $('#form-penalty').attr('action', action);
+                $('input[name="denda"]').val(denda);
+                $('#modal-penalty').modal('show');
+            });
+        });
+    });
+</script>
 @endsection

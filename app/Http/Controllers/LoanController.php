@@ -149,6 +149,27 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
     }
 
+    public function markBadDebt($id)
+    {
+        $loan = Loan::findOrFail($id);
+        if ($loan->status == 'berjalan') {
+            $loan->update(['status' => 'macet']);
+        }
+        return redirect()->back()->with('success', 'Pinjaman ditandai sebagai macet.');
+    }
+
+    public function addPenalty(Request $request, $id)
+    {
+        $request->validate([
+            'denda' => 'required|numeric|min:0'
+        ]);
+
+        $installment = LoanInstallment::findOrFail($id);
+        $installment->update(['denda' => $request->denda]);
+
+        return redirect()->back()->with('success', 'Denda berhasil ditambahkan.');
+    }
+
     public function payInstallment(Request $request, $id)
     {
         $installment = LoanInstallment::findOrFail($id);

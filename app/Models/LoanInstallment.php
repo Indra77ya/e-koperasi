@@ -17,6 +17,7 @@ class LoanInstallment extends Model
         'pokok',
         'bunga',
         'sisa_pinjaman',
+        'denda',
         'status',
     ];
 
