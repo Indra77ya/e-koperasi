@@ -10,8 +10,8 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Daftar Pinjaman</h4>
-                    <div class="card-tools">
-                        <a href="{{ route('loans.create') }}" class="btn btn-primary btn-sm">Ajukan Pinjaman</a>
+                    <div class="card-options">
+                        <a href="{{ route('loans.create') }}" class="btn btn-primary btn-sm btn-pill">Ajukan Pinjaman</a>
                     </div>
                 </div>
                 <div class="card-body">
