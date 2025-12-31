@@ -61,10 +61,20 @@
 
                     <div class="mt-3">
                         @if($loan->status == 'diajukan')
-                            <form action="{{ route('loans.approve', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Setujui pinjaman ini?')">
-                                @csrf
-                                <button type="submit" class="btn btn-success btn-block">Setujui Pinjaman</button>
-                            </form>
+                            <div class="row">
+                                <div class="col-6">
+                                    <form action="{{ route('loans.approve', $loan->id) }}" method="POST" onsubmit="return confirm('Setujui pinjaman ini?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success btn-block">Setujui</button>
+                                    </form>
+                                </div>
+                                <div class="col-6">
+                                    <form action="{{ route('loans.reject', $loan->id) }}" method="POST" onsubmit="return confirm('Tolak pinjaman ini?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-block">Tolak</button>
+                                    </form>
+                                </div>
+                            </div>
                         @endif
 
                         @if($loan->status == 'disetujui')

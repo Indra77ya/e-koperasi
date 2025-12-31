@@ -112,6 +112,17 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Pinjaman disetujui.');
     }
 
+    public function reject($id)
+    {
+        $loan = Loan::findOrFail($id);
+        if ($loan->status == 'diajukan') {
+            $loan->update([
+                'status' => 'ditolak',
+            ]);
+        }
+        return redirect()->back()->with('success', 'Pinjaman ditolak.');
+    }
+
     public function disburse(Request $request, $id)
     {
         $loan = Loan::findOrFail($id);
