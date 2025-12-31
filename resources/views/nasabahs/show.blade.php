@@ -134,43 +134,6 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Legacy Loans if any -->
-                        @if($nasabah->loans->count() > 0)
-                        <h5 class="mt-4 text-muted">Riwayat Pinjaman (Legacy)</h5>
-                        <div class="table-responsive">
-                            <table class="table card-table table-vcenter text-nowrap text-muted">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal Pinjam</th>
-                                        <th>Jatuh Tempo</th>
-                                        <th>Jumlah</th>
-                                        <th>Status</th>
-                                        <th>Catatan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($nasabah->loans as $loan)
-                                    <tr>
-                                        <td>{{ $loan->loan_date }}</td>
-                                        <td>{{ $loan->due_date }}</td>
-                                        <td>{{ number_format($loan->amount, 0, ',', '.') }}</td>
-                                        <td>
-                                            @if($loan->status == 'paid')
-                                                <span class="tag tag-success">Lunas</span>
-                                            @elseif($loan->status == 'overdue')
-                                                <span class="tag tag-danger">Terlambat</span>
-                                            @else
-                                                <span class="tag tag-warning">Pending</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $loan->notes }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endif
                     </div>
                 </div>
 
