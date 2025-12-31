@@ -1,29 +1,33 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container">
-    <div class="page-header">
-        <h1 class="page-title">
-            Daftar Pinjaman Nasabah
-        </h1>
-        <div class="page-options d-flex">
-            <a href="{{ route('nasabah_loans.create') }}" class="btn btn-primary btn-sm">
-                <i class="fe fe-plus"></i> Buat Pengajuan Pinjaman
-            </a>
-        </div>
-    </div>
+@section('page-title', 'Daftar Pinjaman Nasabah')
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Data Pinjaman</h3>
+@section('content-app')
+<div class="row row-cards row-deck">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Data Pinjaman</h3>
+                <div class="card-options">
+                    <a href="{{ route('nasabah_loans.create') }}" class="btn btn-sm btn-pill btn-primary">
+                        <i class="fe fe-plus"></i> Buat Pengajuan Pinjaman
+                    </a>
                 </div>
+            </div>
+            <div class="card-body">
+                @if (session('success'))
+                    <div class="alert alert-icon alert-success alert-dismissible" role="alert">
+                        <i class="fe fe-check mr-2" aria-hidden="true"></i>
+                        <button type="button" class="close" data-dismiss="alert"></button>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <div class="table-responsive">
-                    <table class="table card-table table-vcenter text-nowrap datatable" id="loans-table">
+                    <table class="table card-table table-vcenter text-nowrap" id="loans-table">
                         <thead>
                             <tr>
-                                <th>No</th>
+                                <th class="w-1">No</th>
                                 <th>Nasabah</th>
                                 <th>Jumlah</th>
                                 <th>Tgl Pinjam</th>
@@ -41,7 +45,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('js')
 <script>
     require(['datatables', 'jquery'], function(datatable, $) {
         $('#loans-table').DataTable({
@@ -57,7 +61,10 @@
                 { data: 'loan_type', name: 'loan_type' },
                 { data: 'tenor', name: 'tenor' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
-            ]
+            ],
+            language: {
+                "url": '{{ lang_url() }}'
+            }
         });
     });
 </script>

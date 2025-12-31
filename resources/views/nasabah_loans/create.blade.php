@@ -1,120 +1,114 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container">
-    <div class="page-header">
-        <h1 class="page-title">
-            Pengajuan Pinjaman Baru
-        </h1>
-    </div>
+@section('page-title', 'Pengajuan Pinjaman Baru')
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Formulir Pengajuan</h3>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('nasabah_loans.store') }}" method="POST" id="loan-form">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Nasabah</label>
-                                    <select name="nasabah_id" class="form-control custom-select">
-                                        <option value="">Pilih Nasabah</option>
-                                        @foreach($nasabahs as $nasabah)
-                                            <option value="{{ $nasabah->id }}">{{ $nasabah->nama }} - {{ $nasabah->nik }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Jumlah Pinjaman (Rp)</label>
-                                    <input type="number" name="amount" id="amount" class="form-control" placeholder="Contoh: 10000000">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Tanggal Pengajuan</label>
-                                    <input type="date" name="loan_date" class="form-control" value="{{ date('Y-m-d') }}">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Jenis Pinjaman</label>
-                                    <select name="loan_type" class="form-control custom-select">
-                                        <option value="consumptive">Konsumtif</option>
-                                        <option value="productive">Produktif</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Tenor (Bulan)</label>
-                                    <input type="number" name="tenor" id="tenor" class="form-control" placeholder="Contoh: 12">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Tipe Bunga</label>
-                                    <select name="interest_type" id="interest_type" class="form-control custom-select">
-                                        <option value="flat">Flat</option>
-                                        <option value="effective">Efektif (Menurun)</option>
-                                        <option value="annuity">Anuitas</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Suku Bunga (% per tahun)</label>
-                                    <input type="number" name="interest_rate" id="interest_rate" class="form-control" placeholder="Contoh: 12">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Metode Pencairan</label>
-                                    <select name="disbursement_method" class="form-control custom-select">
-                                        <option value="cash">Tunai</option>
-                                        <option value="transfer">Transfer</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Biaya Admin</label>
-                                    <input type="number" name="admin_fee" class="form-control" value="0">
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label class="form-label">Catatan</label>
-                                    <textarea name="notes" class="form-control" rows="3"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-footer">
-                            <button type="button" class="btn btn-secondary" id="btn-simulate">Simulasi Angsuran</button>
-                            <button type="submit" class="btn btn-primary ml-auto">Simpan Pengajuan</button>
-                        </div>
-                    </form>
-                </div>
+@section('content-app')
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Formulir Pengajuan</h3>
             </div>
+            <div class="card-body">
+                <form action="{{ route('nasabah_loans.store') }}" method="POST" id="loan-form">
+                    @csrf
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nasabah</label>
+                                <select name="nasabah_id" class="form-control custom-select">
+                                    <option value="">Pilih Nasabah</option>
+                                    @foreach($nasabahs as $nasabah)
+                                        <option value="{{ $nasabah->id }}">{{ $nasabah->nama }} - {{ $nasabah->nik }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jumlah Pinjaman (Rp)</label>
+                                <input type="number" name="amount" id="amount" class="form-control" placeholder="Contoh: 10000000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Pengajuan</label>
+                                <input type="date" name="loan_date" class="form-control" value="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jenis Pinjaman</label>
+                                <select name="loan_type" class="form-control custom-select">
+                                    <option value="consumptive">Konsumtif</option>
+                                    <option value="productive">Produktif</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Tenor (Bulan)</label>
+                                <input type="number" name="tenor" id="tenor" class="form-control" placeholder="Contoh: 12">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tipe Bunga</label>
+                                <select name="interest_type" id="interest_type" class="form-control custom-select">
+                                    <option value="flat">Flat</option>
+                                    <option value="effective">Efektif (Menurun)</option>
+                                    <option value="annuity">Anuitas</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Suku Bunga (% per tahun)</label>
+                                <input type="number" name="interest_rate" id="interest_rate" class="form-control" placeholder="Contoh: 12">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Metode Pencairan</label>
+                                <select name="disbursement_method" class="form-control custom-select">
+                                    <option value="cash">Tunai</option>
+                                    <option value="transfer">Transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Biaya Admin</label>
+                                <input type="number" name="admin_fee" class="form-control" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Catatan</label>
+                                <textarea name="notes" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="card" id="simulation-result" style="display: none;">
-                <div class="card-header">
-                    <h3 class="card-title">Hasil Simulasi Angsuran</h3>
-                </div>
-                <div class="table-responsive">
-                    <table class="table card-table table-striped text-nowrap">
-                        <thead>
-                            <tr>
-                                <th>Bulan Ke</th>
-                                <th>Pokok</th>
-                                <th>Bunga</th>
-                                <th>Total Angsuran</th>
-                                <th>Sisa Pinjaman</th>
-                            </tr>
-                        </thead>
-                        <tbody id="simulation-body">
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="form-footer">
+                        <button type="button" class="btn btn-secondary" id="btn-simulate">Simulasi Angsuran</button>
+                        <button type="submit" class="btn btn-primary ml-auto">Simpan Pengajuan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" id="simulation-result" style="display: none;">
+            <div class="card-header">
+                <h3 class="card-title">Hasil Simulasi Angsuran</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table card-table table-striped text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Bulan Ke</th>
+                            <th>Pokok</th>
+                            <th>Bunga</th>
+                            <th>Total Angsuran</th>
+                            <th>Sisa Pinjaman</th>
+                        </tr>
+                    </thead>
+                    <tbody id="simulation-body">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 @endsection
 
-@section('scripts')
+@section('js')
 <script>
     require(['jquery'], function($) {
         $('#btn-simulate').on('click', function() {
