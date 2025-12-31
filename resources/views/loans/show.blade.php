@@ -49,6 +49,10 @@
                             <td>Rp {{ number_format($loan->denda_keterlambatan, 0, ',', '.') }}</td>
                         </tr>
                         <tr>
+                            <th>Keterangan</th>
+                            <td>{{ $loan->keterangan ?? '-' }}</td>
+                        </tr>
+                        <tr>
                             <th>Status</th>
                             <td>
                                 @if($loan->status == 'diajukan')
