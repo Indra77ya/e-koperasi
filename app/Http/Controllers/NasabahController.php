@@ -6,6 +6,7 @@ use App\Models\Nasabah;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class NasabahController extends Controller
 {
@@ -46,6 +47,10 @@ class NasabahController extends Controller
         ]);
 
         $data = $request->all();
+
+        if ($request->filled('tanggal_lahir')) {
+            $data['tanggal_lahir'] = Carbon::createFromFormat('d/m/Y', $request->tanggal_lahir)->format('Y-m-d');
+        }
 
         if ($request->hasFile('file_ktp')) {
             $data['file_ktp'] = $request->file('file_ktp')->store('nasabah/ktp', 'public');
@@ -103,6 +108,10 @@ class NasabahController extends Controller
 
         $nasabah = Nasabah::findOrFail($id);
         $data = $request->all();
+
+        if ($request->filled('tanggal_lahir')) {
+            $data['tanggal_lahir'] = Carbon::createFromFormat('d/m/Y', $request->tanggal_lahir)->format('Y-m-d');
+        }
 
         if ($request->hasFile('file_ktp')) {
             if ($nasabah->file_ktp) {
