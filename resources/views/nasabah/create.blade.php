@@ -44,7 +44,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Tanggal Lahir</label>
-                                <input type="text" class="form-control" name="tanggal_lahir" id="datepicker" autocomplete="off" value="{{ old('tanggal_lahir') }}" placeholder="dd/mm/yyyy">
+                                <input type="text" class="form-control" name="tanggal_lahir" id="nasabah-datepicker" autocomplete="off" value="{{ old('tanggal_lahir') }}" placeholder="dd/mm/yyyy">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Nomor HP</label>
@@ -112,7 +112,7 @@
             $(this).next('.custom-file-label').addClass("selected").html(fileName);
         });
 
-        $('#datepicker').datepicker({
+        $('#nasabah-datepicker').datepicker({
             format: 'dd/mm/yyyy',
             autoclose: true
         });
