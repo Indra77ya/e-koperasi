@@ -6,7 +6,7 @@ use App\Models\Nasabah;
 use App\Models\NasabahLoan;
 use App\Models\NasabahLoanInstallment;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
+use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;

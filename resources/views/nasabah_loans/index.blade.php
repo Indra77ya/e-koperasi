@@ -37,6 +37,8 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
+                        <tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -51,7 +53,7 @@
         $('#loans-table').DataTable({
             processing: true,
             serverSide: true,
-            ajax: '{!! route('nasabah_loans.get-json') !!}',
+            ajax: '{{ route('nasabah_loans.get-json') }}',
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'nasabah_name', name: 'nasabah.nama' },
