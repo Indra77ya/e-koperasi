@@ -92,6 +92,54 @@
                             <table class="table card-table table-vcenter text-nowrap">
                                 <thead>
                                     <tr>
+                                        <th>Kode</th>
+                                        <th>Tgl Pengajuan</th>
+                                        <th>Jumlah</th>
+                                        <th>Bunga</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($nasabah->pinjaman as $loan)
+                                    <tr>
+                                        <td>{{ $loan->kode_pinjaman }}</td>
+                                        <td>{{ $loan->tanggal_pengajuan->format('Y-m-d') }}</td>
+                                        <td>Rp {{ number_format($loan->jumlah_pinjaman, 0, ',', '.') }}</td>
+                                        <td>{{ $loan->suku_bunga }}% ({{ ucfirst($loan->jenis_bunga) }})</td>
+                                        <td>
+                                            @if($loan->status == 'lunas')
+                                                <span class="tag tag-success">Lunas</span>
+                                            @elseif($loan->status == 'berjalan')
+                                                <span class="tag tag-primary">Berjalan</span>
+                                            @elseif($loan->status == 'disetujui')
+                                                <span class="tag tag-info">Disetujui</span>
+                                            @elseif($loan->status == 'ditolak')
+                                                <span class="tag tag-danger">Ditolak</span>
+                                            @else
+                                                <span class="tag tag-warning">Diajukan</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('loans.show', $loan->id) }}" class="btn btn-sm btn-secondary">Detail</a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Belum ada data pinjaman (Modul Baru)</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Legacy Loans if any -->
+                        @if($nasabah->loans->count() > 0)
+                        <h5 class="mt-4 text-muted">Riwayat Pinjaman (Legacy)</h5>
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap text-muted">
+                                <thead>
+                                    <tr>
                                         <th>Tanggal Pinjam</th>
                                         <th>Jatuh Tempo</th>
                                         <th>Jumlah</th>
@@ -100,7 +148,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($nasabah->loans as $loan)
+                                    @foreach($nasabah->loans as $loan)
                                     <tr>
                                         <td>{{ $loan->loan_date }}</td>
                                         <td>{{ $loan->due_date }}</td>
@@ -116,14 +164,11 @@
                                         </td>
                                         <td>{{ $loan->notes }}</td>
                                     </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">Belum ada data pinjaman</td>
-                                    </tr>
-                                    @endforelse
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @endif
                     </div>
                 </div>
 
