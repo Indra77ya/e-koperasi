@@ -42,6 +42,9 @@
                         <a href="{{ route('members.index') }}" class="nav-link"><i class="fe fe-users" aria-hidden="true"></i> {{ __('menu.member') }}</a>
                     </li>
                     <li class="nav-item">
+                        <a href="{{ route('nasabahs.index') }}" class="nav-link"><i class="fe fe-user-check" aria-hidden="true"></i> Nasabah</a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{{ route('deposits.index') }}" class="nav-link"><i class="fe fe-dollar-sign" aria-hidden="true"></i> {{ __('menu.deposit') }}</a>
                     </li>
                     <li class="nav-item">
