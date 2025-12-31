@@ -25,6 +25,22 @@ class LoanController extends Controller
                     $unit = $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun';
                     return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
                 })
+                ->editColumn('status', function ($loan) {
+                    if ($loan->status == 'diajukan') {
+                        return '<span class="badge badge-warning">Diajukan</span>';
+                    } elseif ($loan->status == 'disetujui') {
+                        return '<span class="badge badge-info">Disetujui</span>';
+                    } elseif ($loan->status == 'berjalan') {
+                        return '<span class="badge badge-primary">Berjalan</span>';
+                    } elseif ($loan->status == 'lunas') {
+                        return '<span class="badge badge-success">Lunas</span>';
+                    } elseif ($loan->status == 'macet') {
+                        return '<span class="badge badge-danger">Macet</span>';
+                    } elseif ($loan->status == 'ditolak') {
+                        return '<span class="badge badge-secondary">Ditolak</span>';
+                    }
+                    return '<span class="badge badge-secondary">' . $loan->status . '</span>';
+                })
                 ->addColumn('member_name', function ($loan) {
                     if ($loan->member) {
                         return $loan->member->nama . ' (Anggota)';
@@ -37,7 +53,7 @@ class LoanController extends Controller
                     $btn = '<a href="' . route('loans.show', $loan->id) . '" class="btn btn-sm btn-info">Detail</a>';
                     return $btn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['status', 'action'])
                 ->make(true);
         }
 
