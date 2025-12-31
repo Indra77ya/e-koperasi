@@ -16,7 +16,7 @@ class CreatePinjamanTable extends Migration
         Schema::create('pinjaman', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('kode_pinjaman')->unique();
-            $table->unsignedInteger('anggota_id');
+            $table->unsignedBigInteger('anggota_id');
             $table->string('jenis_pinjaman'); // produktif, konsumtif
             $table->decimal('jumlah_pinjaman', 15, 2);
             $table->integer('tenor'); // in months
