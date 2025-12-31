@@ -97,11 +97,15 @@
 @endsection
 
 @section('js')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://select2.github.io/select2-bootstrap-theme/css/select2-bootstrap.css">
 <script>
-    require(['jquery', 'select2'], function($) {
+    require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js'], function($) {
         $(document).ready(function() {
             if ($('.select2').length) {
-                $('.select2').select2();
+                $('.select2').select2({
+                    theme: "bootstrap"
+                });
             }
 
             $('#btn-simulate').click(function() {
@@ -138,6 +142,10 @@
                         });
                         $('#simulation-body').html(html);
                         $('#simulation-result').show();
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        alert('Terjadi kesalahan saat simulasi.');
                     }
                 });
             });
