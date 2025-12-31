@@ -116,6 +116,8 @@
                                                 <span class="tag tag-info">Disetujui</span>
                                             @elseif($loan->status == 'ditolak')
                                                 <span class="tag tag-danger">Ditolak</span>
+                                            @elseif($loan->status == 'macet')
+                                                <span class="tag tag-danger">Macet / Bermasalah</span>
                                             @else
                                                 <span class="tag tag-warning">Diajukan</span>
                                             @endif
