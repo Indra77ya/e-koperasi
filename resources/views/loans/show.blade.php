@@ -178,30 +178,28 @@
                                             </td>
                                             <td>
                                                 @if($inst->status == 'belum_lunas' && $loan->status != 'macet')
-                                                    <div class="btn-group">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-success btn-pay"
-                                                            data-id="{{ $inst->id }}"
-                                                            data-angsuran="{{ $inst->angsuran_ke }}"
-                                                            data-total="{{ $inst->total_angsuran }}"
-                                                            data-denda="{{ $inst->denda }}"
-                                                            data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
-                                                            Bayar
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-warning btn-penalty" data-id="{{ $inst->id }}" data-denda="{{ $inst->denda }}"><i class="fe fe-alert-circle"></i></button>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-success btn-pay mr-1"
+                                                        data-id="{{ $inst->id }}"
+                                                        data-angsuran="{{ $inst->angsuran_ke }}"
+                                                        data-total="{{ $inst->total_angsuran }}"
+                                                        data-denda="{{ $inst->denda }}"
+                                                        data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
+                                                        Bayar
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-warning btn-penalty mr-1" data-id="{{ $inst->id }}" data-denda="{{ $inst->denda }}"><i class="fe fe-alert-circle"></i></button>
 
-                                                        @if(now() > $inst->tanggal_jatuh_tempo)
-                                                             @php
-                                                                $phone = $loan->member ? $loan->member->no_hp : ($loan->nasabah ? $loan->nasabah->no_hp : '');
-                                                                // Basic sanitization for WA
-                                                                $phone = preg_replace('/^0/', '62', $phone);
-                                                                $msg = "Halo, angsuran ke-" . $inst->angsuran_ke . " Anda jatuh tempo pada " . $inst->tanggal_jatuh_tempo->format('d-m-Y') . ". Mohon segera melakukan pembayaran.";
-                                                            @endphp
-                                                            @if($phone)
-                                                                <a href="https://wa.me/{{ $phone }}?text={{ urlencode($msg) }}" target="_blank" class="btn btn-sm btn-success ml-1"><i class="fe fe-message-circle"></i> WA</a>
-                                                            @endif
+                                                    @if(now() > $inst->tanggal_jatuh_tempo)
+                                                            @php
+                                                            $phone = $loan->member ? $loan->member->no_hp : ($loan->nasabah ? $loan->nasabah->no_hp : '');
+                                                            // Basic sanitization for WA
+                                                            $phone = preg_replace('/^0/', '62', $phone);
+                                                            $msg = "Halo, angsuran ke-" . $inst->angsuran_ke . " Anda jatuh tempo pada " . $inst->tanggal_jatuh_tempo->format('d-m-Y') . ". Mohon segera melakukan pembayaran.";
+                                                        @endphp
+                                                        @if($phone)
+                                                            <a href="https://wa.me/{{ $phone }}?text={{ urlencode($msg) }}" target="_blank" class="btn btn-sm btn-success ml-1"><i class="fe fe-message-circle"></i> WA</a>
                                                         @endif
-                                                    </div>
+                                                    @endif
                                                 @elseif($inst->status == 'lunas')
                                                     <span class="text-muted"><i class="fe fe-check"></i> Terbayar</span>
                                                     <a href="{{ route('loans.installments.print', $inst->id) }}" target="_blank" class="btn btn-sm btn-secondary ml-1"><i class="fe fe-printer"></i></a>
