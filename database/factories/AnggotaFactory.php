@@ -10,7 +10,7 @@ $factory->define(App\Models\Member::class, function (Faker $faker) {
         'no_hp' => $faker->e164PhoneNumber,
         'jenkel' => 'L',
         'agama' => 'Islam',
-        'pekerjaan' => $faker->jobTitle,
+        'pekerjaan' => $faker->randomElement(['PNS', 'Wiraswasta', 'Petani', 'Buruh', 'Guru', 'Pedagang', 'TNI/Polri', 'Dokter', 'Karyawan Swasta', 'Sopir', 'Nelayan']),
         'alamat' => $faker->address,
         'tempat_lahir' => $faker->city,
         'tanggal_lahir' => $faker->date(),
