@@ -22,7 +22,13 @@ class LoanController extends Controller
                     return 'Rp ' . number_format($loan->jumlah_pinjaman, 0, ',', '.');
                 })
                 ->editColumn('suku_bunga', function ($loan) {
-                    $unit = $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun';
+                    if ($loan->satuan_bunga == 'hari') {
+                         $unit = 'Hari';
+                    } elseif ($loan->satuan_bunga == 'bulan') {
+                         $unit = 'Bulan';
+                    } else {
+                         $unit = 'Tahun';
+                    }
                     return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
                 })
                 ->editColumn('tenor', function ($loan) {
@@ -99,7 +105,7 @@ class LoanController extends Controller
             'jumlah_pinjaman' => 'required|numeric|min:0',
             'tenor' => 'required|integer|min:1',
             'suku_bunga' => 'required|numeric|min:0',
-            'satuan_bunga' => 'required|in:tahun,bulan',
+            'satuan_bunga' => 'required|in:tahun,bulan,hari',
             'tempo_angsuran' => 'required|in:harian,mingguan,bulanan',
             'jenis_bunga' => 'required|in:flat,efektif,anuitas',
             'tanggal_pengajuan' => 'required|date',
@@ -261,24 +267,24 @@ class LoanController extends Controller
     {
         $schedule = [];
         $balance = $amount;
+        $ratePercent = $rate / 100;
 
-        // Calculate Rate Per Period (Installment)
-        if ($unit == 'bulan') {
-             $ratePerMonth = $rate / 100;
-        } else {
-             $ratePerMonth = ($rate / 100) / 12;
+        // 1. Normalize to Yearly Rate
+        if ($unit == 'hari') {
+            $yearlyRate = $ratePercent * 365;
+        } elseif ($unit == 'bulan') {
+            $yearlyRate = $ratePercent * 12;
+        } else { // tahun
+            $yearlyRate = $ratePercent;
         }
 
-        $ratePerPeriod = $ratePerMonth;
-
-        // If tempo is not monthly, adjust the rate per period
-        if ($tempo == 'mingguan') {
-            // Assume 4 weeks per month for simplicity or 52 weeks per year
-            // Standard approach: RatePerMonth * 12 / 52
-            $ratePerPeriod = ($ratePerMonth * 12) / 52;
-        } elseif ($tempo == 'harian') {
-            // Standard approach: RatePerMonth * 12 / 365
-            $ratePerPeriod = ($ratePerMonth * 12) / 365;
+        // 2. Calculate Rate Per Period
+        if ($tempo == 'harian') {
+            $ratePerPeriod = $yearlyRate / 365;
+        } elseif ($tempo == 'mingguan') {
+            $ratePerPeriod = $yearlyRate / 52;
+        } else { // bulanan
+            $ratePerPeriod = $yearlyRate / 12;
         }
 
         if ($type == 'flat') {

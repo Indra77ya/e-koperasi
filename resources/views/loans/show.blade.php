@@ -49,7 +49,14 @@
                         <tr>
                             <th>Bunga</th>
                             <td>
-                                {{ $loan->suku_bunga }}% / {{ $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun' }}
+                                {{ $loan->suku_bunga }}% /
+                                @if($loan->satuan_bunga == 'hari')
+                                    Hari
+                                @elseif($loan->satuan_bunga == 'bulan')
+                                    Bulan
+                                @else
+                                    Tahun
+                                @endif
                                 <br><small>({{ ucfirst($loan->jenis_bunga) }})</small>
                             </td>
                         </tr>

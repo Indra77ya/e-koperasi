@@ -75,6 +75,7 @@
                                             <select name="satuan_bunga" id="unit" class="form-control">
                                                 <option value="tahun">Per Tahun</option>
                                                 <option value="bulan">Per Bulan</option>
+                                                <option value="hari">Per Hari</option>
                                             </select>
                                         </div>
                                     </div>
