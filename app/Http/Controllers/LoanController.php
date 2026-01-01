@@ -25,6 +25,14 @@ class LoanController extends Controller
                     $unit = $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun';
                     return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
                 })
+                ->editColumn('tenor', function ($loan) {
+                    if ($loan->tempo_angsuran == 'harian') {
+                        return $loan->tenor . ' Hari';
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        return $loan->tenor . ' Minggu';
+                    }
+                    return $loan->tenor . ' Bulan';
+                })
                 ->editColumn('status', function ($loan) {
                     if ($loan->status == 'diajukan') {
                         return '<span class="badge badge-warning">Diajukan</span>';
