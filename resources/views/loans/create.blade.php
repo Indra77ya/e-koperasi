@@ -53,8 +53,17 @@
                                     <input type="number" name="jumlah_pinjaman" id="amount" class="form-control" required min="0">
                                 </div>
                                 <div class="form-group">
-                                    <label>Tenor (Bulan)</label>
-                                    <input type="number" name="tenor" id="tenor" class="form-control" required min="1">
+                                    <label>Tenor</label>
+                                    <div class="input-group">
+                                        <input type="number" name="tenor" id="tenor" class="form-control" required min="1">
+                                        <div class="input-group-append">
+                                            <select name="tempo_angsuran" id="tempo_angsuran" class="form-control">
+                                                <option value="bulanan">Bulan</option>
+                                                <option value="mingguan">Minggu</option>
+                                                <option value="harian">Hari</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -108,7 +117,7 @@
                         <table class="table table-bordered table-sm">
                             <thead>
                                 <tr>
-                                    <th>Bulan Ke</th>
+                                    <th>Angsuran Ke</th>
                                     <th>Pokok</th>
                                     <th>Bunga</th>
                                     <th>Total Angsuran</th>

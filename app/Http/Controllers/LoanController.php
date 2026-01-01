@@ -91,6 +91,7 @@ class LoanController extends Controller
             'tenor' => 'required|integer|min:1',
             'suku_bunga' => 'required|numeric|min:0',
             'satuan_bunga' => 'required|in:tahun,bulan',
+            'tempo_angsuran' => 'required|in:harian,mingguan,bulanan',
             'jenis_bunga' => 'required|in:flat,efektif,anuitas',
             'tanggal_pengajuan' => 'required|date',
         ]);
@@ -104,6 +105,7 @@ class LoanController extends Controller
             'tenor' => $request->tenor,
             'suku_bunga' => $request->suku_bunga,
             'satuan_bunga' => $request->satuan_bunga,
+            'tempo_angsuran' => $request->tempo_angsuran,
             'jenis_bunga' => $request->jenis_bunga,
             'biaya_admin' => $request->biaya_admin ?? 0,
             'denda_keterlambatan' => $request->denda_keterlambatan ?? 0,
@@ -154,10 +156,20 @@ class LoanController extends Controller
                 $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga);
 
                 foreach ($schedule as $inst) {
+                    $dueDate = now();
+                    if ($loan->tempo_angsuran == 'harian') {
+                        $dueDate->addDays($inst['month']);
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        $dueDate->addWeeks($inst['month']);
+                    } else {
+                        // Default bulanan
+                        $dueDate->addMonths($inst['month']);
+                    }
+
                     LoanInstallment::create([
                         'pinjaman_id' => $loan->id,
                         'angsuran_ke' => $inst['month'],
-                        'tanggal_jatuh_tempo' => now()->addMonths($inst['month']),
+                        'tanggal_jatuh_tempo' => $dueDate,
                         'total_angsuran' => $inst['total'],
                         'pokok' => $inst['principal'],
                         'bunga' => $inst['interest'],
@@ -196,10 +208,20 @@ class LoanController extends Controller
         $installment = LoanInstallment::findOrFail($id);
 
         if ($installment->status == 'belum_lunas') {
-            DB::transaction(function () use ($installment) {
+            $request->validate([
+                'tanggal_bayar' => 'required|date',
+                'metode_pembayaran' => 'required',
+                'denda' => 'nullable|numeric|min:0',
+                'keterangan_pembayaran' => 'nullable|string',
+            ]);
+
+            DB::transaction(function () use ($installment, $request) {
                 $installment->update([
                     'status' => 'lunas',
-                    'tanggal_bayar' => now(),
+                    'tanggal_bayar' => $request->tanggal_bayar,
+                    'metode_pembayaran' => $request->metode_pembayaran,
+                    'keterangan_pembayaran' => $request->keterangan_pembayaran,
+                    'denda' => $request->denda ?? $installment->denda, // Update denda if provided
                 ]);
 
                 // Check if all installments are paid
@@ -215,6 +237,15 @@ class LoanController extends Controller
         }
 
         return redirect()->back()->with('error', 'Angsuran sudah lunas atau tidak valid.');
+    }
+
+    public function printReceipt($id)
+    {
+        $installment = LoanInstallment::with(['loan.member', 'loan.nasabah'])->findOrFail($id);
+        if ($installment->status != 'lunas') {
+            return redirect()->back()->with('error', 'Angsuran belum lunas.');
+        }
+        return view('loans.installments.print', compact('installment'));
     }
 
     private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun')
