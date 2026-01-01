@@ -74,8 +74,9 @@ class LoanController extends Controller
         $rate = $request->rate; // percentage
         $type = $request->type; // flat, efektif, anuitas
         $unit = $request->unit ?? 'tahun'; // tahun, bulan
+        $tempo = $request->tempo ?? 'bulanan'; // harian, mingguan, bulanan
 
-        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type, $unit);
+        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type, $unit, $tempo);
 
         return response()->json($schedule);
     }
@@ -153,7 +154,7 @@ class LoanController extends Controller
             DB::transaction(function () use ($loan) {
                 $loan->update(['status' => 'berjalan']);
 
-                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga);
+                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga, $loan->tempo_angsuran);
 
                 foreach ($schedule as $inst) {
                     $dueDate = now();
@@ -248,20 +249,33 @@ class LoanController extends Controller
         return view('loans.installments.print', compact('installment'));
     }
 
-    private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun')
+    private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun', $tempo = 'bulanan')
     {
         $schedule = [];
         $balance = $amount;
 
+        // Calculate Rate Per Period (Installment)
         if ($unit == 'bulan') {
              $ratePerMonth = $rate / 100;
         } else {
              $ratePerMonth = ($rate / 100) / 12;
         }
 
+        $ratePerPeriod = $ratePerMonth;
+
+        // If tempo is not monthly, adjust the rate per period
+        if ($tempo == 'mingguan') {
+            // Assume 4 weeks per month for simplicity or 52 weeks per year
+            // Standard approach: RatePerMonth * 12 / 52
+            $ratePerPeriod = ($ratePerMonth * 12) / 52;
+        } elseif ($tempo == 'harian') {
+            // Standard approach: RatePerMonth * 12 / 365
+            $ratePerPeriod = ($ratePerMonth * 12) / 365;
+        }
+
         if ($type == 'flat') {
             $principal = $amount / $tenor;
-            $interest = $amount * $ratePerMonth;
+            $interest = $amount * $ratePerPeriod;
             $total = $principal + $interest;
 
             for ($i = 1; $i <= $tenor; $i++) {
@@ -282,7 +296,7 @@ class LoanController extends Controller
             $principal = $amount / $tenor;
 
             for ($i = 1; $i <= $tenor; $i++) {
-                $interest = $balance * $ratePerMonth;
+                $interest = $balance * $ratePerPeriod;
                 $total = $principal + $interest;
                 $balance -= $principal;
 
@@ -297,14 +311,14 @@ class LoanController extends Controller
 
         } elseif ($type == 'anuitas') {
             // PMT = P * r * (1+r)^n / ((1+r)^n - 1)
-            if ($ratePerMonth > 0) {
-                $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+            if ($ratePerPeriod > 0) {
+                $pmt = ($amount * $ratePerPeriod) / (1 - pow(1 + $ratePerPeriod, -$tenor));
             } else {
                 $pmt = $amount / $tenor;
             }
 
             for ($i = 1; $i <= $tenor; $i++) {
-                $interest = $balance * $ratePerMonth;
+                $interest = $balance * $ratePerPeriod;
                 $principal = $pmt - $interest;
                 $balance -= $principal;
 

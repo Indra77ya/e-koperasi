@@ -163,6 +163,7 @@
                 var rate = $('#rate').val();
                 var unit = $('#unit').val();
                 var type = $('#type').val();
+                var tempo = $('#tempo_angsuran').val();
 
                 if (!amount || !tenor || !rate) {
                     alert('Mohon lengkapi jumlah, tenor, dan suku bunga.');
@@ -178,7 +179,8 @@
                         tenor: tenor,
                         rate: rate,
                         unit: unit,
-                        type: type
+                        type: type,
+                        tempo: tempo
                     },
                     success: function(response) {
                         var html = '';

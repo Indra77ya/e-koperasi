@@ -35,7 +35,16 @@
                         </tr>
                         <tr>
                             <th>Tenor</th>
-                            <td>{{ $loan->tenor }} Bulan</td>
+                            <td>
+                                {{ $loan->tenor }}
+                                @if($loan->tempo_angsuran == 'harian')
+                                    Hari
+                                @elseif($loan->tempo_angsuran == 'mingguan')
+                                    Minggu
+                                @else
+                                    Bulan
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <th>Bunga</th>
