@@ -35,12 +35,28 @@
                         </tr>
                         <tr>
                             <th>Tenor</th>
-                            <td>{{ $loan->tenor }} Bulan</td>
+                            <td>
+                                {{ $loan->tenor }}
+                                @if($loan->tempo_angsuran == 'harian')
+                                    Hari
+                                @elseif($loan->tempo_angsuran == 'mingguan')
+                                    Minggu
+                                @else
+                                    Bulan
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <th>Bunga</th>
                             <td>
-                                {{ $loan->suku_bunga }}% / {{ $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun' }}
+                                {{ $loan->suku_bunga }}% /
+                                @if($loan->satuan_bunga == 'hari')
+                                    Hari
+                                @elseif($loan->satuan_bunga == 'bulan')
+                                    Bulan
+                                @else
+                                    Tahun
+                                @endif
                                 <br><small>({{ ucfirst($loan->jenis_bunga) }})</small>
                             </td>
                         </tr>
@@ -134,7 +150,12 @@
                                     @foreach($loan->installments as $inst)
                                         <tr>
                                             <td>{{ $inst->angsuran_ke }}</td>
-                                            <td>{{ $inst->tanggal_jatuh_tempo->format('d-m-Y') }}</td>
+                                            <td>
+                                                {{ $inst->tanggal_jatuh_tempo->format('d-m-Y') }}
+                                                @if($inst->status == 'belum_lunas' && now() > $inst->tanggal_jatuh_tempo)
+                                                    <br><span class="badge badge-danger">Telat {{ now()->diffInDays($inst->tanggal_jatuh_tempo) }} Hari</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 Rp {{ number_format($inst->total_angsuran + $inst->denda, 0, ',', '.') }}
                                                 @if($inst->denda > 0)
@@ -150,6 +171,7 @@
                                             <td>
                                                 @if($inst->status == 'lunas')
                                                     <span class="badge badge-success">Lunas</span>
+                                                    <br><small>{{ $inst->tanggal_bayar ? $inst->tanggal_bayar->format('d/m/Y') : '' }}</small>
                                                 @else
                                                     <span class="badge badge-secondary">Belum Lunas</span>
                                                 @endif
@@ -157,14 +179,32 @@
                                             <td>
                                                 @if($inst->status == 'belum_lunas' && $loan->status != 'macet')
                                                     <div class="btn-group">
-                                                        <form action="{{ route('loans.installments.pay', $inst->id) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran angsuran ke-{{ $inst->angsuran_ke }}?')" class="mr-1">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-success">Bayar</button>
-                                                        </form>
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-success btn-pay"
+                                                            data-id="{{ $inst->id }}"
+                                                            data-angsuran="{{ $inst->angsuran_ke }}"
+                                                            data-total="{{ $inst->total_angsuran }}"
+                                                            data-denda="{{ $inst->denda }}"
+                                                            data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
+                                                            Bayar
+                                                        </button>
                                                         <button type="button" class="btn btn-sm btn-warning btn-penalty" data-id="{{ $inst->id }}" data-denda="{{ $inst->denda }}"><i class="fe fe-alert-circle"></i></button>
+
+                                                        @if(now() > $inst->tanggal_jatuh_tempo)
+                                                             @php
+                                                                $phone = $loan->member ? $loan->member->no_hp : ($loan->nasabah ? $loan->nasabah->no_hp : '');
+                                                                // Basic sanitization for WA
+                                                                $phone = preg_replace('/^0/', '62', $phone);
+                                                                $msg = "Halo, angsuran ke-" . $inst->angsuran_ke . " Anda jatuh tempo pada " . $inst->tanggal_jatuh_tempo->format('d-m-Y') . ". Mohon segera melakukan pembayaran.";
+                                                            @endphp
+                                                            @if($phone)
+                                                                <a href="https://wa.me/{{ $phone }}?text={{ urlencode($msg) }}" target="_blank" class="btn btn-sm btn-success ml-1"><i class="fe fe-message-circle"></i> WA</a>
+                                                            @endif
+                                                        @endif
                                                     </div>
                                                 @elseif($inst->status == 'lunas')
                                                     <span class="text-muted"><i class="fe fe-check"></i> Terbayar</span>
+                                                    <a href="{{ route('loans.installments.print', $inst->id) }}" target="_blank" class="btn btn-sm btn-secondary ml-1"><i class="fe fe-printer"></i></a>
                                                 @else
                                                     <span class="text-danger">Macet</span>
                                                 @endif
@@ -178,6 +218,48 @@
                         <p class="text-muted text-center">Jadwal angsuran belum dibuat (Menunggu pencairan).</p>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Bayar -->
+    <div class="modal fade" id="modal-pay" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Bayar Angsuran <span id="pay-angsuran-ke"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="" method="POST" id="form-pay">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Tanggal Bayar</label>
+                            <input type="date" name="tanggal_bayar" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Metode Pembayaran</label>
+                            <select name="metode_pembayaran" class="form-control" required>
+                                <option value="tunai">Tunai / Kas</option>
+                                <option value="transfer">Transfer Bank</option>
+                                <option value="lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Denda (Rp)</label>
+                            <input type="number" name="denda" id="pay-denda" class="form-control" min="0" value="0">
+                            <small class="text-muted" id="pay-denda-info"></small>
+                        </div>
+                         <div class="form-group">
+                            <label>Keterangan / Catatan</label>
+                            <textarea name="keterangan_pembayaran" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Bayar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -294,7 +376,7 @@
 <script>
     require(['jquery', 'bootstrap'], function($) {
         $(document).ready(function() {
-            $('.btn-penalty').click(function() {
+            $('body').on('click', '.btn-penalty', function() {
                 var id = $(this).data('id');
                 var denda = $(this).data('denda');
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
@@ -309,6 +391,32 @@
                 $('#form-penalty').attr('action', action);
                 $('input[name="denda"]').val(denda);
                 $('#modal-penalty').modal('show');
+            });
+
+            $('body').on('click', '.btn-pay', function() {
+                var id = $(this).data('id');
+                var angsuranKe = $(this).data('angsuran');
+                var denda = $(this).data('denda');
+                var duedate = $(this).data('duedate');
+                var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
+
+                var today = new Date().toISOString().slice(0, 10);
+                var isLate = today > duedate;
+
+                // Auto calculate denda if late and not yet set
+                if (isLate && denda == 0 && defaultDenda > 0) {
+                    denda = defaultDenda;
+                    $('#pay-denda-info').text('Otomatis disarankan berdasarkan denda keterlambatan.');
+                } else {
+                     $('#pay-denda-info').text('');
+                }
+
+                var action = '{{ url('loans/installments') }}/' + id + '/pay';
+
+                $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
+                $('#form-pay').attr('action', action);
+                $('#pay-denda').val(denda);
+                $('#modal-pay').modal('show');
             });
         });
     });

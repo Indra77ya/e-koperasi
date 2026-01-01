@@ -22,8 +22,22 @@ class LoanController extends Controller
                     return 'Rp ' . number_format($loan->jumlah_pinjaman, 0, ',', '.');
                 })
                 ->editColumn('suku_bunga', function ($loan) {
-                    $unit = $loan->satuan_bunga == 'bulan' ? 'Bulan' : 'Tahun';
+                    if ($loan->satuan_bunga == 'hari') {
+                         $unit = 'Hari';
+                    } elseif ($loan->satuan_bunga == 'bulan') {
+                         $unit = 'Bulan';
+                    } else {
+                         $unit = 'Tahun';
+                    }
                     return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
+                })
+                ->editColumn('tenor', function ($loan) {
+                    if ($loan->tempo_angsuran == 'harian') {
+                        return $loan->tenor . ' Hari';
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        return $loan->tenor . ' Minggu';
+                    }
+                    return $loan->tenor . ' Bulan';
                 })
                 ->editColumn('status', function ($loan) {
                     if ($loan->status == 'diajukan') {
@@ -74,8 +88,9 @@ class LoanController extends Controller
         $rate = $request->rate; // percentage
         $type = $request->type; // flat, efektif, anuitas
         $unit = $request->unit ?? 'tahun'; // tahun, bulan
+        $tempo = $request->tempo ?? 'bulanan'; // harian, mingguan, bulanan
 
-        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type, $unit);
+        $schedule = $this->generateSchedule($amount, $tenor, $rate, $type, $unit, $tempo);
 
         return response()->json($schedule);
     }
@@ -90,7 +105,8 @@ class LoanController extends Controller
             'jumlah_pinjaman' => 'required|numeric|min:0',
             'tenor' => 'required|integer|min:1',
             'suku_bunga' => 'required|numeric|min:0',
-            'satuan_bunga' => 'required|in:tahun,bulan',
+            'satuan_bunga' => 'required|in:tahun,bulan,hari',
+            'tempo_angsuran' => 'required|in:harian,mingguan,bulanan',
             'jenis_bunga' => 'required|in:flat,efektif,anuitas',
             'tanggal_pengajuan' => 'required|date',
         ]);
@@ -104,6 +120,7 @@ class LoanController extends Controller
             'tenor' => $request->tenor,
             'suku_bunga' => $request->suku_bunga,
             'satuan_bunga' => $request->satuan_bunga,
+            'tempo_angsuran' => $request->tempo_angsuran,
             'jenis_bunga' => $request->jenis_bunga,
             'biaya_admin' => $request->biaya_admin ?? 0,
             'denda_keterlambatan' => $request->denda_keterlambatan ?? 0,
@@ -151,13 +168,23 @@ class LoanController extends Controller
             DB::transaction(function () use ($loan) {
                 $loan->update(['status' => 'berjalan']);
 
-                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga);
+                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga, $loan->tempo_angsuran);
 
                 foreach ($schedule as $inst) {
+                    $dueDate = now();
+                    if ($loan->tempo_angsuran == 'harian') {
+                        $dueDate->addDays($inst['month']);
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        $dueDate->addWeeks($inst['month']);
+                    } else {
+                        // Default bulanan
+                        $dueDate->addMonths($inst['month']);
+                    }
+
                     LoanInstallment::create([
                         'pinjaman_id' => $loan->id,
                         'angsuran_ke' => $inst['month'],
-                        'tanggal_jatuh_tempo' => now()->addMonths($inst['month']),
+                        'tanggal_jatuh_tempo' => $dueDate,
                         'total_angsuran' => $inst['total'],
                         'pokok' => $inst['principal'],
                         'bunga' => $inst['interest'],
@@ -196,10 +223,20 @@ class LoanController extends Controller
         $installment = LoanInstallment::findOrFail($id);
 
         if ($installment->status == 'belum_lunas') {
-            DB::transaction(function () use ($installment) {
+            $request->validate([
+                'tanggal_bayar' => 'required|date',
+                'metode_pembayaran' => 'required',
+                'denda' => 'nullable|numeric|min:0',
+                'keterangan_pembayaran' => 'nullable|string',
+            ]);
+
+            DB::transaction(function () use ($installment, $request) {
                 $installment->update([
                     'status' => 'lunas',
-                    'tanggal_bayar' => now(),
+                    'tanggal_bayar' => $request->tanggal_bayar,
+                    'metode_pembayaran' => $request->metode_pembayaran,
+                    'keterangan_pembayaran' => $request->keterangan_pembayaran,
+                    'denda' => $request->denda ?? $installment->denda, // Update denda if provided
                 ]);
 
                 // Check if all installments are paid
@@ -217,20 +254,42 @@ class LoanController extends Controller
         return redirect()->back()->with('error', 'Angsuran sudah lunas atau tidak valid.');
     }
 
-    private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun')
+    public function printReceipt($id)
+    {
+        $installment = LoanInstallment::with(['loan.member', 'loan.nasabah'])->findOrFail($id);
+        if ($installment->status != 'lunas') {
+            return redirect()->back()->with('error', 'Angsuran belum lunas.');
+        }
+        return view('loans.installments.print', compact('installment'));
+    }
+
+    private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun', $tempo = 'bulanan')
     {
         $schedule = [];
         $balance = $amount;
+        $ratePercent = $rate / 100;
 
-        if ($unit == 'bulan') {
-             $ratePerMonth = $rate / 100;
-        } else {
-             $ratePerMonth = ($rate / 100) / 12;
+        // 1. Normalize to Yearly Rate
+        if ($unit == 'hari') {
+            $yearlyRate = $ratePercent * 365;
+        } elseif ($unit == 'bulan') {
+            $yearlyRate = $ratePercent * 12;
+        } else { // tahun
+            $yearlyRate = $ratePercent;
+        }
+
+        // 2. Calculate Rate Per Period
+        if ($tempo == 'harian') {
+            $ratePerPeriod = $yearlyRate / 365;
+        } elseif ($tempo == 'mingguan') {
+            $ratePerPeriod = $yearlyRate / 52;
+        } else { // bulanan
+            $ratePerPeriod = $yearlyRate / 12;
         }
 
         if ($type == 'flat') {
             $principal = $amount / $tenor;
-            $interest = $amount * $ratePerMonth;
+            $interest = $amount * $ratePerPeriod;
             $total = $principal + $interest;
 
             for ($i = 1; $i <= $tenor; $i++) {
@@ -251,7 +310,7 @@ class LoanController extends Controller
             $principal = $amount / $tenor;
 
             for ($i = 1; $i <= $tenor; $i++) {
-                $interest = $balance * $ratePerMonth;
+                $interest = $balance * $ratePerPeriod;
                 $total = $principal + $interest;
                 $balance -= $principal;
 
@@ -266,14 +325,14 @@ class LoanController extends Controller
 
         } elseif ($type == 'anuitas') {
             // PMT = P * r * (1+r)^n / ((1+r)^n - 1)
-            if ($ratePerMonth > 0) {
-                $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+            if ($ratePerPeriod > 0) {
+                $pmt = ($amount * $ratePerPeriod) / (1 - pow(1 + $ratePerPeriod, -$tenor));
             } else {
                 $pmt = $amount / $tenor;
             }
 
             for ($i = 1; $i <= $tenor; $i++) {
-                $interest = $balance * $ratePerMonth;
+                $interest = $balance * $ratePerPeriod;
                 $principal = $pmt - $interest;
                 $balance -= $principal;
 

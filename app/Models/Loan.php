@@ -17,6 +17,7 @@ class Loan extends Model
         'tenor',
         'suku_bunga',
         'satuan_bunga',
+        'tempo_angsuran',
         'jenis_bunga',
         'biaya_admin',
         'denda_keterlambatan',
