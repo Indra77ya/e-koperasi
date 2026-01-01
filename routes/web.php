@@ -15,6 +15,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/dev/migrate', function () {
+    if (!App::environment('local')) {
+        abort(403, 'This route is only available in local environment.');
+    }
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return "Migration executed successfully.";
+    } catch (\Exception $e) {
+        return "Migration failed: " . $e->getMessage();
+    }
+});
+
 Route::get('/dev/seed', function () {
     if (!App::environment('local')) {
         abort(403, 'This route is only available in local environment.');
