@@ -19,6 +19,9 @@ class LoanInstallment extends Model
         'sisa_pinjaman',
         'denda',
         'status',
+        'metode_pembayaran',
+        'keterangan_pembayaran',
+        'bukti_pembayaran',
     ];
 
     protected $dates = [

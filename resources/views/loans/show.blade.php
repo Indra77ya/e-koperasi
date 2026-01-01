@@ -192,7 +192,7 @@
 
                                                         @if(now() > $inst->tanggal_jatuh_tempo)
                                                              @php
-                                                                $phone = $loan->member ? $loan->member->telepon : ($loan->nasabah ? $loan->nasabah->telepon : '');
+                                                                $phone = $loan->member ? $loan->member->no_hp : ($loan->nasabah ? $loan->nasabah->no_hp : '');
                                                                 // Basic sanitization for WA
                                                                 $phone = preg_replace('/^0/', '62', $phone);
                                                                 $msg = "Halo, angsuran ke-" . $inst->angsuran_ke . " Anda jatuh tempo pada " . $inst->tanggal_jatuh_tempo->format('d-m-Y') . ". Mohon segera melakukan pembayaran.";

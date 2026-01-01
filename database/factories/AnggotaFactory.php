@@ -4,10 +4,10 @@ use Faker\Generator as Faker;
 
 $factory->define(App\Models\Member::class, function (Faker $faker) {
     return [
-        'nik' => $faker->unique()->numberBetween(1111111111111111, 9999999999999999),
+        'nik' => $faker->unique()->numerify('################'),
         'nama' => $faker->firstName,
         'email' => $faker->unique()->safeEmail,
-        'no_hp' => $faker->e164PhoneNumber,
+        'no_hp' => $faker->numerify('08##########'),
         'jenkel' => 'L',
         'agama' => 'Islam',
         'pekerjaan' => $faker->randomElement(['PNS', 'Wiraswasta', 'Petani', 'Buruh', 'Guru', 'Pedagang', 'TNI/Polri', 'Dokter', 'Karyawan Swasta', 'Sopir', 'Nelayan']),

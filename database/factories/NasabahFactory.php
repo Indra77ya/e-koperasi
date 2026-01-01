@@ -7,7 +7,7 @@ $factory->define(App\Models\Nasabah::class, function (Faker $faker) {
         'nik' => $faker->unique()->numerify('################'),
         'nama' => $faker->name,
         'alamat' => $faker->address,
-        'no_hp' => $faker->phoneNumber,
+        'no_hp' => $faker->numerify('08##########'),
         'pekerjaan' => $faker->randomElement(['PNS', 'Wiraswasta', 'Petani', 'Buruh', 'Guru', 'Pedagang', 'TNI/Polri', 'Dokter', 'Karyawan Swasta', 'Sopir', 'Nelayan']),
         'usaha' => $faker->company,
         'status' => $faker->randomElement(['aman', 'blacklist', 'berisiko']),
