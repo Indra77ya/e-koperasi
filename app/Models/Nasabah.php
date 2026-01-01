@@ -17,4 +17,9 @@ class Nasabah extends Model
     {
         return $this->hasMany('App\Models\NasabahLoan');
     }
+
+    public function pinjaman()
+    {
+        return $this->hasMany('App\Models\Loan', 'nasabah_id');
+    }
 }

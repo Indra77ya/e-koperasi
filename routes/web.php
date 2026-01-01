@@ -62,4 +62,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('nasabahs/get-json', 'NasabahController@jsonNasabah')->name('nasabahs.get-json');
     Route::resource('nasabahs', 'NasabahController');
+
+    // Loans
+    Route::post('loans/calculate', 'LoanController@calculate')->name('loans.calculate');
+    Route::post('loans/{loan}/approve', 'LoanController@approve')->name('loans.approve');
+    Route::post('loans/{loan}/reject', 'LoanController@reject')->name('loans.reject');
+    Route::post('loans/{loan}/disburse', 'LoanController@disburse')->name('loans.disburse');
+    Route::post('loans/{loan}/mark-bad-debt', 'LoanController@markBadDebt')->name('loans.markBadDebt');
+    Route::post('loans/installments/{installment}/pay', 'LoanController@payInstallment')->name('loans.installments.pay');
+    Route::post('loans/installments/{installment}/penalty', 'LoanController@addPenalty')->name('loans.installments.penalty');
+    Route::resource('loans', 'LoanController');
 });

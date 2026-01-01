@@ -92,33 +92,43 @@
                             <table class="table card-table table-vcenter text-nowrap">
                                 <thead>
                                     <tr>
-                                        <th>Tanggal Pinjam</th>
-                                        <th>Jatuh Tempo</th>
+                                        <th>Kode</th>
+                                        <th>Tgl Pengajuan</th>
                                         <th>Jumlah</th>
+                                        <th>Bunga</th>
                                         <th>Status</th>
-                                        <th>Catatan</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($nasabah->loans as $loan)
+                                    @forelse($nasabah->pinjaman as $loan)
                                     <tr>
-                                        <td>{{ $loan->loan_date }}</td>
-                                        <td>{{ $loan->due_date }}</td>
-                                        <td>{{ number_format($loan->amount, 0, ',', '.') }}</td>
+                                        <td>{{ $loan->kode_pinjaman }}</td>
+                                        <td>{{ $loan->tanggal_pengajuan->format('Y-m-d') }}</td>
+                                        <td>Rp {{ number_format($loan->jumlah_pinjaman, 0, ',', '.') }}</td>
+                                        <td>{{ $loan->suku_bunga }}% ({{ ucfirst($loan->jenis_bunga) }})</td>
                                         <td>
-                                            @if($loan->status == 'paid')
+                                            @if($loan->status == 'lunas')
                                                 <span class="tag tag-success">Lunas</span>
-                                            @elseif($loan->status == 'overdue')
-                                                <span class="tag tag-danger">Terlambat</span>
+                                            @elseif($loan->status == 'berjalan')
+                                                <span class="tag tag-primary">Berjalan</span>
+                                            @elseif($loan->status == 'disetujui')
+                                                <span class="tag tag-info">Disetujui</span>
+                                            @elseif($loan->status == 'ditolak')
+                                                <span class="tag tag-danger">Ditolak</span>
+                                            @elseif($loan->status == 'macet')
+                                                <span class="tag tag-danger">Macet / Bermasalah</span>
                                             @else
-                                                <span class="tag tag-warning">Pending</span>
+                                                <span class="tag tag-warning">Diajukan</span>
                                             @endif
                                         </td>
-                                        <td>{{ $loan->notes }}</td>
+                                        <td>
+                                            <a href="{{ route('loans.show', $loan->id) }}" class="btn btn-sm btn-secondary">Detail</a>
+                                        </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">Belum ada data pinjaman</td>
+                                        <td colspan="6" class="text-center text-muted">Belum ada data pinjaman (Modul Baru)</td>
                                     </tr>
                                     @endforelse
                                 </tbody>

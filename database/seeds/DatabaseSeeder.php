@@ -15,11 +15,15 @@ class DatabaseSeeder extends Seeder
         if (!class_exists('NasabahTableSeeder')) {
             require_once __DIR__ . '/NasabahTableSeeder.php';
         }
+        if (!class_exists('LoanSeeder')) {
+            require_once __DIR__ . '/LoanSeeder.php';
+        }
 
         $this->call([
             UsersTableSeeder::class,
             AnggotaTableSeeder::class,
             NasabahTableSeeder::class,
+            LoanSeeder::class,
         ]);
     }
 }

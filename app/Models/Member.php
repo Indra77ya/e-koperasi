@@ -51,4 +51,12 @@ class Member extends Model
     {
         return $this->hasMany('App\Models\BankInterest', 'anggota_id');
     }
+
+    /**
+     * Get the loans for the member.
+     */
+    public function loans()
+    {
+        return $this->hasMany('App\Models\Loan', 'anggota_id');
+    }
 }
