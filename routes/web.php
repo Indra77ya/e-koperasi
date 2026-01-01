@@ -71,5 +71,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('loans/{loan}/mark-bad-debt', 'LoanController@markBadDebt')->name('loans.markBadDebt');
     Route::post('loans/installments/{installment}/pay', 'LoanController@payInstallment')->name('loans.installments.pay');
     Route::post('loans/installments/{installment}/penalty', 'LoanController@addPenalty')->name('loans.installments.penalty');
+    Route::post('loans/{loan}/collaterals/{collateral}/return', 'CollateralController@returnCollateral')->name('loans.collaterals.return');
+    Route::resource('loans.collaterals', 'CollateralController');
     Route::resource('loans', 'LoanController');
 });

@@ -206,6 +206,88 @@
             </div>
         </div>
     </div>
+
+    {{-- Collaterals Section --}}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Data Jaminan</h4>
+                    <div class="card-options">
+                        <a href="{{ route('loans.collaterals.create', $loan->id) }}" class="btn btn-primary btn-sm btn-pill">Tambah Jaminan</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Jenis</th>
+                                    <th>Nomor / Pemilik</th>
+                                    <th>Nilai Taksasi</th>
+                                    <th>Lokasi</th>
+                                    <th>Status</th>
+                                    <th>Foto/Dokumen</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($loan->collaterals as $collateral)
+                                <tr>
+                                    <td>{{ $collateral->jenis }}</td>
+                                    <td>
+                                        {{ $collateral->nomor }}<br>
+                                        <small class="text-muted">{{ $collateral->pemilik }}</small>
+                                    </td>
+                                    <td>Rp {{ number_format($collateral->nilai_taksasi, 0, ',', '.') }}</td>
+                                    <td>{{ $collateral->lokasi_penyimpanan }}</td>
+                                    <td>
+                                        @if($collateral->status == 'disimpan')
+                                            <span class="badge badge-success">Disimpan</span>
+                                            <br><small>{{ $collateral->tanggal_masuk ? \Carbon\Carbon::parse($collateral->tanggal_masuk)->format('d/m/Y') : '-' }}</small>
+                                        @else
+                                            <span class="badge badge-secondary">Dikembalikan</span>
+                                            <br><small>{{ $collateral->tanggal_keluar ? \Carbon\Carbon::parse($collateral->tanggal_keluar)->format('d/m/Y') : '-' }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($collateral->foto)
+                                            <a href="{{ asset('storage/' . $collateral->foto) }}" target="_blank" class="btn btn-xs btn-info">Foto</a>
+                                        @endif
+                                        @if($collateral->dokumen)
+                                            <a href="{{ asset('storage/' . $collateral->dokumen) }}" target="_blank" class="btn btn-xs btn-warning">Dokumen</a>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('loans.collaterals.edit', [$loan->id, $collateral->id]) }}" class="btn btn-sm btn-secondary">Edit</a>
+
+                                        @if($collateral->status == 'disimpan' && $loan->status == 'lunas')
+                                            <form action="{{ route('loans.collaterals.return', [$loan->id, $collateral->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin mengembalikan jaminan ini?');">
+                                                @csrf
+                                                <input type="hidden" name="diserahkan_kepada" value="{{ $loan->member->nama ?? ($loan->nasabah->nama ?? '') }}">
+                                                <button type="submit" class="btn btn-sm btn-success">Kembalikan</button>
+                                            </form>
+                                        @endif
+
+                                        <form action="{{ route('loans.collaterals.destroy', [$loan->id, $collateral->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus jaminan ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="text-center">Belum ada data jaminan.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('js')
