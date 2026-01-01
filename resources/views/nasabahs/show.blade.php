@@ -128,7 +128,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">Belum ada data pinjaman</td>
+                                        <td colspan="6" class="text-center text-muted">Belum ada data pinjaman (Modul Baru)</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
