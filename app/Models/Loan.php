@@ -45,4 +45,9 @@ class Loan extends Model
     {
         return $this->hasMany('App\Models\LoanInstallment', 'pinjaman_id');
     }
+
+    public function collaterals()
+    {
+        return $this->hasMany('App\Models\Collateral', 'pinjaman_id');
+    }
 }

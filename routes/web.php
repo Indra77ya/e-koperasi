@@ -15,6 +15,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/dev/migrate', function () {
+    if (!App::environment('local')) {
+        abort(403, 'This route is only available in local environment.');
+    }
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return "Migration executed successfully.";
+    } catch (\Exception $e) {
+        return "Migration failed: " . $e->getMessage();
+    }
+});
+
 Route::get('/dev/seed', function () {
     if (!App::environment('local')) {
         abort(403, 'This route is only available in local environment.');
@@ -71,5 +83,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('loans/{loan}/mark-bad-debt', 'LoanController@markBadDebt')->name('loans.markBadDebt');
     Route::post('loans/installments/{installment}/pay', 'LoanController@payInstallment')->name('loans.installments.pay');
     Route::post('loans/installments/{installment}/penalty', 'LoanController@addPenalty')->name('loans.installments.penalty');
+    Route::post('loans/{loan}/collaterals/{collateral}/return', 'CollateralController@returnCollateral')->name('loans.collaterals.return');
+    Route::resource('loans.collaterals', 'CollateralController');
     Route::resource('loans', 'LoanController');
 });
