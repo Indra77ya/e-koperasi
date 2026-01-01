@@ -358,9 +358,9 @@
 
 @section('js')
 <script>
-    require(['jquery', 'bootstrap', 'moment'], function($, bootstrap, moment) {
+    require(['jquery', 'bootstrap'], function($) {
         $(document).ready(function() {
-            $('.btn-penalty').click(function() {
+            $('body').on('click', '.btn-penalty', function() {
                 var id = $(this).data('id');
                 var denda = $(this).data('denda');
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
@@ -377,7 +377,7 @@
                 $('#modal-penalty').modal('show');
             });
 
-            $('.btn-pay').click(function() {
+            $('body').on('click', '.btn-pay', function() {
                 var id = $(this).data('id');
                 var angsuranKe = $(this).data('angsuran');
                 var denda = $(this).data('denda');
