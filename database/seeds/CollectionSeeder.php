@@ -27,11 +27,11 @@ class CollectionSeeder extends Seeder
 
         foreach ($loans as $loan) {
             // 1. Randomize Kolektabilitas
-            // 60% Lancar, 25% DPK, 15% Macet
+            // 50% Lancar, 30% DPK, 20% Macet (increased bad debt for demo purposes)
             $rand = rand(1, 100);
-            if ($rand <= 60) {
+            if ($rand <= 50) {
                 $status = 'Lancar';
-            } elseif ($rand <= 85) {
+            } elseif ($rand <= 80) {
                 $status = 'DPK';
             } else {
                 $status = 'Macet';
@@ -40,29 +40,53 @@ class CollectionSeeder extends Seeder
             $loan->update(['kolektabilitas' => $status]);
 
             // 2. Generate History Logs (Timeline)
-            // Create 0 to 3 logs per loan
-            $logCount = rand(0, 3);
+            // Create 1 to 5 logs per loan to make timeline look populated
+            $logCount = rand(1, 5);
             for ($i = 0; $i < $logCount; $i++) {
                 PenagihanLog::create([
                     'pinjaman_id' => $loan->id,
                     'user_id' => $users->random()->id,
                     'metode_penagihan' => $faker->randomElement(['Telepon', 'WhatsApp', 'Kunjungan', 'Surat']),
-                    'hasil_penagihan' => $faker->randomElement(['Terhubung - Janji Bayar', 'Terhubung - Minta Waktu', 'Tidak Diangkat', 'Nomor Salah']),
-                    'tanggal_janji_bayar' => $faker->optional(0.5)->dateTimeBetween('now', '+1 week'),
+                    'hasil_penagihan' => $faker->randomElement(['Terhubung - Janji Bayar', 'Terhubung - Minta Waktu', 'Tidak Diangkat', 'Nomor Salah', 'Rumah Kosong']),
+                    'tanggal_janji_bayar' => $faker->optional(0.5)->dateTimeBetween('now', '+2 weeks'),
                     'catatan' => $faker->sentence,
-                    'created_at' => $faker->dateTimeBetween('-3 months', 'now'),
+                    'created_at' => $faker->dateTimeBetween('-6 months', 'now'),
                 ]);
             }
 
-            // 3. Generate Field Queue
-            // Only for DPK or Macet, small chance to have active queue
-            if ($status != 'Lancar' && rand(0, 1) == 1) {
+            // 3. Generate Field Queue (Antrian Penagihan Lapangan)
+
+            // A. Historical/Completed visits (for all types, mostly DPK/Macet in past)
+            if (rand(0, 1) == 1) {
+                 PenagihanLapangan::create([
+                    'pinjaman_id' => $loan->id,
+                    'petugas_id' => $users->random()->id,
+                    'tanggal_rencana_kunjungan' => $faker->dateTimeBetween('-2 months', '-1 week'),
+                    'status' => 'selesai',
+                    'catatan_tugas' => 'Kunjungan sebelumnya selesai. ' . $faker->sentence,
+                    'created_at' => $faker->dateTimeBetween('-3 months', '-1 month'),
+                ]);
+            }
+
+            // B. Active Queue (Future visits)
+            // Always create for Macet, High chance for DPK, Low chance for Lancar (e.g. routine check)
+            $shouldCreateQueue = false;
+            if ($status == 'Macet') {
+                $shouldCreateQueue = true;
+            } elseif ($status == 'DPK' && rand(1, 10) <= 8) { // 80% chance
+                $shouldCreateQueue = true;
+            } elseif ($status == 'Lancar' && rand(1, 10) <= 1) { // 10% chance
+                $shouldCreateQueue = true;
+            }
+
+            if ($shouldCreateQueue) {
                 PenagihanLapangan::create([
                     'pinjaman_id' => $loan->id,
                     'petugas_id' => $users->random()->id,
                     'tanggal_rencana_kunjungan' => $faker->dateTimeBetween('now', '+1 week'),
-                    'status' => $faker->randomElement(['baru', 'dalam_proses', 'selesai', 'batal']),
-                    'catatan_tugas' => 'Kunjungan rutin untuk penagihan ' . $status,
+                    'status' => $faker->randomElement(['baru', 'dalam_proses']),
+                    'catatan_tugas' => 'Penagihan lapangan prioritas. ' . $faker->sentence,
+                    'created_at' => now(),
                 ]);
             }
         }
