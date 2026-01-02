@@ -84,6 +84,10 @@
                                 @else
                                     <span class="badge badge-secondary">{{ $loan->status }}</span>
                                 @endif
+
+                                @if($loan->kolektabilitas)
+                                    <br><span class="badge badge-{{ $loan->kolektabilitas == 'Lancar' ? 'success' : ($loan->kolektabilitas == 'DPK' ? 'warning' : 'danger') }} mt-1">Kolek: {{ $loan->kolektabilitas }}</span>
+                                @endif
                             </td>
                         </tr>
                     </table>
@@ -287,6 +291,46 @@
         </div>
     </div>
 
+    {{-- Collection Logs & Field Queue --}}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Histori Penagihan (Timeline)</h4>
+                    <div class="card-options">
+                        <button class="btn btn-primary btn-sm btn-pill mr-2" data-toggle="modal" data-target="#modal-log">Catat Penagihan</button>
+                        <button class="btn btn-secondary btn-sm btn-pill" data-toggle="modal" data-target="#modal-queue">Antrian Lapangan</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                     <ul class="timeline mt-3 mb-3 ml-3">
+                        @forelse($loan->penagihanLogs()->latest()->get() as $log)
+                            <li class="timeline-item">
+                                <div class="timeline-badge bg-primary"></div>
+                                <div>
+                                    <strong>{{ $log->metode_penagihan }}</strong> oleh {{ $log->user->name ?? '-' }}
+                                    <div class="text-muted small">{{ $log->created_at->format('d/m/Y H:i') }}</div>
+                                    <div class="mt-1">
+                                        Status: <strong>{{ $log->hasil_penagihan }}</strong><br>
+                                        @if($log->tanggal_janji_bayar)
+                                            <span class="text-danger">Janji Bayar: {{ \Carbon\Carbon::parse($log->tanggal_janji_bayar)->format('d/m/Y') }}</span><br>
+                                        @endif
+                                        Catatan: {{ $log->catatan }}
+                                    </div>
+                                </div>
+                            </li>
+                        @empty
+                            <li class="timeline-item">
+                                <div class="timeline-badge"></div>
+                                <div>Belum ada riwayat penagihan.</div>
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Collaterals Section --}}
     <div class="row mt-4">
         <div class="col-md-12">
@@ -365,6 +409,94 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Log Penagihan -->
+    <div class="modal fade" id="modal-log" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Catat Riwayat Penagihan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('collections.log.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="pinjaman_id" value="{{ $loan->id }}">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Metode Penagihan</label>
+                            <select name="metode_penagihan" class="form-control">
+                                <option value="Telepon">Telepon</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Kunjungan">Kunjungan</option>
+                                <option value="Surat">Surat</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Hasil</label>
+                            <select name="hasil_penagihan" class="form-control">
+                                <option value="Terhubung - Janji Bayar">Terhubung - Janji Bayar</option>
+                                <option value="Terhubung - Minta Waktu">Terhubung - Minta Waktu</option>
+                                <option value="Tidak Diangkat">Tidak Diangkat</option>
+                                <option value="Nomor Salah">Nomor Salah</option>
+                                <option value="Rumah Kosong">Rumah Kosong</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Janji Bayar (Opsional)</label>
+                            <input type="date" name="tanggal_janji_bayar" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Catatan</label>
+                            <textarea name="catatan" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Antrian Lapangan -->
+    <div class="modal fade" id="modal-queue" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Masukan ke Antrian Lapangan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('collections.queue.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="pinjaman_id" value="{{ $loan->id }}">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Petugas (Opsional)</label>
+                            <select name="petugas_id" class="form-control">
+                                <option value="">-- Pilih Petugas --</option>
+                                @foreach(\App\Models\User::all() as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rencana Kunjungan</label>
+                            <input type="date" name="tanggal_rencana_kunjungan" class="form-control" required value="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Catatan Tugas</label>
+                            <textarea name="catatan_tugas" class="form-control" rows="3" placeholder="Instruksi khusus untuk petugas..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

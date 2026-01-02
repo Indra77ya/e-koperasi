@@ -47,6 +47,13 @@
                     <li class="nav-item">
                         <a href="{{ route('loans.index') }}" class="nav-link"><i class="fe fe-activity" aria-hidden="true"></i> Pinjaman</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-bell" aria-hidden="true"></i> Penagihan</a>
+                        <div class="dropdown-menu dropdown-menu-arrow">
+                            <a href="{{ route('collections.index') }}" class="dropdown-item">Dashboard Penagihan</a>
+                            <a href="{{ route('collections.queue') }}" class="dropdown-item">Antrian Lapangan</a>
+                        </div>
+                    </li>
                     <li class="nav-item">
                         <a href="{{ route('deposits.index') }}" class="nav-link"><i class="fe fe-dollar-sign" aria-hidden="true"></i> {{ __('menu.deposit') }}</a>
                     </li>

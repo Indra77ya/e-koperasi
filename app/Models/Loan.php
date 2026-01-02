@@ -24,6 +24,7 @@ class Loan extends Model
         'tanggal_pengajuan',
         'tanggal_persetujuan',
         'status',
+        'kolektabilitas',
         'keterangan',
     ];
 
@@ -50,5 +51,31 @@ class Loan extends Model
     public function collaterals()
     {
         return $this->hasMany('App\Models\Collateral', 'pinjaman_id');
+    }
+
+    public function penagihanLogs()
+    {
+        return $this->hasMany('App\Models\PenagihanLog', 'pinjaman_id');
+    }
+
+    public function penagihanLapangan()
+    {
+        return $this->hasMany('App\Models\PenagihanLapangan', 'pinjaman_id');
+    }
+
+    // Helper to get days past due based on oldest unpaid installment
+    public function getDaysPastDueAttribute()
+    {
+        $oldestUnpaid = $this->installments()
+            ->where('status', 'belum_lunas')
+            ->where('tanggal_jatuh_tempo', '<', now())
+            ->orderBy('tanggal_jatuh_tempo', 'asc')
+            ->first();
+
+        if ($oldestUnpaid) {
+            return now()->diffInDays($oldestUnpaid->tanggal_jatuh_tempo);
+        }
+
+        return 0;
     }
 }
