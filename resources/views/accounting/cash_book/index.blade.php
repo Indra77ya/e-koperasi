@@ -14,7 +14,7 @@
                             @endforeach
                         </select>
                     </form>
-                    <a href="{{ route('accounting.journals.create') }}" class="btn btn-primary btn-pill btn-sm ml-2">Input Transaksi</a>
+                    <a href="{{ route('accounting.journals.create') }}" class="btn btn-primary btn-pill">Input Transaksi</a>
                 </div>
             </div>
             <div class="card-body">
