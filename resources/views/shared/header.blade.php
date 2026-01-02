@@ -48,6 +48,18 @@
                         <a href="{{ route('loans.index') }}" class="nav-link"><i class="fe fe-activity" aria-hidden="true"></i> Pinjaman</a>
                     </li>
                     <li class="nav-item dropdown">
+                        <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-book" aria-hidden="true"></i> Akuntansi</a>
+                        <div class="dropdown-menu dropdown-menu-arrow">
+                            <a href="{{ route('accounting.cash_book') }}" class="dropdown-item">Buku Kas & Bank</a>
+                            <a href="{{ route('accounting.journals') }}" class="dropdown-item">Jurnal Umum</a>
+                            <a href="{{ route('accounting.coa') }}" class="dropdown-item">Chart of Accounts</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('accounting.reports.neraca') }}" class="dropdown-item">Neraca</a>
+                            <a href="{{ route('accounting.reports.laba_rugi') }}" class="dropdown-item">Laba Rugi</a>
+                            <a href="{{ route('accounting.reports.arus_kas') }}" class="dropdown-item">Arus Kas</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
                         <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-bell" aria-hidden="true"></i> Penagihan</a>
                         <div class="dropdown-menu dropdown-menu-arrow">
                             <a href="{{ route('collections.index') }}" class="dropdown-item">Dashboard Penagihan</a>
