@@ -5,19 +5,19 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Journal Entries</h3>
+                <h3 class="card-title">Jurnal Umum</h3>
                 <div class="card-options">
-                    <a href="{{ route('accounting.journals.create') }}" class="btn btn-primary btn-pill btn-sm">Add Journal Entry</a>
+                    <a href="{{ route('accounting.journals.create') }}" class="btn btn-primary btn-pill">Buat Jurnal Umum</a>
                 </div>
             </div>
             <div class="table-responsive">
                 <table class="table card-table table-vcenter text-nowrap datatable" id="journal-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Ref No</th>
-                            <th>Description</th>
-                            <th>Details</th>
+                            <th>Tanggal</th>
+                            <th>No. Ref</th>
+                            <th>Keterangan</th>
+                            <th>Detail</th>
                         </tr>
                     </thead>
                     <tbody></tbody>

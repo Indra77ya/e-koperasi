@@ -38,12 +38,12 @@
                     <table class="table card-table table-vcenter text-nowrap datatable" id="cash-book-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Ref No</th>
-                                <th>Description</th>
+                                <th>Tanggal</th>
+                                <th>No. Ref</th>
+                                <th>Keterangan</th>
                                 <th>Debit (Masuk)</th>
-                                <th>Credit (Keluar)</th>
-                                <th>Balance</th>
+                                <th>Kredit (Keluar)</th>
+                                <th>Saldo</th>
                             </tr>
                         </thead>
                         <tbody></tbody>

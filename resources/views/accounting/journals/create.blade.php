@@ -6,38 +6,38 @@
         <form action="{{ route('accounting.journals.store') }}" method="POST" class="card" id="journal-form">
             @csrf
             <div class="card-header">
-                <h3 class="card-title">Create Journal Entry</h3>
+                <h3 class="card-title">Buat Jurnal Umum</h3>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Date</label>
+                            <label class="form-label">Tanggal</label>
                             <input type="date" class="form-control" name="transaction_date" required value="{{ date('Y-m-d') }}">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Reference Number</label>
+                            <label class="form-label">Nomor Referensi</label>
                             <input type="text" class="form-control" name="reference_number">
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="form-label">Description</label>
+                            <label class="form-label">Keterangan</label>
                             <input type="text" class="form-control" name="description" required>
                         </div>
                     </div>
                 </div>
 
-                <h4 class="mt-4">Journal Items</h4>
+                <h4 class="mt-4">Item Jurnal</h4>
                 <table class="table" id="items-table">
                     <thead>
                         <tr>
-                            <th>Account</th>
+                            <th>Akun</th>
                             <th>Debit</th>
-                            <th>Credit</th>
-                            <th>Action</th>
+                            <th>Kredit</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,7 +45,7 @@
                         <tr>
                             <td>
                                 <select class="form-control select2-account" name="items[{{$i}}][chart_of_account_id]" required style="width: 100%">
-                                    <option value="">Select Account</option>
+                                    <option value="">Pilih Akun</option>
                                     @foreach($accounts as $account)
                                         <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
                                     @endforeach
@@ -68,13 +68,13 @@
                             <th>Total</th>
                             <th><span id="total-debit">0.00</span></th>
                             <th><span id="total-credit">0.00</span></th>
-                            <th><button type="button" class="btn btn-secondary btn-sm" id="add-row">Add Row</button></th>
+                            <th><button type="button" class="btn btn-secondary btn-sm" id="add-row">Tambah Baris</button></th>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             <div class="card-footer text-right">
-                <button type="submit" class="btn btn-primary">Save Journal</button>
+                <button type="submit" class="btn btn-primary">Simpan Jurnal</button>
             </div>
         </form>
     </div>
@@ -98,7 +98,7 @@ require(['jquery', 'select2'], function($) {
             <tr>
                 <td>
                     <select class="form-control select2-account" name="items[${rowCount}][chart_of_account_id]" required style="width: 100%">
-                        <option value="">Select Account</option>
+                        <option value="">Pilih Akun</option>
                         @foreach($accounts as $account)
                             <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
                         @endforeach
