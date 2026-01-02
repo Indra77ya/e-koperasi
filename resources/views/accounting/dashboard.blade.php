@@ -5,7 +5,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Accounting Dashboard</h3>
+                <h3 class="card-title">Dashboard Akuntansi</h3>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -16,8 +16,8 @@
                                     <i class="fe fe-dollar-sign"></i>
                                 </span>
                                 <div>
-                                    <h4 class="m-0"><a href="{{ route('accounting.cash_book') }}">Cash Book</a></h4>
-                                    <small class="text-muted">Manage Cash & Bank</small>
+                                    <h4 class="m-0"><a href="{{ route('accounting.cash_book') }}">Buku Kas</a></h4>
+                                    <small class="text-muted">Kelola Kas & Bank</small>
                                 </div>
                             </div>
                         </div>
@@ -29,8 +29,8 @@
                                     <i class="fe fe-book-open"></i>
                                 </span>
                                 <div>
-                                    <h4 class="m-0"><a href="{{ route('accounting.journals') }}">Journals</a></h4>
-                                    <small class="text-muted">General Ledger</small>
+                                    <h4 class="m-0"><a href="{{ route('accounting.journals') }}">Jurnal</a></h4>
+                                    <small class="text-muted">Jurnal Umum</small>
                                 </div>
                             </div>
                         </div>
@@ -42,8 +42,8 @@
                                     <i class="fe fe-list"></i>
                                 </span>
                                 <div>
-                                    <h4 class="m-0"><a href="{{ route('accounting.coa') }}">Chart of Accounts</a></h4>
-                                    <small class="text-muted">Manage Accounts</small>
+                                    <h4 class="m-0"><a href="{{ route('accounting.coa') }}">Kode Akun (COA)</a></h4>
+                                    <small class="text-muted">Kelola Akun</small>
                                 </div>
                             </div>
                         </div>
@@ -55,8 +55,8 @@
                                     <i class="fe fe-bar-chart"></i>
                                 </span>
                                 <div>
-                                    <h4 class="m-0"><a href="{{ route('accounting.reports.neraca') }}">Reports</a></h4>
-                                    <small class="text-muted">Financial Statements</small>
+                                    <h4 class="m-0"><a href="{{ route('accounting.reports.neraca') }}">Laporan</a></h4>
+                                    <small class="text-muted">Laporan Keuangan</small>
                                 </div>
                             </div>
                         </div>
