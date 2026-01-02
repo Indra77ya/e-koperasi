@@ -12,21 +12,21 @@
                 <h3 class="card-title">Daftar Kunjungan Lapangan</h3>
             </div>
             <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap">
+                <table class="table card-table table-vcenter">
                     <thead>
                         <tr>
                             <th>Tanggal Rencana</th>
                             <th>Peminjam</th>
                             <th>Petugas</th>
                             <th>Status</th>
-                            <th>Catatan Tugas</th>
-                            <th>Aksi</th>
+                            <th style="max-width: 300px;">Catatan Tugas</th>
+                            <th class="text-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($queue as $item)
                             <tr>
-                                <td>{{ $item->tanggal_rencana_kunjungan->format('d/m/Y') }}</td>
+                                <td class="text-nowrap">{{ $item->tanggal_rencana_kunjungan->format('d/m/Y') }}</td>
                                 <td>
                                     @if($item->loan->member)
                                         {{ $item->loan->member->nama }} (Anggota)
@@ -42,8 +42,8 @@
                                         {{ ucfirst($item->status) }}
                                     </span>
                                 </td>
-                                <td>{{ $item->catatan_tugas }}</td>
-                                <td>
+                                <td style="max-width: 300px;">{{ $item->catatan_tugas }}</td>
+                                <td class="text-nowrap">
                                     <div class="d-flex">
                                         <a href="{{ route('loans.show', $item->pinjaman_id) }}" class="btn btn-sm btn-primary mr-1">Lihat Pinjaman</a>
                                         @if($item->status == 'baru' || $item->status == 'dalam_proses')
