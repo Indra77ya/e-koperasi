@@ -127,24 +127,22 @@ class AccountingController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date ?? date('Y-m-d');
 
-        // Helper for efficient sum
+        // Helper for efficient sum (Laravel 6 compatible)
         $getAccountsWithBalance = function($type, $normalBalance) use ($endDate) {
             return ChartOfAccount::where('type', $type)
-                ->withSum(['journalItems as total_debit' => function($q) use ($endDate) {
+                ->with(['journalItems' => function($q) use ($endDate) {
                     $q->whereHas('journalEntry', function($je) use ($endDate) {
                         $je->where('transaction_date', '<=', $endDate);
                     });
-                }], 'debit')
-                ->withSum(['journalItems as total_credit' => function($q) use ($endDate) {
-                    $q->whereHas('journalEntry', function($je) use ($endDate) {
-                        $je->where('transaction_date', '<=', $endDate);
-                    });
-                }], 'credit')
+                }])
                 ->get()
                 ->map(function($account) use ($normalBalance) {
+                    $debit = $account->journalItems->sum('debit');
+                    $credit = $account->journalItems->sum('credit');
+
                     $account->balance = $normalBalance == 'DEBIT'
-                        ? ($account->total_debit - $account->total_credit)
-                        : ($account->total_credit - $account->total_debit);
+                        ? ($debit - $credit)
+                        : ($credit - $debit);
                     return $account;
                 });
         };
@@ -174,21 +172,19 @@ class AccountingController extends Controller
 
         $getAccountsWithBalance = function($type, $normalBalance) use ($startDate, $endDate) {
             return ChartOfAccount::where('type', $type)
-                ->withSum(['journalItems as total_debit' => function($q) use ($startDate, $endDate) {
+                ->with(['journalItems' => function($q) use ($startDate, $endDate) {
                     $q->whereHas('journalEntry', function($je) use ($startDate, $endDate) {
                         $je->whereBetween('transaction_date', [$startDate, $endDate]);
                     });
-                }], 'debit')
-                ->withSum(['journalItems as total_credit' => function($q) use ($startDate, $endDate) {
-                    $q->whereHas('journalEntry', function($je) use ($startDate, $endDate) {
-                        $je->whereBetween('transaction_date', [$startDate, $endDate]);
-                    });
-                }], 'credit')
+                }])
                 ->get()
                 ->map(function($account) use ($normalBalance) {
+                     $debit = $account->journalItems->sum('debit');
+                     $credit = $account->journalItems->sum('credit');
+
                     $account->balance = $normalBalance == 'DEBIT'
-                        ? ($account->total_debit - $account->total_credit)
-                        : ($account->total_credit - $account->total_debit);
+                        ? ($debit - $credit)
+                        : ($credit - $debit);
                     return $account;
                 });
         };
