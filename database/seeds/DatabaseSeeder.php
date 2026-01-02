@@ -27,6 +27,9 @@ class DatabaseSeeder extends Seeder
         if (!class_exists('JournalSeeder')) {
             require_once __DIR__ . '/JournalSeeder.php';
         }
+        if (!class_exists('ReportSeeder')) {
+            require_once __DIR__ . '/ReportSeeder.php';
+        }
 
         $this->call([
             UsersTableSeeder::class,
@@ -36,6 +39,7 @@ class DatabaseSeeder extends Seeder
             CollectionSeeder::class,
             CoaSeeder::class,
             JournalSeeder::class,
+            ReportSeeder::class,
         ]);
     }
 }

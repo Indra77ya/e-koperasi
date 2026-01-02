@@ -59,6 +59,9 @@
                             <a href="{{ route('accounting.reports.arus_kas') }}" class="dropdown-item">Arus Kas</a>
                         </div>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('reports.index') }}" class="nav-link"><i class="fe fe-file-text" aria-hidden="true"></i> Laporan</a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-bell" aria-hidden="true"></i> Penagihan</a>
                         <div class="dropdown-menu dropdown-menu-arrow">

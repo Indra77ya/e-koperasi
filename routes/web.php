@@ -116,4 +116,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('accounting/reports/neraca', 'AccountingController@neraca')->name('accounting.reports.neraca');
     Route::get('accounting/reports/laba-rugi', 'AccountingController@labaRugi')->name('accounting.reports.laba_rugi');
     Route::get('accounting/reports/arus-kas', 'AccountingController@arusKas')->name('accounting.reports.arus_kas');
+
+    // Reports Module
+    Route::prefix('reports')->group(function () {
+        Route::get('/', 'ReportController@index')->name('reports.index');
+        Route::get('/outstanding', 'ReportController@outstanding')->name('reports.outstanding');
+        Route::get('/bad-debt', 'ReportController@badDebt')->name('reports.bad_debt');
+        Route::get('/collateral', 'ReportController@collateral')->name('reports.collateral');
+        Route::get('/cash-flow', 'ReportController@cashFlow')->name('reports.cash_flow');
+        Route::get('/revenue', 'ReportController@revenue')->name('reports.revenue');
+    });
 });
