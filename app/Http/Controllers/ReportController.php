@@ -160,14 +160,15 @@ class ReportController extends Controller
 
     private function exportCollateral($cursor)
     {
-        return $this->streamCsv('collaterals.csv', ['Nama Aset', 'Tipe', 'Nilai Taksiran', 'No Pinjaman', 'Status', 'Keterangan'], $cursor, function($col) {
+        return $this->streamCsv('collaterals.csv', ['Jenis', 'Nomor', 'Nilai Taksiran', 'Pemilik', 'No Pinjaman', 'Status', 'Keterangan'], $cursor, function($col) {
             return [
-                $col->name,
-                $col->type,
-                $col->estimated_value,
+                $col->jenis,
+                $col->nomor,
+                $col->nilai_taksasi,
+                $col->pemilik,
                 $col->loan ? $col->loan->loan_number : '-',
                 $col->status,
-                $col->description
+                $col->keterangan
             ];
         });
     }

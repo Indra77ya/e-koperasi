@@ -24,10 +24,10 @@
                     <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
-                                <th>Nama Aset</th>
-                                <th>Tipe</th>
+                                <th>Jenis</th>
+                                <th>Nomor</th>
                                 <th>Nilai Taksiran</th>
-                                <th>Pemilik (Peminjam)</th>
+                                <th>Pemilik</th>
                                 <th>No. Pinjaman</th>
                                 <th>Status</th>
                                 <th>Keterangan</th>
@@ -36,20 +36,10 @@
                         <tbody>
                             @forelse($collaterals as $col)
                             <tr>
-                                <td>{{ $col->name }}</td>
-                                <td>{{ $col->type }}</td>
-                                <td>Rp {{ number_format($col->estimated_value, 0, ',', '.') }}</td>
-                                <td>
-                                    @if($col->loan)
-                                        @if($col->loan->member)
-                                            {{ $col->loan->member->name }}
-                                        @elseif($col->loan->nasabah)
-                                            {{ $col->loan->nasabah->name }}
-                                        @endif
-                                    @else
-                                        -
-                                    @endif
-                                </td>
+                                <td>{{ $col->jenis }}</td>
+                                <td>{{ $col->nomor }}</td>
+                                <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
+                                <td>{{ $col->pemilik }}</td>
                                 <td>{{ $col->loan ? $col->loan->loan_number : '-' }}</td>
                                 <td>
                                     @if($col->status == 'disimpan')
@@ -60,7 +50,7 @@
                                         {{ ucfirst($col->status) }}
                                     @endif
                                 </td>
-                                <td>{{ $col->description }}</td>
+                                <td>{{ $col->keterangan }}</td>
                             </tr>
                             @empty
                             <tr>

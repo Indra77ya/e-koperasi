@@ -48,12 +48,13 @@ class ReportSeeder extends Seeder
 
             // Add Collateral
             Collateral::create([
-                'loan_id' => $loan->id,
-                'name' => 'BPKB Motor Honda ' . ($index + 1),
-                'type' => 'Kendaraan',
-                'estimated_value' => 15000000,
+                'pinjaman_id' => $loan->id,
+                'jenis' => 'Kendaraan',
+                'nomor' => 'BPKB-00' . ($index + 1),
+                'pemilik' => $member->name,
+                'nilai_taksasi' => 15000000,
                 'status' => 'disimpan',
-                'description' => 'Diserahkan saat pencairan',
+                'keterangan' => 'Diserahkan saat pencairan. Motor Honda ' . ($index + 1),
             ]);
         }
 
