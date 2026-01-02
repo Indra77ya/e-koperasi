@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Seeder;
 use App\Models\Loan;
+use App\Models\LoanInstallment;
 use App\Models\PenagihanLog;
 use App\Models\PenagihanLapangan;
 use App\Models\User;
@@ -24,6 +25,25 @@ class CollectionSeeder extends Seeder
         }
 
         $faker = \Faker\Factory::create('id_ID');
+
+        // To ensure we have reminders, we need to pick a few loans and set their installments to be due soon.
+        $loansForReminder = $loans->where('status', '!=', 'lunas')->take(5);
+        $daysOffset = 0;
+
+        foreach ($loansForReminder as $loan) {
+             // Find first unpaid installment
+             $installment = LoanInstallment::where('pinjaman_id', $loan->id)
+                ->where('status', 'belum_lunas')
+                ->orderBy('angsuran_ke', 'asc')
+                ->first();
+
+            if ($installment) {
+                // Set due date to today + offset (0, 1, 2 days) to fall within < 3 days reminder
+                $installment->tanggal_jatuh_tempo = Carbon::now()->addDays($daysOffset % 3);
+                $installment->save();
+                $daysOffset++;
+            }
+        }
 
         foreach ($loans as $loan) {
             // 1. Randomize Kolektabilitas
