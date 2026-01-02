@@ -9,6 +9,9 @@
                 <h3 class="card-title">Buat Jurnal Umum</h3>
             </div>
             <div class="card-body">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+                <link rel="stylesheet" href="https://select2.github.io/select2-bootstrap-theme/css/select2-bootstrap.css">
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -83,10 +86,12 @@
 
 @section('js')
 <script>
-require(['jquery', 'select2'], function($) {
+require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js'], function($) {
 
     function initSelect2() {
-        $('.select2-account').select2();
+        $('.select2-account').select2({
+            theme: "bootstrap"
+        });
     }
 
     initSelect2();

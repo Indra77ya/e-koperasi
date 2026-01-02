@@ -16,12 +16,13 @@ class JournalSeeder extends Seeder
     public function run()
     {
         // Only run if we have accounts
-        $cash = ChartOfAccount::where('code', '1001')->first(); // Kas
-        $bank = ChartOfAccount::where('code', '1002')->first(); // Bank
-        $capital = ChartOfAccount::where('code', '3001')->first(); // Modal Disetor
-        $revenue = ChartOfAccount::where('code', '4001')->first(); // Pendapatan Bunga
-        $expense_salary = ChartOfAccount::where('code', '5001')->first(); // Beban Gaji
-        $expense_rent = ChartOfAccount::where('code', '5002')->first(); // Beban Sewa
+        // Matches codes in CoaSeeder.php
+        $cash = ChartOfAccount::where('code', '1101')->first(); // Kas
+        $bank = ChartOfAccount::where('code', '1102')->first(); // Bank
+        $capital = ChartOfAccount::where('code', '3101')->first(); // Modal Awal
+        $revenue = ChartOfAccount::where('code', '4101')->first(); // Pendapatan Bunga Pinjaman
+        $expense_salary = ChartOfAccount::where('code', '5101')->first(); // Beban Gaji
+        $expense_ops = ChartOfAccount::where('code', '5102')->first(); // Beban Operasional
 
         if (!$cash || !$capital) {
             $this->command->info('COA not found. Please run CoaSeeder first.');
@@ -50,14 +51,14 @@ class JournalSeeder extends Seeder
             ]
         );
 
-        // 3. Rent Expense (Cash Out)
-        if ($expense_rent) {
+        // 3. Operational Expense (Cash Out)
+        if ($expense_ops) {
             $this->createEntry(
                 Carbon::now()->subMonth()->format('Y-m-d'),
                 'REF-003',
-                'Bayar Sewa Kantor Bulan Lalu',
+                'Bayar Sewa Kantor (Operasional)',
                 [
-                    ['account_id' => $expense_rent->id, 'debit' => 5000000, 'credit' => 0],
+                    ['account_id' => $expense_ops->id, 'debit' => 5000000, 'credit' => 0],
                     ['account_id' => $bank->id, 'debit' => 0, 'credit' => 5000000],
                 ]
             );
@@ -68,7 +69,7 @@ class JournalSeeder extends Seeder
             $this->createEntry(
                 Carbon::now()->subDays(15)->format('Y-m-d'),
                 'REF-004',
-                'Pendapatan Jasa Konsultasi',
+                'Pendapatan Bunga Pinjaman',
                 [
                     ['account_id' => $cash->id, 'debit' => 2500000, 'credit' => 0],
                     ['account_id' => $revenue->id, 'debit' => 0, 'credit' => 2500000],
