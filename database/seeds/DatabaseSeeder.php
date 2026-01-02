@@ -21,6 +21,12 @@ class DatabaseSeeder extends Seeder
         if (!class_exists('CollectionSeeder')) {
             require_once __DIR__ . '/CollectionSeeder.php';
         }
+        if (!class_exists('CoaSeeder')) {
+            require_once __DIR__ . '/CoaSeeder.php';
+        }
+        if (!class_exists('JournalSeeder')) {
+            require_once __DIR__ . '/JournalSeeder.php';
+        }
 
         $this->call([
             UsersTableSeeder::class,
@@ -28,6 +34,8 @@ class DatabaseSeeder extends Seeder
             NasabahTableSeeder::class,
             LoanSeeder::class,
             CollectionSeeder::class,
+            CoaSeeder::class,
+            JournalSeeder::class,
         ]);
     }
 }

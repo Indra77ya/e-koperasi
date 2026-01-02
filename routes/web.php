@@ -96,4 +96,24 @@ Route::middleware(['auth'])->group(function () {
     Route::post('collections/queue', 'CollectionController@addToFieldQueue')->name('collections.queue.store');
     Route::patch('collections/queue/{id}', 'CollectionController@updateFieldQueueStatus')->name('collections.queue.update');
     Route::post('collections/refresh', 'CollectionController@refreshCollectibility')->name('collections.refresh');
+
+    // Accounting
+    Route::get('accounting/coa', 'AccountingController@coa')->name('accounting.coa');
+    Route::get('accounting/coa/data', 'AccountingController@coaData')->name('accounting.coa.data');
+    Route::get('accounting/coa/create', 'AccountingController@coaCreate')->name('accounting.coa.create');
+    Route::post('accounting/coa', 'AccountingController@coaStore')->name('accounting.coa.store');
+    Route::get('accounting/coa/{id}/edit', 'AccountingController@coaEdit')->name('accounting.coa.edit');
+    Route::put('accounting/coa/{id}', 'AccountingController@coaUpdate')->name('accounting.coa.update');
+
+    Route::get('accounting/journals', 'AccountingController@journals')->name('accounting.journals');
+    Route::get('accounting/journals/data', 'AccountingController@journalsData')->name('accounting.journals.data');
+    Route::get('accounting/journals/create', 'AccountingController@createJournal')->name('accounting.journals.create');
+    Route::post('accounting/journals', 'AccountingController@storeJournal')->name('accounting.journals.store');
+
+    Route::get('accounting/cash-book', 'AccountingController@cashBook')->name('accounting.cash_book');
+    Route::get('accounting/cash-book/data', 'AccountingController@cashBookData')->name('accounting.cash_book.data');
+
+    Route::get('accounting/reports/neraca', 'AccountingController@neraca')->name('accounting.reports.neraca');
+    Route::get('accounting/reports/laba-rugi', 'AccountingController@labaRugi')->name('accounting.reports.laba_rugi');
+    Route::get('accounting/reports/arus-kas', 'AccountingController@arusKas')->name('accounting.reports.arus_kas');
 });

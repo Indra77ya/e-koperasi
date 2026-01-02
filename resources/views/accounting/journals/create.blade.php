@@ -1,0 +1,174 @@
+@extends('layouts.app')
+
+@section('content-app')
+<div class="row row-cards">
+    <div class="col-12">
+        <form action="{{ route('accounting.journals.store') }}" method="POST" class="card" id="journal-form">
+            @csrf
+            <div class="card-header">
+                <h3 class="card-title">Buat Jurnal Umum</h3>
+            </div>
+            <div class="card-body">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+                <link rel="stylesheet" href="https://select2.github.io/select2-bootstrap-theme/css/select2-bootstrap.css">
+
+                {{-- Error & Success Messages --}}
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" name="transaction_date" required value="{{ date('Y-m-d') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Referensi</label>
+                            <input type="text" class="form-control" name="reference_number">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-label">Keterangan</label>
+                            <input type="text" class="form-control" name="description" required>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mt-4">Item Jurnal</h4>
+                <table class="table" id="items-table">
+                    <thead>
+                        <tr>
+                            <th>Akun</th>
+                            <th>Debit</th>
+                            <th>Kredit</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for ($i = 0; $i < 2; $i++)
+                        <tr>
+                            <td>
+                                <select class="form-control select2-account" name="items[{{$i}}][chart_of_account_id]" required style="width: 100%">
+                                    <option value="">Pilih Akun</option>
+                                    @foreach($accounts as $account)
+                                        <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" class="form-control input-debit" name="items[{{$i}}][debit]" placeholder="0">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" class="form-control input-credit" name="items[{{$i}}][credit]" placeholder="0">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-row"><i class="fe fe-trash"></i></button>
+                            </td>
+                        </tr>
+                        @endfor
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th><span id="total-debit">0.00</span></th>
+                            <th><span id="total-credit">0.00</span></th>
+                            <th><button type="button" class="btn btn-secondary btn-sm" id="add-row">Tambah Baris</button></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="card-footer text-right">
+                <button type="submit" class="btn btn-primary">Simpan Jurnal</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+
+@section('js')
+<script>
+require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js'], function($) {
+
+    function initSelect2() {
+        $('.select2-account').select2({
+            theme: "bootstrap"
+        });
+    }
+
+    initSelect2();
+
+    let rowCount = 2;
+
+    $('#add-row').click(function() {
+        let html = `
+            <tr>
+                <td>
+                    <select class="form-control select2-account" name="items[${rowCount}][chart_of_account_id]" required style="width: 100%">
+                        <option value="">Pilih Akun</option>
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control input-debit" name="items[${rowCount}][debit]" placeholder="0">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control input-credit" name="items[${rowCount}][credit]" placeholder="0">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-row"><i class="fe fe-trash"></i></button>
+                </td>
+            </tr>
+        `;
+        $('#items-table tbody').append(html);
+        rowCount++;
+        initSelect2();
+    });
+
+    $(document).on('click', '.remove-row', function() {
+        $(this).closest('tr').remove();
+        calcTotal();
+    });
+
+    $(document).on('input', '.input-debit, .input-credit', function() {
+        calcTotal();
+    });
+
+    function calcTotal() {
+        let totalDebit = 0;
+        let totalCredit = 0;
+
+        $('.input-debit').each(function() {
+            totalDebit += parseFloat($(this).val() || 0);
+        });
+        $('.input-credit').each(function() {
+            totalCredit += parseFloat($(this).val() || 0);
+        });
+
+        $('#total-debit').text(totalDebit.toFixed(2));
+        $('#total-credit').text(totalCredit.toFixed(2));
+    }
+});
+</script>
+@endsection

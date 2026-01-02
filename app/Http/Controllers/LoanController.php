@@ -10,9 +10,17 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\AccountingService;
 
 class LoanController extends Controller
 {
+    protected $accountingService;
+
+    public function __construct(AccountingService $accountingService)
+    {
+        $this->accountingService = $accountingService;
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -192,6 +200,19 @@ class LoanController extends Controller
                         'status' => 'belum_lunas',
                     ]);
                 }
+
+                // Create Journal: Dr Piutang Pinjaman, Cr Kas
+                // Codes based on Seeder: Piutang Pinjaman (1103), Kas (1101)
+                $this->accountingService->createJournal(
+                    now(),
+                    $loan->kode_pinjaman,
+                    'Pencairan Pinjaman ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                    [
+                        ['code' => '1103', 'debit' => $loan->jumlah_pinjaman, 'credit' => 0], // Piutang
+                        ['code' => '1101', 'debit' => 0, 'credit' => $loan->jumlah_pinjaman], // Kas
+                    ],
+                    $loan
+                );
             });
         }
         return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
@@ -246,6 +267,28 @@ class LoanController extends Controller
                 if ($remaining == 0) {
                     $loan->update(['status' => 'lunas']);
                 }
+
+                // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)
+                $denda = $installment->denda ?? 0;
+                $totalMasuk = $installment->pokok + $installment->bunga + $denda;
+
+                $items = [
+                    ['code' => '1101', 'debit' => $totalMasuk, 'credit' => 0], // Kas
+                    ['code' => '1103', 'debit' => 0, 'credit' => $installment->pokok], // Piutang
+                    ['code' => '4101', 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
+                ];
+
+                if ($denda > 0) {
+                    $items[] = ['code' => '4103', 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
+                }
+
+                $this->accountingService->createJournal(
+                    $request->tanggal_bayar,
+                    $loan->kode_pinjaman . '-' . $installment->angsuran_ke,
+                    'Pembayaran Angsuran ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                    $items,
+                    $installment
+                );
             });
 
             return redirect()->back()->with('success', 'Angsuran berhasil dibayar.');
