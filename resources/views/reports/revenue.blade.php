@@ -21,12 +21,12 @@
                             <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
                             <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-pill mr-2">Filter</button>
+                        <button type="submit" class="btn btn-primary btn-pill mr-2 text-nowrap">Filter</button>
                     </form>
-                     <a href="{{ route('reports.revenue', array_merge(request()->all(), ['export' => 1])) }}" class="btn btn-success btn-pill mr-2">
+                     <a href="{{ route('reports.revenue', array_merge(request()->all(), ['export' => 1])) }}" class="btn btn-success btn-pill mr-2 text-nowrap">
                         <i class="fa fa-file-excel-o"></i> Excel
                     </a>
-                    <button onclick="window.print()" class="btn btn-secondary btn-pill">
+                    <button onclick="window.print()" class="btn btn-secondary btn-pill text-nowrap">
                         <i class="fa fa-print"></i> PDF
                     </button>
                 </div>
