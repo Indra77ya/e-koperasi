@@ -7,7 +7,7 @@
             <div class="card-header">
                 <h3 class="card-title">Chart of Accounts (COA)</h3>
                 <div class="card-options">
-                    <a href="{{ route('accounting.coa.create') }}" class="btn btn-primary btn-pill btn-sm">Tambah Akun</a>
+                    <a href="{{ route('accounting.coa.create') }}" class="btn btn-primary btn-pill">Tambah Akun</a>
                 </div>
             </div>
             <div class="table-responsive">
