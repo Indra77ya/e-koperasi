@@ -112,25 +112,6 @@ class ReportController extends Controller
     }
 
     // Export Helper Methods
-    private function exportToCsv($filename, $headers, $cursor)
-    {
-        $callback = function() use ($headers, $cursor) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $headers);
-            foreach ($cursor as $row) {
-                // Determine format based on data type or transform via callback if needed.
-                // Since cursor returns raw models, we need to map them inside the loop.
-                // However, the generic $cursor loop needs to know how to transform the row.
-                // I will refactor to pass the transformer logic.
-            }
-            fclose($file);
-        };
-
-        // This generic method is tricky with cursor directly.
-        // Let's refactor the specific export methods to handle the cursor loop directly.
-        // It's cleaner given the strict separation needed.
-    }
-
     private function streamCsv($filename, $headers, $cursor, $transformer)
     {
         return response()->stream(function() use ($headers, $cursor, $transformer) {
