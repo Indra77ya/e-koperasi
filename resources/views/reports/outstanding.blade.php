@@ -35,7 +35,7 @@
                         <tbody>
                             @forelse($loans as $loan)
                             <tr>
-                                <td>{{ $loan->loan_number }}</td>
+                                <td>{{ $loan->kode_pinjaman }}</td>
                                 <td>
                                     @if($loan->member)
                                         {{ $loan->member->name }} <span class="badge badge-info">Anggota</span>
@@ -45,7 +45,7 @@
                                         -
                                     @endif
                                 </td>
-                                <td>Rp {{ number_format($loan->amount, 0, ',', '.') }}</td>
+                                <td>Rp {{ number_format($loan->jumlah_pinjaman, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($loan->remaining_balance ?? 0, 0, ',', '.') }}</td>
                                 <td>
                                     <span class="badge badge-primary">{{ ucfirst($loan->status) }}</span>

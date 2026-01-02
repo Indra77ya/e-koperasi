@@ -36,13 +36,15 @@ class ReportSeeder extends Seeder
         // 1. Outstanding Loans (Dicairkan/Berjalan)
         foreach ($members as $index => $member) {
             $loan = Loan::create([
-                'loan_number' => 'L-OUT-M-' . ($index + 1),
+                'kode_pinjaman' => 'L-OUT-M-' . ($index + 1),
                 'anggota_id' => $member->id,
-                'amount' => 10000000 * ($index + 1),
-                'remaining_balance' => 8000000 * ($index + 1),
+                'jenis_pinjaman' => 'produktif',
+                'jumlah_pinjaman' => 10000000 * ($index + 1),
                 'tenor' => 12,
-                'interest_rate' => 10,
-                'status' => 'dicairkan', // or 'berjalan' depending on system convention
+                'suku_bunga' => 10,
+                'jenis_bunga' => 'flat',
+                'tanggal_pengajuan' => Carbon::now()->subMonths($index + 1),
+                'status' => 'dicairkan',
                 'created_at' => Carbon::now()->subMonths($index + 1),
             ]);
 
@@ -61,12 +63,14 @@ class ReportSeeder extends Seeder
         // 2. Bad Debts (Macet)
         foreach ($nasabahs as $index => $nasabah) {
             Loan::create([
-                'loan_number' => 'L-BAD-N-' . ($index + 1),
+                'kode_pinjaman' => 'L-BAD-N-' . ($index + 1),
                 'nasabah_id' => $nasabah->id,
-                'amount' => 5000000 * ($index + 1),
-                'remaining_balance' => 4500000 * ($index + 1), // Mostly unpaid
+                'jenis_pinjaman' => 'konsumtif',
+                'jumlah_pinjaman' => 5000000 * ($index + 1),
                 'tenor' => 6,
-                'interest_rate' => 12,
+                'suku_bunga' => 12,
+                'jenis_bunga' => 'flat',
+                'tanggal_pengajuan' => Carbon::now()->subMonths(6 + $index),
                 'status' => 'macet',
                 'created_at' => Carbon::now()->subMonths(6 + $index),
                 'updated_at' => Carbon::now()->subDays(10 * ($index + 1)), // Marked macet recently

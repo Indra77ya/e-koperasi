@@ -134,9 +134,9 @@ class ReportController extends Controller
     {
         return $this->streamCsv('outstanding_loans.csv', ['Nomor Pinjaman', 'Nama', 'Jumlah', 'Sisa', 'Status', 'Tanggal'], $cursor, function($loan) {
             return [
-                $loan->loan_number,
+                $loan->kode_pinjaman,
                 $loan->member ? $loan->member->name : ($loan->nasabah ? $loan->nasabah->name : '-'),
-                $loan->amount,
+                $loan->jumlah_pinjaman,
                 $loan->remaining_balance ?? 0,
                 $loan->status,
                 $loan->created_at->format('Y-m-d')
@@ -148,9 +148,9 @@ class ReportController extends Controller
     {
         return $this->streamCsv('bad_debts.csv', ['Nomor Pinjaman', 'Nama', 'Jumlah', 'Sisa', 'Status', 'Tanggal Macet'], $cursor, function($loan) {
             return [
-                $loan->loan_number,
+                $loan->kode_pinjaman,
                 $loan->member ? $loan->member->name : ($loan->nasabah ? $loan->nasabah->name : '-'),
-                $loan->amount,
+                $loan->jumlah_pinjaman,
                 $loan->remaining_balance ?? 0,
                 $loan->status,
                 $loan->updated_at->format('Y-m-d')
@@ -166,7 +166,7 @@ class ReportController extends Controller
                 $col->nomor,
                 $col->nilai_taksasi,
                 $col->pemilik,
-                $col->loan ? $col->loan->loan_number : '-',
+                $col->loan ? $col->loan->kode_pinjaman : '-',
                 $col->status,
                 $col->keterangan
             ];
