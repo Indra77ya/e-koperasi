@@ -94,5 +94,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('collections/log', 'CollectionController@storeLog')->name('collections.log.store');
     Route::get('collections/queue', 'CollectionController@fieldQueue')->name('collections.queue');
     Route::post('collections/queue', 'CollectionController@addToFieldQueue')->name('collections.queue.store');
+    Route::patch('collections/queue/{id}', 'CollectionController@updateFieldQueueStatus')->name('collections.queue.update');
     Route::post('collections/refresh', 'CollectionController@refreshCollectibility')->name('collections.refresh');
 });

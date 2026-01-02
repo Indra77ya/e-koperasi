@@ -27,6 +27,6 @@ class PenagihanLapangan extends Model
 
     public function petugas()
     {
-        return $this->belongsTo('App\User', 'petugas_id');
+        return $this->belongsTo('App\Models\User', 'petugas_id');
     }
 }

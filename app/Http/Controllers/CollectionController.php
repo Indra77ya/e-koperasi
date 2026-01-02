@@ -130,6 +130,22 @@ class CollectionController extends Controller
     }
 
     /**
+     * Update Field Queue Status
+     */
+    public function updateFieldQueueStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:selesai,batal',
+        ]);
+
+        $task = PenagihanLapangan::findOrFail($id);
+        $task->status = $request->status;
+        $task->save();
+
+        return back()->with('success', 'Status tugas berhasil diperbarui.');
+    }
+
+    /**
      * Refresh Collectibility Statuses
      * Loops through active loans and updates their status based on overdue days.
      */

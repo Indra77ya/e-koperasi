@@ -44,7 +44,23 @@
                                 </td>
                                 <td>{{ $item->catatan_tugas }}</td>
                                 <td>
-                                    <a href="{{ route('loans.show', $item->pinjaman_id) }}" class="btn btn-sm btn-primary">Lihat Pinjaman</a>
+                                    <div class="d-flex">
+                                        <a href="{{ route('loans.show', $item->pinjaman_id) }}" class="btn btn-sm btn-primary mr-1">Lihat Pinjaman</a>
+                                        @if($item->status == 'baru' || $item->status == 'dalam_proses')
+                                            <form action="{{ route('collections.queue.update', $item->id) }}" method="POST" onsubmit="return confirm('Tandai tugas ini sebagai Selesai?');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="selesai">
+                                                <button type="submit" class="btn btn-sm btn-success mr-1" title="Selesai"><i class="fe fe-check"></i></button>
+                                            </form>
+                                            <form action="{{ route('collections.queue.update', $item->id) }}" method="POST" onsubmit="return confirm('Batalkan tugas ini?');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="batal">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Batalkan"><i class="fe fe-x"></i></button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty

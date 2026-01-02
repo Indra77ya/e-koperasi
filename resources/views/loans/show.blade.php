@@ -478,7 +478,7 @@
                             <label>Petugas (Opsional)</label>
                             <select name="petugas_id" class="form-control">
                                 <option value="">-- Pilih Petugas --</option>
-                                @foreach(\App\User::all() as $user)
+                                @foreach(\App\Models\User::all() as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
                             </select>
