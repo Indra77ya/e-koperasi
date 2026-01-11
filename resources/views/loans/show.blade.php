@@ -242,6 +242,10 @@
                             <input type="date" name="tanggal_bayar" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
                         <div class="form-group">
+                            <label>Tagihan Bunga (Rp)</label>
+                            <input type="text" id="pay-bunga-display" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
                             <label>Jumlah Bayar (Rp)</label>
                             <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
                             <small class="text-muted" id="pay-amount-help">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
@@ -577,6 +581,7 @@
                 $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
                 $('#form-pay').attr('action', action);
                 $('#pay-denda').val(denda);
+                $('#pay-bunga-display').val(bunga.toLocaleString('id-ID')); // Show formatted bunga
                 $('#pay-amount').val(total + (denda - $(this).data('denda'))); // Adjust total if auto-denda added
 
                 // Trigger calculation
