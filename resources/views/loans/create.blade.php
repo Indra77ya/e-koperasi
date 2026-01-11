@@ -194,8 +194,13 @@
                 var unit = $('#unit').val();
                 var type = $('#type').val();
                 var tempo = $('#tempo_angsuran').val();
+                var isIndefinite = $('#is_indefinite').is(':checked');
 
-                if (!amount || !tenor || !rate) {
+                if (isIndefinite) {
+                    tenor = 0; // Simulate infinite as 0
+                }
+
+                if (!amount || (!isIndefinite && !tenor) || !rate) {
                     alert('Mohon lengkapi jumlah, tenor, dan suku bunga.');
                     return;
                 }

@@ -438,6 +438,19 @@ class LoanController extends Controller
             $ratePerPeriod = $yearlyRate / 12;
         }
 
+        if ($tenor == 0) {
+            // Indefinite Loan Simulation: Show 1 installment example (Interest Only)
+            $interest = $amount * $ratePerPeriod;
+            $schedule[] = [
+                'month' => 1,
+                'principal' => 0,
+                'interest' => round($interest, 2),
+                'total' => round($interest, 2),
+                'balance' => round($amount, 2)
+            ];
+            return $schedule;
+        }
+
         if ($type == 'flat') {
             $principal = $amount / $tenor;
             $interest = $amount * $ratePerPeriod;
