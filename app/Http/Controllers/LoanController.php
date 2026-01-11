@@ -310,38 +310,49 @@ class LoanController extends Controller
                 'jumlah_bayar' => 'nullable|numeric|min:0'
             ]);
 
-            DB::transaction(function () use ($installment, $request) {
-                // Determine actual amounts paid
-                $denda = $request->denda ?? $installment->denda;
-                $paidAmount = $request->jumlah_bayar ?? ($installment->total_angsuran + $denda);
+            // Validate amounts
+            $denda = $request->denda ?? $installment->denda;
+            $paidAmount = $request->jumlah_bayar ?? ($installment->total_angsuran + $denda);
 
-                // For indefinite loans, calculate extra principal paid
-                // Default installment total usually equals interest (+denda if any)
-                // If user pays more, the difference goes to principal
+            // Logic validation before transaction
+            $minPayment = $installment->bunga + $denda;
+            if ($installment->loan->tenor != 0) {
+                // For Fixed Loans, ensure full payment (partial not supported yet)
+                $minPayment = $installment->total_angsuran + $denda;
+
+                // Allow small floating point tolerance
+                if ($paidAmount < ($minPayment - 1)) {
+                    return redirect()->back()->with('error', 'Pembayaran kurang. Harap bayar sesuai tagihan (Angsuran + Denda).');
+                }
+            } else {
+                // For Indefinite, ensure at least Interest + Denda is paid
+                if ($paidAmount < ($minPayment - 1)) {
+                    return redirect()->back()->with('error', 'Pembayaran kurang. Minimal membayar bunga + denda.');
+                }
+            }
+
+            DB::transaction(function () use ($installment, $request, $denda, $paidAmount) {
                 $pokokPaid = $installment->pokok;
                 $bungaPaid = $installment->bunga;
 
-                // Validate if paidAmount covers at least interest + denda
-                $minPayment = $installment->bunga + $denda;
-                // If fixed loan, usually total_angsuran + denda
-                if ($installment->loan->tenor != 0) {
-                     $minPayment = $installment->total_angsuran + $denda;
-                }
-
-                if ($paidAmount < $minPayment) {
-                    // This creates a potential issue if we allow partial payments, but for now enforcing full payment
-                    // or full interest payment.
-                    // For now, let's assume they must pay at least the billed amount (Interest)
-                }
-
+                // Handle Indefinite Loan Logic
                 if ($installment->loan->tenor == 0) {
-                     // For Indefinite, any excess over (Interest + Denda) is Principal
-                     $excess = $paidAmount - ($installment->bunga + $denda);
-                     if ($excess > 0) {
-                         $pokokPaid = $excess;
-                     } else {
-                         $pokokPaid = 0;
+                     // Excess over (Interest + Denda) goes to Principal
+                     $excess = $paidAmount - ($bungaPaid + $denda);
+
+                     // Ensure we don't pay more than the outstanding loan balance
+                     // sisa_pinjaman on current installment refers to the balance *before* this payment
+                     // Wait, in disburse we set 'sisa_pinjaman' = total loan.
+                     // When creating next installment, we carry it over.
+                     // So $installment->sisa_pinjaman is the Outstanding Principal.
+                     $outstandingPrincipal = $installment->sisa_pinjaman;
+
+                     if ($excess > $outstandingPrincipal) {
+                         $excess = $outstandingPrincipal; // Cap at outstanding balance
+                         $paidAmount = $bungaPaid + $denda + $excess; // Adjust paid amount to match cap
                      }
+
+                     $pokokPaid = max(0, $excess);
                 }
 
                 $installment->update([
@@ -350,14 +361,9 @@ class LoanController extends Controller
                     'metode_pembayaran' => $request->metode_pembayaran,
                     'keterangan_pembayaran' => $request->keterangan_pembayaran,
                     'denda' => $denda,
-                    'total_angsuran' => $paidAmount - $denda, // Store base amount without denda as total_angsuran? Or match structure?
-                    // Usually total_angsuran includes Pokok + Bunga.
                     'pokok' => $pokokPaid,
+                    'total_angsuran' => $pokokPaid + $bungaPaid, // Update total to reflect actual structure (Pokok + Bunga)
                 ]);
-
-                // If we updated Pokok, we should update total_angsuran to reflect Pokok + Bunga
-                $installment->total_angsuran = $pokokPaid + $bungaPaid;
-                $installment->save();
 
                 // Check if all installments are paid
                 $loan = $installment->loan;

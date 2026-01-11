@@ -187,6 +187,8 @@
                                                         data-id="{{ $inst->id }}"
                                                         data-angsuran="{{ $inst->angsuran_ke }}"
                                                         data-total="{{ $inst->total_angsuran }}"
+                                                        data-bunga="{{ $inst->bunga }}"
+                                                        data-sisa="{{ $inst->sisa_pinjaman }}"
                                                         data-denda="{{ $inst->denda }}"
                                                         data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
                                                         Bayar
@@ -242,7 +244,7 @@
                         <div class="form-group">
                             <label>Jumlah Bayar (Rp)</label>
                             <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
-                            <small class="text-muted">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
+                            <small class="text-muted" id="pay-amount-help">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
                         </div>
                         <div class="form-group">
                             <label>Metode Pembayaran</label>
@@ -260,6 +262,15 @@
                          <div class="form-group">
                             <label>Keterangan / Catatan</label>
                             <textarea name="keterangan_pembayaran" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="alert alert-secondary bg-light">
+                            <strong>Simulasi Pembayaran:</strong>
+                            <ul class="mb-0 pl-3 small">
+                                <li>Tagihan Bunga + Denda: <span id="calc-bill" class="font-weight-bold">Rp 0</span></li>
+                                <li>Alokasi Pokok: <span id="calc-principal" class="font-weight-bold text-success">Rp 0</span></li>
+                                <li>Sisa Pinjaman Akhir: <span id="calc-balance" class="font-weight-bold text-danger">Rp 0</span></li>
+                            </ul>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -531,8 +542,10 @@
             $('body').on('click', '.btn-pay', function() {
                 var id = $(this).data('id');
                 var angsuranKe = $(this).data('angsuran');
-                var total = $(this).data('total'); // Get total bill
-                var denda = $(this).data('denda');
+                var total = parseFloat($(this).data('total')) || 0;
+                var bunga = parseFloat($(this).data('bunga')) || 0;
+                var currentSisa = parseFloat($(this).data('sisa')) || 0;
+                var denda = parseFloat($(this).data('denda')) || 0;
                 var duedate = $(this).data('duedate');
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
 
@@ -547,14 +560,55 @@
                      $('#pay-denda-info').text('');
                 }
 
+                // Store base values for calculation
+                $('#modal-pay').data('bunga', bunga);
+                $('#modal-pay').data('sisa', currentSisa);
+
+                // Determine if fixed or indefinite
+                // If total equals bunga, likely indefinite (heuristic) or we can check PHP side,
+                // but checking if sisa equals loan amount isn't reliable.
+                // Better heuristic: if tenor is 0 (we don't have that in button),
+                // but we know Indefinite loans allow flexible input.
+                // Fixed loans: Disable input or warn.
+                // For simplicity, we assume flexible input allowed but Simulation logic highlights principal allocation.
+
                 var action = '{{ url('loans/installments') }}/' + id + '/pay';
 
                 $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
                 $('#form-pay').attr('action', action);
                 $('#pay-denda').val(denda);
-                $('#pay-amount').val(total); // Set default amount
+                $('#pay-amount').val(total + (denda - $(this).data('denda'))); // Adjust total if auto-denda added
+
+                // Trigger calculation
+                calculateSimulation();
+
                 $('#modal-pay').modal('show');
             });
+
+            $('#pay-amount, #pay-denda').on('input', function() {
+                calculateSimulation();
+            });
+
+            function calculateSimulation() {
+                var inputAmount = parseFloat($('#pay-amount').val()) || 0;
+                var inputDenda = parseFloat($('#pay-denda').val()) || 0;
+                var baseBunga = parseFloat($('#modal-pay').data('bunga')) || 0;
+                var currentSisa = parseFloat($('#modal-pay').data('sisa')) || 0;
+
+                var totalBill = baseBunga + inputDenda;
+                var principalPaid = 0;
+
+                if (inputAmount > totalBill) {
+                    principalPaid = inputAmount - totalBill;
+                }
+
+                var finalBalance = currentSisa - principalPaid;
+                if (finalBalance < 0) finalBalance = 0;
+
+                $('#calc-bill').text('Rp ' + totalBill.toLocaleString('id-ID'));
+                $('#calc-principal').text('Rp ' + principalPaid.toLocaleString('id-ID'));
+                $('#calc-balance').text('Rp ' + finalBalance.toLocaleString('id-ID'));
+            }
         });
     });
 </script>
