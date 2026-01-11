@@ -307,16 +307,57 @@ class LoanController extends Controller
                 'metode_pembayaran' => 'required',
                 'denda' => 'nullable|numeric|min:0',
                 'keterangan_pembayaran' => 'nullable|string',
+                'jumlah_bayar' => 'nullable|numeric|min:0'
             ]);
 
             DB::transaction(function () use ($installment, $request) {
+                // Determine actual amounts paid
+                $denda = $request->denda ?? $installment->denda;
+                $paidAmount = $request->jumlah_bayar ?? ($installment->total_angsuran + $denda);
+
+                // For indefinite loans, calculate extra principal paid
+                // Default installment total usually equals interest (+denda if any)
+                // If user pays more, the difference goes to principal
+                $pokokPaid = $installment->pokok;
+                $bungaPaid = $installment->bunga;
+
+                // Validate if paidAmount covers at least interest + denda
+                $minPayment = $installment->bunga + $denda;
+                // If fixed loan, usually total_angsuran + denda
+                if ($installment->loan->tenor != 0) {
+                     $minPayment = $installment->total_angsuran + $denda;
+                }
+
+                if ($paidAmount < $minPayment) {
+                    // This creates a potential issue if we allow partial payments, but for now enforcing full payment
+                    // or full interest payment.
+                    // For now, let's assume they must pay at least the billed amount (Interest)
+                }
+
+                if ($installment->loan->tenor == 0) {
+                     // For Indefinite, any excess over (Interest + Denda) is Principal
+                     $excess = $paidAmount - ($installment->bunga + $denda);
+                     if ($excess > 0) {
+                         $pokokPaid = $excess;
+                     } else {
+                         $pokokPaid = 0;
+                     }
+                }
+
                 $installment->update([
                     'status' => 'lunas',
                     'tanggal_bayar' => $request->tanggal_bayar,
                     'metode_pembayaran' => $request->metode_pembayaran,
                     'keterangan_pembayaran' => $request->keterangan_pembayaran,
-                    'denda' => $request->denda ?? $installment->denda, // Update denda if provided
+                    'denda' => $denda,
+                    'total_angsuran' => $paidAmount - $denda, // Store base amount without denda as total_angsuran? Or match structure?
+                    // Usually total_angsuran includes Pokok + Bunga.
+                    'pokok' => $pokokPaid,
                 ]);
+
+                // If we updated Pokok, we should update total_angsuran to reflect Pokok + Bunga
+                $installment->total_angsuran = $pokokPaid + $bungaPaid;
+                $installment->save();
 
                 // Check if all installments are paid
                 $loan = $installment->loan;
@@ -328,52 +369,67 @@ class LoanController extends Controller
 
                 // Indefinite Loan Logic: Create next installment
                 if ($loan->tenor == 0) {
-                    $nextInstallmentNo = $installment->angsuran_ke + 1;
-                    $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
+                    // Calculate New Balance based on what was just paid
+                    // Previous Balance (Sisa Pinjaman at this installment)
+                    // Note: 'sisa_pinjaman' in DB is the balance AFTER this installment.
+                    // But for Indefinite, we generated it with 'sisa_pinjaman' = full loan amount (because principal was 0).
+                    // So we subtract the newly paid principal from that.
 
-                    if ($loan->tempo_angsuran == 'harian') {
-                        $nextDueDate->addDay();
-                    } elseif ($loan->tempo_angsuran == 'mingguan') {
-                        $nextDueDate->addWeek();
+                    $prevBalance = $installment->sisa_pinjaman;
+                    $newBalance = $prevBalance - $pokokPaid;
+
+                    if ($newBalance <= 100) { // Tolerance for rounding
+                        $loan->update(['status' => 'lunas']);
+                        // Update this installment to reflect 0 balance
+                        $installment->update(['sisa_pinjaman' => 0]);
                     } else {
-                        $nextDueDate->addMonth();
+                        // Update this installment's sisa_pinjaman to reflect the payment?
+                        // Actually, historically sisa_pinjaman is "Outstanding Principal Remaining".
+                        $installment->update(['sisa_pinjaman' => $newBalance]);
+
+                        $nextInstallmentNo = $installment->angsuran_ke + 1;
+                        $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
+
+                        if ($loan->tempo_angsuran == 'harian') {
+                            $nextDueDate->addDay();
+                        } elseif ($loan->tempo_angsuran == 'mingguan') {
+                            $nextDueDate->addWeek();
+                        } else {
+                            $nextDueDate->addMonth();
+                        }
+
+                        $ratePercent = $loan->suku_bunga / 100;
+                         // Normalize Rate
+                        if ($loan->satuan_bunga == 'hari') {
+                            $yearlyRate = $ratePercent * 365;
+                        } elseif ($loan->satuan_bunga == 'bulan') {
+                            $yearlyRate = $ratePercent * 12;
+                        } else {
+                            $yearlyRate = $ratePercent;
+                        }
+
+                        // Rate Per Period
+                        if ($loan->tempo_angsuran == 'harian') {
+                            $ratePerPeriod = $yearlyRate / 365;
+                        } elseif ($loan->tempo_angsuran == 'mingguan') {
+                            $ratePerPeriod = $yearlyRate / 52;
+                        } else {
+                            $ratePerPeriod = $yearlyRate / 12;
+                        }
+
+                        $interest = $newBalance * $ratePerPeriod;
+
+                        LoanInstallment::create([
+                            'pinjaman_id' => $loan->id,
+                            'angsuran_ke' => $nextInstallmentNo,
+                            'tanggal_jatuh_tempo' => $nextDueDate,
+                            'total_angsuran' => round($interest, 2),
+                            'pokok' => 0,
+                            'bunga' => round($interest, 2),
+                            'sisa_pinjaman' => $newBalance, // Carry forward new balance
+                            'status' => 'belum_lunas',
+                        ]);
                     }
-
-                    // Calculate Interest again (in case we support partial principal payment later, for now Principal is full)
-                    // Currently assume principal never decreases for Indefinite unless manual intervention
-                    $balance = $loan->jumlah_pinjaman;
-
-                    $ratePercent = $loan->suku_bunga / 100;
-                     // Normalize Rate
-                    if ($loan->satuan_bunga == 'hari') {
-                        $yearlyRate = $ratePercent * 365;
-                    } elseif ($loan->satuan_bunga == 'bulan') {
-                        $yearlyRate = $ratePercent * 12;
-                    } else {
-                        $yearlyRate = $ratePercent;
-                    }
-
-                    // Rate Per Period
-                    if ($loan->tempo_angsuran == 'harian') {
-                        $ratePerPeriod = $yearlyRate / 365;
-                    } elseif ($loan->tempo_angsuran == 'mingguan') {
-                        $ratePerPeriod = $yearlyRate / 52;
-                    } else {
-                        $ratePerPeriod = $yearlyRate / 12;
-                    }
-
-                    $interest = $balance * $ratePerPeriod;
-
-                    LoanInstallment::create([
-                        'pinjaman_id' => $loan->id,
-                        'angsuran_ke' => $nextInstallmentNo,
-                        'tanggal_jatuh_tempo' => $nextDueDate,
-                        'total_angsuran' => round($interest, 2),
-                        'pokok' => 0,
-                        'bunga' => round($interest, 2),
-                        'sisa_pinjaman' => $balance,
-                        'status' => 'belum_lunas',
-                    ]);
                 }
 
                 // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)

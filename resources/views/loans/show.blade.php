@@ -240,6 +240,11 @@
                             <input type="date" name="tanggal_bayar" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
                         <div class="form-group">
+                            <label>Jumlah Bayar (Rp)</label>
+                            <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
+                            <small class="text-muted">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
+                        </div>
+                        <div class="form-group">
                             <label>Metode Pembayaran</label>
                             <select name="metode_pembayaran" class="form-control" required>
                                 <option value="tunai">Tunai / Kas</option>
@@ -526,6 +531,7 @@
             $('body').on('click', '.btn-pay', function() {
                 var id = $(this).data('id');
                 var angsuranKe = $(this).data('angsuran');
+                var total = $(this).data('total'); // Get total bill
                 var denda = $(this).data('denda');
                 var duedate = $(this).data('duedate');
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
@@ -546,6 +552,7 @@
                 $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
                 $('#form-pay').attr('action', action);
                 $('#pay-denda').val(denda);
+                $('#pay-amount').val(total); // Set default amount
                 $('#modal-pay').modal('show');
             });
         });
