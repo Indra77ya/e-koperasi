@@ -89,8 +89,13 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Biaya Admin (Rp)</label>
-                                    <input type="number" name="biaya_admin" class="form-control" value="0">
+                                    <label>Biaya Admin (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="biaya_admin" id="admin_fee_percent" class="form-control" value="0" step="0.01" min="0">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="admin_fee_amount_display">Rp 0</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Denda Keterlambatan (Rp)</label>
@@ -157,6 +162,15 @@
                     $('#nasabah-group').show();
                 }
             });
+
+            function calculateAdminFee() {
+                var amount = parseFloat($('#amount').val()) || 0;
+                var percent = parseFloat($('#admin_fee_percent').val()) || 0;
+                var fee = amount * (percent / 100);
+                $('#admin_fee_amount_display').text('Rp ' + fee.toLocaleString('id-ID'));
+            }
+
+            $('#amount, #admin_fee_percent').on('input', calculateAdminFee);
 
             $('#btn-simulate').click(function() {
                 var amount = $('#amount').val();

@@ -130,7 +130,7 @@ class LoanController extends Controller
             'satuan_bunga' => $request->satuan_bunga,
             'tempo_angsuran' => $request->tempo_angsuran,
             'jenis_bunga' => $request->jenis_bunga,
-            'biaya_admin' => $request->biaya_admin ?? 0,
+            'biaya_admin' => $request->jumlah_pinjaman * (($request->biaya_admin ?? 0) / 100),
             'denda_keterlambatan' => $request->denda_keterlambatan ?? 0,
             'tanggal_pengajuan' => $request->tanggal_pengajuan,
             'status' => 'diajukan',
@@ -201,16 +201,25 @@ class LoanController extends Controller
                     ]);
                 }
 
-                // Create Journal: Dr Piutang Pinjaman, Cr Kas
-                // Codes based on Seeder: Piutang Pinjaman (1103), Kas (1101)
+                // Create Journal: Dr Piutang Pinjaman, Cr Kas, Cr Pendapatan Admin
+                // Codes based on Seeder: Piutang Pinjaman (1103), Kas (1101), Pendapatan Admin (4102)
+                $adminFee = $loan->biaya_admin ?? 0;
+                $disbursedAmount = $loan->jumlah_pinjaman - $adminFee;
+
+                $journalItems = [
+                    ['code' => '1103', 'debit' => $loan->jumlah_pinjaman, 'credit' => 0], // Piutang
+                    ['code' => '1101', 'debit' => 0, 'credit' => $disbursedAmount], // Kas
+                ];
+
+                if ($adminFee > 0) {
+                    $journalItems[] = ['code' => '4102', 'debit' => 0, 'credit' => $adminFee]; // Pendapatan Admin
+                }
+
                 $this->accountingService->createJournal(
                     now(),
                     $loan->kode_pinjaman,
                     'Pencairan Pinjaman ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
-                    [
-                        ['code' => '1103', 'debit' => $loan->jumlah_pinjaman, 'credit' => 0], // Piutang
-                        ['code' => '1101', 'debit' => 0, 'credit' => $loan->jumlah_pinjaman], // Kas
-                    ],
+                    $journalItems,
                     $loan
                 );
             });
