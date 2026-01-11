@@ -190,6 +190,7 @@
                                                         data-bunga="{{ $inst->bunga }}"
                                                         data-sisa="{{ $inst->sisa_pinjaman }}"
                                                         data-denda="{{ $inst->denda }}"
+                                                        data-tenor="{{ $loan->tenor }}"
                                                         data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
                                                         Bayar
                                                     </button>
@@ -246,7 +247,7 @@
                             <input type="text" id="pay-bunga-display" class="form-control" readonly>
                         </div>
                         <div class="form-group">
-                            <label>Jumlah Bayar (Rp)</label>
+                            <label id="label-pay-amount">Jumlah Bayar (Rp)</label>
                             <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
                             <small class="text-muted" id="pay-amount-help">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
                         </div>
@@ -550,6 +551,7 @@
                 var bunga = parseFloat($(this).data('bunga')) || 0;
                 var currentSisa = parseFloat($(this).data('sisa')) || 0;
                 var denda = parseFloat($(this).data('denda')) || 0;
+                var tenor = parseInt($(this).data('tenor')) || 0;
                 var duedate = $(this).data('duedate');
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
 
@@ -567,14 +569,7 @@
                 // Store base values for calculation
                 $('#modal-pay').data('bunga', bunga);
                 $('#modal-pay').data('sisa', currentSisa);
-
-                // Determine if fixed or indefinite
-                // If total equals bunga, likely indefinite (heuristic) or we can check PHP side,
-                // but checking if sisa equals loan amount isn't reliable.
-                // Better heuristic: if tenor is 0 (we don't have that in button),
-                // but we know Indefinite loans allow flexible input.
-                // Fixed loans: Disable input or warn.
-                // For simplicity, we assume flexible input allowed but Simulation logic highlights principal allocation.
+                $('#modal-pay').data('tenor', tenor);
 
                 var action = '{{ url('loans/installments') }}/' + id + '/pay';
 
@@ -582,7 +577,18 @@
                 $('#form-pay').attr('action', action);
                 $('#pay-denda').val(denda);
                 $('#pay-bunga-display').val(bunga.toLocaleString('id-ID')); // Show formatted bunga
-                $('#pay-amount').val(total + (denda - $(this).data('denda'))); // Adjust total if auto-denda added
+
+                if (tenor == 0) {
+                    // Indefinite: Input is PRINCIPAL ONLY
+                    $('#label-pay-amount').text('Bayar Pokok (Rp)');
+                    $('#pay-amount-help').text('Masukkan jumlah pokok yang ingin dibayar. Total bayar otomatis ditambah bunga & denda.');
+                    $('#pay-amount').val(0); // Default to paying 0 principal (just interest)
+                } else {
+                    // Fixed: Input is TOTAL
+                    $('#label-pay-amount').text('Jumlah Bayar (Rp)');
+                    $('#pay-amount-help').text('Masukkan total nominal uang yang dibayarkan.');
+                    $('#pay-amount').val(total + (denda - $(this).data('denda')));
+                }
 
                 // Trigger calculation
                 calculateSimulation();
@@ -599,18 +605,28 @@
                 var inputDenda = parseFloat($('#pay-denda').val()) || 0;
                 var baseBunga = parseFloat($('#modal-pay').data('bunga')) || 0;
                 var currentSisa = parseFloat($('#modal-pay').data('sisa')) || 0;
+                var tenor = parseInt($('#modal-pay').data('tenor')) || 0;
 
                 var totalBill = baseBunga + inputDenda;
                 var principalPaid = 0;
 
-                if (inputAmount > totalBill) {
-                    principalPaid = inputAmount - totalBill;
+                if (tenor == 0) {
+                    // Indefinite: Input is Principal
+                    principalPaid = inputAmount;
+                    totalBill = totalBill + principalPaid; // Total Cash needed
+
+                    $('#calc-bill').html('Rp ' + (baseBunga + inputDenda).toLocaleString('id-ID') + ' <span class="text-muted">(Bunga+Denda)</span> <br>+ Rp ' + principalPaid.toLocaleString('id-ID') + ' <span class="text-muted">(Pokok)</span><br><strong>Total: Rp ' + totalBill.toLocaleString('id-ID') + '</strong>');
+                } else {
+                    // Fixed: Input is Total
+                    if (inputAmount > totalBill) {
+                        principalPaid = inputAmount - totalBill;
+                    }
+                    $('#calc-bill').text('Rp ' + totalBill.toLocaleString('id-ID'));
                 }
 
                 var finalBalance = currentSisa - principalPaid;
                 if (finalBalance < 0) finalBalance = 0;
 
-                $('#calc-bill').text('Rp ' + totalBill.toLocaleString('id-ID'));
                 $('#calc-principal').text('Rp ' + principalPaid.toLocaleString('id-ID'));
                 $('#calc-balance').text('Rp ' + finalBalance.toLocaleString('id-ID'));
             }
