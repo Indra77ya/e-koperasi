@@ -53,7 +53,11 @@
                                     <input type="number" name="jumlah_pinjaman" id="amount" class="form-control" required min="0">
                                 </div>
                                 <div class="form-group">
-                                    <label>Tenor</label>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="is_indefinite" name="is_indefinite" value="1">
+                                        <label class="custom-control-label" for="is_indefinite">Pinjaman Tanpa Tenor (Jangka Panjang)</label>
+                                    </div>
+                                    <label id="label-tenor">Tenor</label>
                                     <div class="input-group">
                                         <input type="number" name="tenor" id="tenor" class="form-control" required min="1">
                                         <div class="input-group-append">
@@ -160,6 +164,17 @@
                 } else {
                     $('#anggota-group').hide();
                     $('#nasabah-group').show();
+                }
+            });
+
+            $('#is_indefinite').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#tenor').prop('disabled', true).prop('required', false).val('');
+                    $('#label-tenor').addClass('text-muted');
+                    // Usually indefinite loans are Flat or Effective (Interest only), allow user to keep selecting
+                } else {
+                    $('#tenor').prop('disabled', false).prop('required', true);
+                    $('#label-tenor').removeClass('text-muted');
                 }
             });
 

@@ -40,6 +40,9 @@ class LoanController extends Controller
                     return $loan->suku_bunga . '% / ' . $unit . ' (' . ucfirst($loan->jenis_bunga) . ')';
                 })
                 ->editColumn('tenor', function ($loan) {
+                    if ($loan->tenor == 0) {
+                        return '<span class="badge badge-warning">Tanpa Tenor</span>';
+                    }
                     if ($loan->tempo_angsuran == 'harian') {
                         return $loan->tenor . ' Hari';
                     } elseif ($loan->tempo_angsuran == 'mingguan') {
@@ -105,19 +108,24 @@ class LoanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'tipe_peminjam' => 'required|in:anggota,nasabah',
             'anggota_id' => 'required_if:tipe_peminjam,anggota|nullable|exists:anggota,id',
             'nasabah_id' => 'required_if:tipe_peminjam,nasabah|nullable|exists:nasabahs,id',
             'jenis_pinjaman' => 'required',
             'jumlah_pinjaman' => 'required|numeric|min:0',
-            'tenor' => 'required|integer|min:1',
             'suku_bunga' => 'required|numeric|min:0',
             'satuan_bunga' => 'required|in:tahun,bulan,hari',
             'tempo_angsuran' => 'required|in:harian,mingguan,bulanan',
             'jenis_bunga' => 'required|in:flat,efektif,anuitas',
             'tanggal_pengajuan' => 'required|date',
-        ]);
+        ];
+
+        if (!$request->has('is_indefinite')) {
+            $rules['tenor'] = 'required|integer|min:1';
+        }
+
+        $request->validate($rules);
 
         $loan = Loan::create([
             'kode_pinjaman' => 'P-' . date('Ymd') . '-' . rand(100, 999),
@@ -125,7 +133,7 @@ class LoanController extends Controller
             'nasabah_id' => $request->tipe_peminjam == 'nasabah' ? $request->nasabah_id : null,
             'jenis_pinjaman' => $request->jenis_pinjaman,
             'jumlah_pinjaman' => $request->jumlah_pinjaman,
-            'tenor' => $request->tenor,
+            'tenor' => $request->has('is_indefinite') ? 0 : $request->tenor,
             'suku_bunga' => $request->suku_bunga,
             'satuan_bunga' => $request->satuan_bunga,
             'tempo_angsuran' => $request->tempo_angsuran,
@@ -176,29 +184,70 @@ class LoanController extends Controller
             DB::transaction(function () use ($loan) {
                 $loan->update(['status' => 'berjalan']);
 
-                $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga, $loan->tempo_angsuran);
+                if ($loan->tenor == 0) {
+                    // Indefinite Loan: Generate only the 1st installment (Interest Only)
+                    $ratePercent = $loan->suku_bunga / 100;
 
-                foreach ($schedule as $inst) {
-                    $dueDate = now();
-                    if ($loan->tempo_angsuran == 'harian') {
-                        $dueDate->addDays($inst['month']);
-                    } elseif ($loan->tempo_angsuran == 'mingguan') {
-                        $dueDate->addWeeks($inst['month']);
+                    // Normalize Rate
+                    if ($loan->satuan_bunga == 'hari') {
+                        $yearlyRate = $ratePercent * 365;
+                    } elseif ($loan->satuan_bunga == 'bulan') {
+                        $yearlyRate = $ratePercent * 12;
                     } else {
-                        // Default bulanan
-                        $dueDate->addMonths($inst['month']);
+                        $yearlyRate = $ratePercent;
                     }
+
+                    // Rate Per Period
+                    if ($loan->tempo_angsuran == 'harian') {
+                        $ratePerPeriod = $yearlyRate / 365;
+                        $dueDate = now()->addDay();
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        $ratePerPeriod = $yearlyRate / 52;
+                         $dueDate = now()->addWeek();
+                    } else {
+                        $ratePerPeriod = $yearlyRate / 12;
+                        $dueDate = now()->addMonth();
+                    }
+
+                    $interest = $loan->jumlah_pinjaman * $ratePerPeriod;
 
                     LoanInstallment::create([
                         'pinjaman_id' => $loan->id,
-                        'angsuran_ke' => $inst['month'],
+                        'angsuran_ke' => 1,
                         'tanggal_jatuh_tempo' => $dueDate,
-                        'total_angsuran' => $inst['total'],
-                        'pokok' => $inst['principal'],
-                        'bunga' => $inst['interest'],
-                        'sisa_pinjaman' => $inst['balance'],
+                        'total_angsuran' => round($interest, 2),
+                        'pokok' => 0,
+                        'bunga' => round($interest, 2),
+                        'sisa_pinjaman' => $loan->jumlah_pinjaman,
                         'status' => 'belum_lunas',
                     ]);
+
+                } else {
+                    // Fixed Loan
+                    $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga, $loan->tempo_angsuran);
+
+                    foreach ($schedule as $inst) {
+                        $dueDate = now();
+                        if ($loan->tempo_angsuran == 'harian') {
+                            $dueDate->addDays($inst['month']);
+                        } elseif ($loan->tempo_angsuran == 'mingguan') {
+                            $dueDate->addWeeks($inst['month']);
+                        } else {
+                            // Default bulanan
+                            $dueDate->addMonths($inst['month']);
+                        }
+
+                        LoanInstallment::create([
+                            'pinjaman_id' => $loan->id,
+                            'angsuran_ke' => $inst['month'],
+                            'tanggal_jatuh_tempo' => $dueDate,
+                            'total_angsuran' => $inst['total'],
+                            'pokok' => $inst['principal'],
+                            'bunga' => $inst['interest'],
+                            'sisa_pinjaman' => $inst['balance'],
+                            'status' => 'belum_lunas',
+                        ]);
+                    }
                 }
 
                 // Create Journal: Dr Piutang Pinjaman, Cr Kas, Cr Pendapatan Admin
@@ -273,8 +322,58 @@ class LoanController extends Controller
                 $loan = $installment->loan;
                 $remaining = $loan->installments()->where('status', 'belum_lunas')->count();
 
-                if ($remaining == 0) {
+                if ($remaining == 0 && $loan->tenor != 0) {
                     $loan->update(['status' => 'lunas']);
+                }
+
+                // Indefinite Loan Logic: Create next installment
+                if ($loan->tenor == 0) {
+                    $nextInstallmentNo = $installment->angsuran_ke + 1;
+                    $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
+
+                    if ($loan->tempo_angsuran == 'harian') {
+                        $nextDueDate->addDay();
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        $nextDueDate->addWeek();
+                    } else {
+                        $nextDueDate->addMonth();
+                    }
+
+                    // Calculate Interest again (in case we support partial principal payment later, for now Principal is full)
+                    // Currently assume principal never decreases for Indefinite unless manual intervention
+                    $balance = $loan->jumlah_pinjaman;
+
+                    $ratePercent = $loan->suku_bunga / 100;
+                     // Normalize Rate
+                    if ($loan->satuan_bunga == 'hari') {
+                        $yearlyRate = $ratePercent * 365;
+                    } elseif ($loan->satuan_bunga == 'bulan') {
+                        $yearlyRate = $ratePercent * 12;
+                    } else {
+                        $yearlyRate = $ratePercent;
+                    }
+
+                    // Rate Per Period
+                    if ($loan->tempo_angsuran == 'harian') {
+                        $ratePerPeriod = $yearlyRate / 365;
+                    } elseif ($loan->tempo_angsuran == 'mingguan') {
+                        $ratePerPeriod = $yearlyRate / 52;
+                    } else {
+                        $ratePerPeriod = $yearlyRate / 12;
+                    }
+
+                    $interest = $balance * $ratePerPeriod;
+
+                    LoanInstallment::create([
+                        'pinjaman_id' => $loan->id,
+                        'angsuran_ke' => $nextInstallmentNo,
+                        'tanggal_jatuh_tempo' => $nextDueDate,
+                        'total_angsuran' => round($interest, 2),
+                        'pokok' => 0,
+                        'bunga' => round($interest, 2),
+                        'sisa_pinjaman' => $balance,
+                        'status' => 'belum_lunas',
+                    ]);
                 }
 
                 // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)
