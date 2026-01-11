@@ -78,7 +78,7 @@ class LoanController extends Controller
                     $btn = '<a href="' . route('loans.show', $loan->id) . '" class="btn btn-sm btn-info">Detail</a>';
                     return $btn;
                 })
-                ->rawColumns(['status', 'action'])
+                ->rawColumns(['tenor', 'status', 'action'])
                 ->make(true);
         }
 
