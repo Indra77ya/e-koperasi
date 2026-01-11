@@ -312,47 +312,49 @@ class LoanController extends Controller
 
             // Validate amounts
             $denda = $request->denda ?? $installment->denda;
-            $paidAmount = $request->jumlah_bayar ?? ($installment->total_angsuran + $denda);
+            $inputAmount = $request->jumlah_bayar ?? ($installment->total_angsuran);
 
             // Logic validation before transaction
             $minPayment = $installment->bunga + $denda;
-            if ($installment->loan->tenor != 0) {
-                // For Fixed Loans, ensure full payment (partial not supported yet)
-                $minPayment = $installment->total_angsuran + $denda;
 
-                // Allow small floating point tolerance
-                if ($paidAmount < ($minPayment - 1)) {
-                    return redirect()->back()->with('error', 'Pembayaran kurang. Harap bayar sesuai tagihan (Angsuran + Denda).');
+            // Calculate Total Paid based on Loan Type
+            if ($installment->loan->tenor == 0) {
+                // Indefinite: Input is Principal. Total = Input + Interest + Denda
+                $pokokPaid = $inputAmount;
+                $bungaPaid = $installment->bunga;
+                $totalPaid = $pokokPaid + $bungaPaid + $denda;
+
+                // Ensure Principal is non-negative
+                if ($pokokPaid < 0) {
+                     return redirect()->back()->with('error', 'Jumlah pokok tidak boleh negatif.');
                 }
             } else {
-                // For Indefinite, ensure at least Interest + Denda is paid
-                if ($paidAmount < ($minPayment - 1)) {
-                    return redirect()->back()->with('error', 'Pembayaran kurang. Minimal membayar bunga + denda.');
-                }
-            }
+                // Fixed: Input is Total.
+                $totalPaid = $inputAmount + $denda; // Assuming input includes base amount, denda added or included?
+                // Revert to original logic: if fixed, input usually matches total_angsuran.
+                // Let's assume input is Total Cash.
+                $totalPaid = $inputAmount;
 
-            DB::transaction(function () use ($installment, $request, $denda, $paidAmount) {
+                // Validate Full Payment
+                $requiredTotal = $installment->total_angsuran + $denda;
+                if ($totalPaid < ($requiredTotal - 1)) {
+                    return redirect()->back()->with('error', 'Pembayaran kurang. Harap bayar sesuai tagihan (Angsuran + Denda).');
+                }
+
                 $pokokPaid = $installment->pokok;
                 $bungaPaid = $installment->bunga;
+            }
 
-                // Handle Indefinite Loan Logic
+            DB::transaction(function () use ($installment, $request, $denda, $pokokPaid, $bungaPaid, $totalPaid) {
+                // Handle Indefinite Loan Logic Caps
                 if ($installment->loan->tenor == 0) {
-                     // Excess over (Interest + Denda) goes to Principal
-                     $excess = $paidAmount - ($bungaPaid + $denda);
-
-                     // Ensure we don't pay more than the outstanding loan balance
-                     // sisa_pinjaman on current installment refers to the balance *before* this payment
-                     // Wait, in disburse we set 'sisa_pinjaman' = total loan.
-                     // When creating next installment, we carry it over.
-                     // So $installment->sisa_pinjaman is the Outstanding Principal.
                      $outstandingPrincipal = $installment->sisa_pinjaman;
 
-                     if ($excess > $outstandingPrincipal) {
-                         $excess = $outstandingPrincipal; // Cap at outstanding balance
-                         $paidAmount = $bungaPaid + $denda + $excess; // Adjust paid amount to match cap
+                     if ($pokokPaid > $outstandingPrincipal) {
+                         $pokokPaid = $outstandingPrincipal; // Cap at outstanding balance
+                         // Recalculate total
+                         $totalPaid = $pokokPaid + $bungaPaid + $denda;
                      }
-
-                     $pokokPaid = max(0, $excess);
                 }
 
                 $installment->update([
