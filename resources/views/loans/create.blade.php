@@ -181,7 +181,7 @@
             function calculateAdminFee() {
                 var amount = parseFloat($('#amount').val()) || 0;
                 var percent = parseFloat($('#admin_fee_percent').val()) || 0;
-                var fee = amount * (percent / 100);
+                var fee = Math.round(amount * (percent / 100));
                 $('#admin_fee_amount_display').text('Rp ' + fee.toLocaleString('id-ID'));
             }
 
@@ -222,10 +222,10 @@
                         $.each(response, function(index, item) {
                             html += '<tr>';
                             html += '<td>' + item.month + '</td>';
-                            html += '<td>Rp ' + item.principal.toLocaleString('id-ID') + '</td>';
-                            html += '<td>Rp ' + item.interest.toLocaleString('id-ID') + '</td>';
-                            html += '<td>Rp ' + item.total.toLocaleString('id-ID') + '</td>';
-                            html += '<td>Rp ' + item.balance.toLocaleString('id-ID') + '</td>';
+                            html += '<td>Rp ' + Math.round(item.principal).toLocaleString('id-ID') + '</td>';
+                            html += '<td>Rp ' + Math.round(item.interest).toLocaleString('id-ID') + '</td>';
+                            html += '<td>Rp ' + Math.round(item.total).toLocaleString('id-ID') + '</td>';
+                            html += '<td>Rp ' + Math.round(item.balance).toLocaleString('id-ID') + '</td>';
                             html += '</tr>';
                         });
                         $('#simulation-body').html(html);

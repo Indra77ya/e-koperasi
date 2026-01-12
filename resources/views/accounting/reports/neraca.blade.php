@@ -23,13 +23,13 @@
                                 @if(abs($asset->balance) > 0)
                                 <tr>
                                     <td>{{ $asset->code }} - {{ $asset->name }}</td>
-                                    <td class="text-right">{{ number_format($asset->balance, 2) }}</td>
+                                    <td class="text-right">{{ number_format($asset->balance, 0, ',', '.') }}</td>
                                 </tr>
                                 @endif
                             @endforeach
                             <tr class="font-weight-bold bg-light">
                                 <td>Total Aset</td>
-                                <td class="text-right">{{ number_format($assets->sum('balance'), 2) }}</td>
+                                <td class="text-right">{{ number_format($assets->sum('balance'), 0, ',', '.') }}</td>
                             </tr>
                         </table>
                     </div>
@@ -42,13 +42,13 @@
                                 @if(abs($liab->balance) > 0)
                                 <tr>
                                     <td>{{ $liab->code }} - {{ $liab->name }}</td>
-                                    <td class="text-right">{{ number_format($liab->balance, 2) }}</td>
+                                    <td class="text-right">{{ number_format($liab->balance, 0, ',', '.') }}</td>
                                 </tr>
                                 @endif
                             @endforeach
                             <tr class="font-weight-bold bg-light">
                                 <td>Total Liabilitas</td>
-                                <td class="text-right">{{ number_format($liabilities->sum('balance'), 2) }}</td>
+                                <td class="text-right">{{ number_format($liabilities->sum('balance'), 0, ',', '.') }}</td>
                             </tr>
                         </table>
 
@@ -58,23 +58,23 @@
                                 @if(abs($equity->balance) > 0)
                                 <tr>
                                     <td>{{ $equity->code }} - {{ $equity->name }}</td>
-                                    <td class="text-right">{{ number_format($equity->balance, 2) }}</td>
+                                    <td class="text-right">{{ number_format($equity->balance, 0, ',', '.') }}</td>
                                 </tr>
                                 @endif
                             @endforeach
                             <tr>
                                 <td>Laba/Rugi Berjalan</td>
-                                <td class="text-right">{{ number_format($currentEarnings, 2) }}</td>
+                                <td class="text-right">{{ number_format($currentEarnings, 0, ',', '.') }}</td>
                             </tr>
                             <tr class="font-weight-bold bg-light">
                                 <td>Total Ekuitas</td>
-                                <td class="text-right">{{ number_format($equities->sum('balance') + $currentEarnings, 2) }}</td>
+                                <td class="text-right">{{ number_format($equities->sum('balance') + $currentEarnings, 0, ',', '.') }}</td>
                             </tr>
                         </table>
 
                         <div class="alert alert-secondary mt-3">
                             <strong>Total Liabilitas & Ekuitas:</strong>
-                            <span class="float-right font-weight-bold">{{ number_format($liabilities->sum('balance') + $equities->sum('balance') + $currentEarnings, 2) }}</span>
+                            <span class="float-right font-weight-bold">{{ number_format($liabilities->sum('balance') + $equities->sum('balance') + $currentEarnings, 0, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>

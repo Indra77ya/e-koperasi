@@ -76,10 +76,10 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" step="0.01" class="form-control input-debit" name="items[{{$i}}][debit]" placeholder="0">
+                                <input type="number" class="form-control input-debit" name="items[{{$i}}][debit]" placeholder="0">
                             </td>
                             <td>
-                                <input type="number" step="0.01" class="form-control input-credit" name="items[{{$i}}][credit]" placeholder="0">
+                                <input type="number" class="form-control input-credit" name="items[{{$i}}][credit]" placeholder="0">
                             </td>
                             <td>
                                 <button type="button" class="btn btn-danger btn-sm remove-row"><i class="fe fe-trash"></i></button>
@@ -131,10 +131,10 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
                     </select>
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control input-debit" name="items[${rowCount}][debit]" placeholder="0">
+                    <input type="number" class="form-control input-debit" name="items[${rowCount}][debit]" placeholder="0">
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control input-credit" name="items[${rowCount}][credit]" placeholder="0">
+                    <input type="number" class="form-control input-credit" name="items[${rowCount}][credit]" placeholder="0">
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm remove-row"><i class="fe fe-trash"></i></button>
@@ -166,8 +166,8 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
             totalCredit += parseFloat($(this).val() || 0);
         });
 
-        $('#total-debit').text(totalDebit.toFixed(2));
-        $('#total-credit').text(totalCredit.toFixed(2));
+        $('#total-debit').text(Math.round(totalDebit).toLocaleString('id-ID'));
+        $('#total-credit').text(Math.round(totalCredit).toLocaleString('id-ID'));
     }
 });
 </script>

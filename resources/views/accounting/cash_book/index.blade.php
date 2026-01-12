@@ -26,7 +26,7 @@
                                     <i class="fe fe-dollar-sign"></i>
                                 </span>
                                 <div>
-                                    <h4 class="m-0"><a href="javascript:void(0)">{{ number_format($currentBalance, 2) }}</a></h4>
+                                    <h4 class="m-0"><a href="javascript:void(0)">{{ number_format($currentBalance, 0, ',', '.') }}</a></h4>
                                     <small class="text-muted">Saldo Saat Ini</small>
                                 </div>
                             </div>
@@ -71,9 +71,9 @@ require(['jquery', 'datatables'], function($, datatable) {
             { data: 'transaction_date', name: 'transaction_date' },
             { data: 'reference_number', name: 'reference_number' },
             { data: 'description', name: 'description' },
-            { data: 'debit', name: 'debit', render: $.fn.dataTable.render.number(',', '.', 2) },
-            { data: 'credit', name: 'credit', render: $.fn.dataTable.render.number(',', '.', 2) },
-            { data: 'balance', name: 'balance', render: $.fn.dataTable.render.number(',', '.', 2) }
+            { data: 'debit', name: 'debit', render: $.fn.dataTable.render.number('.', ',', 0) },
+            { data: 'credit', name: 'credit', render: $.fn.dataTable.render.number('.', ',', 0) },
+            { data: 'balance', name: 'balance', render: $.fn.dataTable.render.number('.', ',', 0) }
         ],
         order: [[ 0, "desc" ]]
     });
