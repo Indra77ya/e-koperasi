@@ -248,7 +248,7 @@
                         </div>
                         <div class="form-group">
                             <label id="label-pay-amount">Jumlah Bayar (Rp)</label>
-                            <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
+                            <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0" step="0.01">
                             <small class="text-muted" id="pay-amount-help">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
                         </div>
                         <div class="form-group">
@@ -261,7 +261,7 @@
                         </div>
                         <div class="form-group">
                             <label>Denda (Rp)</label>
-                            <input type="number" name="denda" id="pay-denda" class="form-control" min="0" value="0">
+                            <input type="number" name="denda" id="pay-denda" class="form-control" min="0" value="0" step="0.01">
                             <small class="text-muted" id="pay-denda-info"></small>
                         </div>
                          <div class="form-group">
@@ -300,7 +300,7 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Jumlah Denda (Rp)</label>
-                            <input type="number" name="denda" class="form-control" min="0" required>
+                            <input type="number" name="denda" class="form-control" min="0" required step="0.01">
                         </div>
                     </div>
                     <div class="modal-footer">
