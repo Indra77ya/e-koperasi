@@ -31,7 +31,7 @@ class CollectionController extends Controller
         $reminders = Loan::where('status', '!=', 'lunas')
             ->whereHas('installments', function ($q) {
                 $q->where('status', 'belum_lunas')
-                  ->whereBetween('tanggal_jatuh_tempo', [now(), now()->addDays(3)]);
+                  ->whereBetween('tanggal_jatuh_tempo', [today(), today()->addDays(3)]);
             })
             ->with(['member', 'nasabah'])
             ->limit(10)
