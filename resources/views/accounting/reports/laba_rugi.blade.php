@@ -25,13 +25,13 @@
                                 @if(abs($rev->balance) > 0)
                                 <tr>
                                     <td>{{ $rev->code }} - {{ $rev->name }}</td>
-                                    <td class="text-right">{{ number_format($rev->balance, 2) }}</td>
+                                    <td class="text-right">{{ number_format($rev->balance, 0, ',', '.') }}</td>
                                 </tr>
                                 @endif
                             @endforeach
                             <tr class="font-weight-bold bg-light">
                                 <td>Total Pendapatan</td>
-                                <td class="text-right">{{ number_format($revenues->sum('balance'), 2) }}</td>
+                                <td class="text-right">{{ number_format($revenues->sum('balance'), 0, ',', '.') }}</td>
                             </tr>
                         </table>
 
@@ -42,13 +42,13 @@
                                 @if(abs($exp->balance) > 0)
                                 <tr>
                                     <td>{{ $exp->code }} - {{ $exp->name }}</td>
-                                    <td class="text-right">{{ number_format($exp->balance, 2) }}</td>
+                                    <td class="text-right">{{ number_format($exp->balance, 0, ',', '.') }}</td>
                                 </tr>
                                 @endif
                             @endforeach
                             <tr class="font-weight-bold bg-light">
                                 <td>Total Beban</td>
-                                <td class="text-right">{{ number_format($expenses->sum('balance'), 2) }}</td>
+                                <td class="text-right">{{ number_format($expenses->sum('balance'), 0, ',', '.') }}</td>
                             </tr>
                         </table>
 
@@ -56,7 +56,7 @@
                         <div class="alert alert-{{ ($revenues->sum('balance') - $expenses->sum('balance')) >= 0 ? 'success' : 'danger' }} mt-4">
                             <h3 class="m-0">
                                 Laba/Rugi Bersih
-                                <span class="float-right">{{ number_format($revenues->sum('balance') - $expenses->sum('balance'), 2) }}</span>
+                                <span class="float-right">{{ number_format($revenues->sum('balance') - $expenses->sum('balance'), 0, ',', '.') }}</span>
                             </h3>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ if ( ! function_exists('format_rupiah'))
      */
     function format_rupiah($data)
     {
-        return 'Rp' . number_format($data, 2, ',', '.');
+        return 'Rp ' . number_format($data, 0, ',', '.');
     }
 }
 

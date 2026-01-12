@@ -26,13 +26,13 @@
                     @foreach($cashInItems as $item)
                     <tr>
                         <td>{{ $item->description ?? 'Transaksi' }} ({{ $item->ref_number }})</td>
-                        <td class="text-right text-success">+ {{ number_format($item->debit, 2) }}</td>
+                        <td class="text-right text-success">+ {{ number_format($item->debit, 0, ',', '.') }}</td>
                     </tr>
                     @php $totalIn += $item->debit; @endphp
                     @endforeach
                     <tr class="font-weight-bold bg-light">
                         <td>Total Penerimaan Kas</td>
-                        <td class="text-right">{{ number_format($totalIn, 2) }}</td>
+                        <td class="text-right">{{ number_format($totalIn, 0, ',', '.') }}</td>
                     </tr>
                 </table>
 
@@ -42,20 +42,20 @@
                     @foreach($cashOutItems as $item)
                     <tr>
                         <td>{{ $item->description ?? 'Transaksi' }} ({{ $item->ref_number }})</td>
-                        <td class="text-right text-danger">- {{ number_format($item->credit, 2) }}</td>
+                        <td class="text-right text-danger">- {{ number_format($item->credit, 0, ',', '.') }}</td>
                     </tr>
                     @php $totalOut += $item->credit; @endphp
                     @endforeach
                     <tr class="font-weight-bold bg-light">
                         <td>Total Pengeluaran Kas</td>
-                        <td class="text-right">{{ number_format($totalOut, 2) }}</td>
+                        <td class="text-right">{{ number_format($totalOut, 0, ',', '.') }}</td>
                     </tr>
                 </table>
 
                 <div class="alert alert-{{ ($totalIn - $totalOut) >= 0 ? 'success' : 'warning' }} mt-4">
                     <h3 class="m-0">
                         Arus Kas Bersih
-                        <span class="float-right">{{ number_format($totalIn - $totalOut, 2) }}</span>
+                        <span class="float-right">{{ number_format($totalIn - $totalOut, 0, ',', '.') }}</span>
                     </h3>
                 </div>
             </div>
