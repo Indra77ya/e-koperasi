@@ -248,7 +248,7 @@
                         </div>
                         <div class="form-group">
                             <label id="label-pay-amount">Jumlah Bayar (Rp)</label>
-                            <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0" step="0.01">
+                            <input type="number" name="jumlah_bayar" id="pay-amount" class="form-control" required min="0">
                             <small class="text-muted" id="pay-amount-help">Minimal sebesar tagihan bunga (untuk pinjaman jangka panjang) atau total angsuran.</small>
                         </div>
                         <div class="form-group">
@@ -261,7 +261,7 @@
                         </div>
                         <div class="form-group">
                             <label>Denda (Rp)</label>
-                            <input type="number" name="denda" id="pay-denda" class="form-control" min="0" value="0" step="0.01">
+                            <input type="number" name="denda" id="pay-denda" class="form-control" min="0" value="0">
                             <small class="text-muted" id="pay-denda-info"></small>
                         </div>
                          <div class="form-group">
@@ -300,7 +300,7 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Jumlah Denda (Rp)</label>
-                            <input type="number" name="denda" class="form-control" min="0" required step="0.01">
+                            <input type="number" name="denda" class="form-control" min="0" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -540,7 +540,7 @@
                 var action = '{{ url('loans/installments') }}/' + id + '/penalty';
 
                 $('#form-penalty').attr('action', action);
-                $('input[name="denda"]').val(denda);
+                $('input[name="denda"]').val(Math.round(denda));
                 $('#modal-penalty').modal('show');
             });
 
@@ -575,8 +575,8 @@
 
                 $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
                 $('#form-pay').attr('action', action);
-                $('#pay-denda').val(denda);
-                $('#pay-bunga-display').val(bunga.toLocaleString('id-ID')); // Show formatted bunga
+                $('#pay-denda').val(Math.round(denda));
+                $('#pay-bunga-display').val(Math.round(bunga).toLocaleString('id-ID')); // Show formatted bunga
 
                 if (tenor == 0) {
                     // Indefinite: Input is PRINCIPAL ONLY
@@ -587,7 +587,7 @@
                     // Fixed: Input is TOTAL
                     $('#label-pay-amount').text('Jumlah Bayar (Rp)');
                     $('#pay-amount-help').text('Masukkan total nominal uang yang dibayarkan.');
-                    $('#pay-amount').val(total + (denda - $(this).data('denda')));
+                    $('#pay-amount').val(Math.round(total + (denda - $(this).data('denda'))));
                 }
 
                 // Trigger calculation
@@ -615,20 +615,20 @@
                     principalPaid = inputAmount;
                     totalBill = totalBill + principalPaid; // Total Cash needed
 
-                    $('#calc-bill').html('Rp ' + (baseBunga + inputDenda).toLocaleString('id-ID') + ' <span class="text-muted">(Bunga+Denda)</span> <br>+ Rp ' + principalPaid.toLocaleString('id-ID') + ' <span class="text-muted">(Pokok)</span><br><strong>Total: Rp ' + totalBill.toLocaleString('id-ID') + '</strong>');
+                    $('#calc-bill').html('Rp ' + Math.round(baseBunga + inputDenda).toLocaleString('id-ID') + ' <span class="text-muted">(Bunga+Denda)</span> <br>+ Rp ' + Math.round(principalPaid).toLocaleString('id-ID') + ' <span class="text-muted">(Pokok)</span><br><strong>Total: Rp ' + Math.round(totalBill).toLocaleString('id-ID') + '</strong>');
                 } else {
                     // Fixed: Input is Total
                     if (inputAmount > totalBill) {
                         principalPaid = inputAmount - totalBill;
                     }
-                    $('#calc-bill').text('Rp ' + totalBill.toLocaleString('id-ID'));
+                    $('#calc-bill').text('Rp ' + Math.round(totalBill).toLocaleString('id-ID'));
                 }
 
                 var finalBalance = currentSisa - principalPaid;
                 if (finalBalance < 0) finalBalance = 0;
 
-                $('#calc-principal').text('Rp ' + principalPaid.toLocaleString('id-ID'));
-                $('#calc-balance').text('Rp ' + finalBalance.toLocaleString('id-ID'));
+                $('#calc-principal').text('Rp ' + Math.round(principalPaid).toLocaleString('id-ID'));
+                $('#calc-balance').text('Rp ' + Math.round(finalBalance).toLocaleString('id-ID'));
             }
         });
     });
