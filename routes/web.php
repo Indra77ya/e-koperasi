@@ -126,4 +126,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cash-flow', 'ReportController@cashFlow')->name('reports.cash_flow');
         Route::get('/revenue', 'ReportController@revenue')->name('reports.revenue');
     });
+
+    Route::get('notifications/mark-all-read', 'NotificationController@markAllAsRead')->name('notifications.readAll');
 });
