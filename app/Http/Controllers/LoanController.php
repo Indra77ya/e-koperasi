@@ -11,6 +11,9 @@ use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountingService;
+use App\Models\User;
+use App\Notifications\LoanSubmittedNotification;
+use Illuminate\Support\Facades\Schema;
 
 class LoanController extends Controller
 {
@@ -144,6 +147,19 @@ class LoanController extends Controller
             'status' => 'diajukan',
             'keterangan' => $request->keterangan,
         ]);
+
+        // Send Notification if table exists
+        if (Schema::hasTable('notifications')) {
+             try {
+                // Notify current user or admins
+                $user = auth()->user();
+                if ($user) {
+                    $user->notify(new LoanSubmittedNotification($loan));
+                }
+             } catch (\Exception $e) {
+                 // Ignore notification errors
+             }
+        }
 
         return redirect()->route('loans.index')->with('success', 'Pinjaman berhasil diajukan.');
     }

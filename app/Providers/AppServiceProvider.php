@@ -13,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        view()->composer(
+            'shared.header',
+            'App\Http\View\Composers\HeaderComposer'
+        );
     }
 
     /**

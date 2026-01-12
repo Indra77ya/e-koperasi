@@ -6,6 +6,71 @@
             </a>
             <div class="d-flex order-lg-2 ml-auto">
                 @include('shared.lang')
+                <div class="dropdown d-none d-md-flex">
+                    <a class="nav-link icon" data-toggle="dropdown">
+                        <i class="fe fe-bell"></i>
+                        @if(isset($headerAlerts) && $headerAlerts['total_alerts'] > 0)
+                            <span class="nav-unread"></span>
+                        @endif
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                        @if(isset($headerAlerts))
+                            <!-- Pending Loans -->
+                            @if($headerAlerts['pending_loans'] > 0)
+                            <a href="{{ route('loans.index', ['status' => 'diajukan']) }}" class="dropdown-item d-flex">
+                                <span class="avatar mr-3 align-self-center bg-orange-lightest text-orange">
+                                    <i class="fe fe-file-text"></i>
+                                </span>
+                                <div>
+                                    <strong>{{ $headerAlerts['pending_loans'] }} Pinjaman</strong> perlu persetujuan.
+                                    <div class="small text-muted">Lihat daftar pinjaman</div>
+                                </div>
+                            </a>
+                            @endif
+
+                            <!-- Due Today -->
+                            @if($headerAlerts['due_today'] > 0)
+                            <a href="{{ route('collections.index') }}" class="dropdown-item d-flex">
+                                <span class="avatar mr-3 align-self-center bg-red-lightest text-red">
+                                    <i class="fe fe-clock"></i>
+                                </span>
+                                <div>
+                                    <strong>{{ $headerAlerts['due_today'] }} Tagihan</strong> jatuh tempo hari ini.
+                                    <div class="small text-muted">Cek dashboard penagihan</div>
+                                </div>
+                            </a>
+                            @endif
+
+                            <!-- Notifications -->
+                            @foreach($headerAlerts['notifications'] as $notification)
+                                <a href="#" class="dropdown-item d-flex">
+                                    <span class="avatar mr-3 align-self-center bg-blue-lightest text-blue">
+                                        <i class="fe fe-info"></i>
+                                    </span>
+                                    <div>
+                                        {{ $notification->data['message'] ?? 'Notification' }}
+                                        <div class="small text-muted">{{ $notification->created_at->diffForHumans() }}</div>
+                                    </div>
+                                </a>
+                            @endforeach
+
+                            @if($headerAlerts['total_alerts'] == 0)
+                                <div class="dropdown-item text-center text-muted">
+                                    Tidak ada notifikasi baru.
+                                </div>
+                            @endif
+
+                            @if($headerAlerts['unread_notifications_count'] > 0)
+                                <div class="dropdown-divider"></div>
+                                <a href="{{ route('notifications.readAll') }}" class="dropdown-item text-center text-muted-dark">Tandai semua sudah dibaca</a>
+                            @endif
+                        @else
+                             <div class="dropdown-item text-center text-muted">
+                                Loading...
+                            </div>
+                        @endif
+                    </div>
+                </div>
                 <div class="dropdown">
                     <a href="#" class="nav-link pr-0 leading-none" data-toggle="dropdown">
                     <span class="avatar" style="background-image: url(https://randomuser.me/api/portraits/men/43.jpg)"></span>
