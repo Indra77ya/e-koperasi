@@ -53,7 +53,11 @@
                                     <input type="number" name="jumlah_pinjaman" id="amount" class="form-control" required min="0">
                                 </div>
                                 <div class="form-group">
-                                    <label>Tenor</label>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="is_indefinite" name="is_indefinite" value="1">
+                                        <label class="custom-control-label" for="is_indefinite">Pinjaman Tanpa Tenor (Jangka Panjang)</label>
+                                    </div>
+                                    <label id="label-tenor">Tenor</label>
                                     <div class="input-group">
                                         <input type="number" name="tenor" id="tenor" class="form-control" required min="1">
                                         <div class="input-group-append">
@@ -89,8 +93,13 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Biaya Admin (Rp)</label>
-                                    <input type="number" name="biaya_admin" class="form-control" value="0">
+                                    <label>Biaya Admin (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="biaya_admin" id="admin_fee_percent" class="form-control" value="0" step="0.01" min="0">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="admin_fee_amount_display">Rp 0</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Denda Keterlambatan (Rp)</label>
@@ -158,6 +167,26 @@
                 }
             });
 
+            $('#is_indefinite').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#tenor').prop('disabled', true).prop('required', false).val('');
+                    $('#label-tenor').addClass('text-muted');
+                    // Usually indefinite loans are Flat or Effective (Interest only), allow user to keep selecting
+                } else {
+                    $('#tenor').prop('disabled', false).prop('required', true);
+                    $('#label-tenor').removeClass('text-muted');
+                }
+            });
+
+            function calculateAdminFee() {
+                var amount = parseFloat($('#amount').val()) || 0;
+                var percent = parseFloat($('#admin_fee_percent').val()) || 0;
+                var fee = amount * (percent / 100);
+                $('#admin_fee_amount_display').text('Rp ' + fee.toLocaleString('id-ID'));
+            }
+
+            $('#amount, #admin_fee_percent').on('input', calculateAdminFee);
+
             $('#btn-simulate').click(function() {
                 var amount = $('#amount').val();
                 var tenor = $('#tenor').val();
@@ -165,8 +194,13 @@
                 var unit = $('#unit').val();
                 var type = $('#type').val();
                 var tempo = $('#tempo_angsuran').val();
+                var isIndefinite = $('#is_indefinite').is(':checked');
 
-                if (!amount || !tenor || !rate) {
+                if (isIndefinite) {
+                    tenor = 0; // Simulate infinite as 0
+                }
+
+                if (!amount || (!isIndefinite && !tenor) || !rate) {
                     alert('Mohon lengkapi jumlah, tenor, dan suku bunga.');
                     return;
                 }
