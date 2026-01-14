@@ -2,6 +2,7 @@
     <div class="container">
         <div class="d-flex">
             <a class="header-brand" href="{{ route('home') }}">
+                <img src="{{ asset('images/koperasi-logo.svg') }}" class="header-brand-img" alt="{{ __('app_name') }}">
                 {{ __('app_name') }}
             </a>
             <div class="d-flex order-lg-2 ml-auto">
