@@ -13,6 +13,9 @@
                         <label class="mr-2">Sampai:</label>
                         <input type="date" name="end_date" class="form-control" value="{{ $endDate }}" onchange="this.form.submit()">
                     </form>
+                    <a href="{{ route('accounting.reports.laba_rugi', ['print' => true] + request()->query()) }}" target="_blank" class="btn btn-secondary btn-pill ml-2 text-nowrap">
+                        <i class="fa fa-print"></i> PDF/Print
+                    </a>
                 </div>
             </div>
             <div class="card-body">
