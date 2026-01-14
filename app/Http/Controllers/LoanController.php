@@ -11,6 +11,7 @@ use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountingService;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\LoanSubmittedNotification;
 use Illuminate\Support\Facades\Schema;
@@ -196,7 +197,12 @@ class LoanController extends Controller
     public function disburse(Request $request, $id)
     {
         $loan = Loan::findOrFail($id);
-        if ($loan->status == 'disetujui') {
+
+        if ($loan->status != 'disetujui') {
+             return redirect()->back()->with('error', 'Status pinjaman tidak valid untuk pencairan.');
+        }
+
+        try {
             DB::transaction(function () use ($loan) {
                 $loan->update(['status' => 'berjalan']);
 
@@ -288,8 +294,13 @@ class LoanController extends Controller
                     $loan
                 );
             });
+
+            return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
+
+        } catch (\Exception $e) {
+            Log::error('Loan Disbursement Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mencairkan dana: ' . $e->getMessage());
         }
-        return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
     }
 
     public function markBadDebt($id)
