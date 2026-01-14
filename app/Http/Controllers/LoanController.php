@@ -6,6 +6,7 @@ use App\Models\Loan;
 use App\Models\LoanInstallment;
 use App\Models\Member;
 use App\Models\Nasabah;
+use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
@@ -204,6 +205,20 @@ class LoanController extends Controller
 
         try {
             DB::transaction(function () use ($loan) {
+                // Ensure required COAs exist (Self-Healing)
+                $coas = [
+                    ['code' => '1103', 'name' => 'Piutang Pinjaman', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
+                    ['code' => '1101', 'name' => 'Kas', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
+                    ['code' => '4102', 'name' => 'Pendapatan Admin', 'type' => 'REVENUE', 'normal_balance' => 'CREDIT'],
+                ];
+
+                foreach ($coas as $coa) {
+                    ChartOfAccount::firstOrCreate(
+                        ['code' => $coa['code']],
+                        $coa
+                    );
+                }
+
                 $loan->update(['status' => 'berjalan']);
 
                 if ($loan->tenor == 0) {
