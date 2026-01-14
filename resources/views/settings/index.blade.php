@@ -94,16 +94,6 @@
                     </div>
                 </div>
 
-                <!-- Hidden Forms for Delete Actions -->
-                <form id="delete-logo-form" action="{{ route('settings.remove_logo') }}" method="POST" style="display: none;">
-                    @csrf
-                    @method('DELETE')
-                </form>
-                <form id="delete-bg-form" action="{{ route('settings.remove_background') }}" method="POST" style="display: none;">
-                    @csrf
-                    @method('DELETE')
-                </form>
-
                 <!-- Loan -->
                 <div class="tab-pane fade" id="loan">
                     <div class="card">
@@ -230,6 +220,16 @@
                     </div>
                 </div>
             </div>
+        </form>
+
+        <!-- Hidden Forms for Delete Actions (Outside Main Form) -->
+        <form id="delete-logo-form" action="{{ route('settings.remove_logo') }}" method="POST" style="display: none;">
+            @csrf
+            @method('DELETE')
+        </form>
+        <form id="delete-bg-form" action="{{ route('settings.remove_background') }}" method="POST" style="display: none;">
+            @csrf
+            @method('DELETE')
         </form>
     </div>
 </div>
