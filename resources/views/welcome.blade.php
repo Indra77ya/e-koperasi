@@ -10,8 +10,8 @@
             <link rel="icon" href="{{ asset($logo) }}" type="image/x-icon"/>
             <link rel="shortcut icon" href="{{ asset($logo) }}" type="image/x-icon"/>
         @else
-            <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
-            <link rel="shortcut icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
+            <link rel="icon" href="{{ asset('favicon-default.svg') }}" type="image/svg+xml"/>
+            <link rel="shortcut icon" href="{{ asset('favicon-default.svg') }}" type="image/svg+xml"/>
         @endif
 
         <!-- Fonts -->
