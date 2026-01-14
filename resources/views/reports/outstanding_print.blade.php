@@ -1,25 +1,43 @@
-@extends('layouts.app')
-
-@section('page-title')
-    Laporan Pinjaman Outstanding
-@endsection
-
-@section('content-app')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Pinjaman Outstanding</h3>
-                <div class="card-options">
-                    <a href="{{ route('reports.outstanding', ['export' => 1]) }}" class="btn btn-success btn-pill mr-2">
-                        <i class="fa fa-file-excel-o"></i> Export Excel
-                    </a>
-                    <a href="{{ route('reports.outstanding', ['print' => true] + request()->query()) }}" target="_blank" class="btn btn-secondary btn-pill">
-                        <i class="fa fa-print"></i> PDF/Print
-                    </a>
-                </div>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Laporan Pinjaman Outstanding</title>
+    <!-- Use dashboard.css for consistent table styling -->
+    <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet" />
+    <style>
+        body {
+            background-color: white; /* Ensure white background for printing */
+            font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+        .page-print {
+            padding: 20px;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            /* Remove shadows and borders for print */
+            .card {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="container-fluid page-print">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h3>Laporan Pinjaman Outstanding</h3>
+                <p class="text-muted">{{ date('d F Y') }}</p>
             </div>
-            <div class="card-body">
+        </div>
+
+        <div class="row">
+            <div class="col-12">
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered">
                         <thead>
@@ -60,25 +78,15 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">
-                    {{ $loans->links() }}
-                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 no-print">
+            <div class="col-12 text-center">
+                <button class="btn btn-secondary" onclick="window.print()">Print Again</button>
+                <button class="btn btn-outline-danger" onclick="window.close()">Close</button>
             </div>
         </div>
     </div>
-</div>
-@endsection
-
-@section('css')
-<style>
-    @media print {
-        .card-header .card-options, .header, .footer, .breadcrumbs, .page-header {
-            display: none !important;
-        }
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-    }
-</style>
-@endsection
+</body>
+</html>

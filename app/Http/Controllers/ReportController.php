@@ -27,6 +27,11 @@ class ReportController extends Controller
         }
 
         $loans = $query->paginate(20);
+
+        if ($request->has('print')) {
+            return view('reports.outstanding_print', compact('loans'));
+        }
+
         return view('reports.outstanding', compact('loans'));
     }
 
