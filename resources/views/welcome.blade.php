@@ -26,10 +26,18 @@
                 font-weight: 200;
                 height: 100vh;
                 margin: 0;
+                @if($bg = \App\Models\Setting::get('front_background'))
+                background-image: url('{{ asset($bg) }}');
+                background-size: cover;
+                background-position: center;
+                @endif
             }
 
             .full-height {
                 height: 100vh;
+                @if(\App\Models\Setting::get('front_background'))
+                background-color: rgba(255, 255, 255, 0.8); /* Overlay for readability */
+                @endif
             }
 
             .flex-center {

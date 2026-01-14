@@ -68,6 +68,19 @@
                                 </div>
                                 <small class="text-muted d-block mt-1">Digunakan pada Header, Login, dan Laporan. Disarankan format PNG/SVG transparan. <strong>Ukuran optimal: Tinggi 100px, Lebar menyesuaikan (rasio aspek terjaga).</strong> Maksimal ukuran file 2MB.</small>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Background Halaman Depan</label>
+                                @if(isset($settings['front_background']) && $settings['front_background'])
+                                    <div class="mb-2">
+                                        <img src="{{ asset($settings['front_background']) }}" alt="Background" style="max-height: 100px; border: 1px solid #ddd; padding: 2px;">
+                                    </div>
+                                @endif
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" name="front_background">
+                                    <label class="custom-file-label">Pilih file background (JPG/PNG)</label>
+                                </div>
+                                <small class="text-muted d-block mt-1">Digunakan sebagai background halaman utama (welcome page). Disarankan gambar resolusi tinggi (1920x1080).</small>
+                            </div>
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>

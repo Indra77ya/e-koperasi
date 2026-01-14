@@ -22,9 +22,9 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->except(['_token', 'company_logo']);
+        $data = $request->except(['_token', 'company_logo', 'front_background']);
 
-        // Handle File Upload
+        // Handle Company Logo Upload
         if ($request->hasFile('company_logo')) {
             $request->validate([
                 'company_logo' => 'image|mimes:jpeg,png,jpg,svg|max:2048',
@@ -32,12 +32,20 @@ class SettingController extends Controller
 
             $file = $request->file('company_logo');
             $fileName = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
-            // Store in storage/app/public/uploads
             $path = $file->storeAs('uploads', $fileName, 'public');
-
-            // Save the path that can be used with asset()
-            // e.g., 'storage/uploads/logo_123.png'
             Setting::set('company_logo', 'storage/' . $path);
+        }
+
+        // Handle Front Background Upload
+        if ($request->hasFile('front_background')) {
+            $request->validate([
+                'front_background' => 'image|mimes:jpeg,png,jpg|max:4096',
+            ]);
+
+            $file = $request->file('front_background');
+            $fileName = 'bg_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('uploads', $fileName, 'public');
+            Setting::set('front_background', 'storage/' . $path);
         }
 
         foreach ($data as $key => $value) {
