@@ -20,8 +20,8 @@
         <link rel="icon" href="{{ asset($logo) }}" type="image/x-icon"/>
         <link rel="shortcut icon" href="{{ asset($logo) }}" type="image/x-icon"/>
     @else
-        <link rel="icon" href="{{ asset('favicon-default.svg') }}" type="image/svg+xml"/>
-        <link rel="shortcut icon" href="{{ asset('favicon-default.svg') }}" type="image/svg+xml"/>
+        <link rel="icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
+        <link rel="shortcut icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
     @endif
 
     <title>{{ \App\Models\Setting::get('company_name', 'Koperasi Tabungan Sukarela') }}</title>

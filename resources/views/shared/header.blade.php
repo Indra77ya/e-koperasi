@@ -5,7 +5,7 @@
                 @if($logo = \App\Models\Setting::get('company_logo'))
                     <img src="{{ asset($logo) }}" class="header-brand-img" alt="logo" style="height: 2rem;">
                 @else
-                    <img src="{{ asset('images/koperasi-logo.svg') }}" class="header-brand-img" alt="logo" style="height: 2rem;">
+                    <img src="{{ asset('images/logo-default.png') }}" class="header-brand-img" alt="logo" style="height: 2rem;">
                 @endif
                 {{ \App\Models\Setting::get('company_name', __('app_name')) }}
             </a>

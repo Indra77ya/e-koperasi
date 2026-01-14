@@ -28,7 +28,7 @@ class CreateSettingsTable extends Migration
             ['key' => 'company_address', 'value' => 'Jl. Koperasi No. 1, Jakarta'],
             ['key' => 'company_phone', 'value' => '021-12345678'],
             ['key' => 'company_email', 'value' => 'info@koperasi.com'],
-            ['key' => 'company_logo', 'value' => 'images/logo-majapahit.png'], // Path to storage
+            ['key' => 'company_logo', 'value' => null], // Path to storage
 
             // Pinjaman
             ['key' => 'default_interest_rate', 'value' => '10'],
