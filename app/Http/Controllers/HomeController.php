@@ -87,11 +87,4 @@ class HomeController extends Controller
             'dueToday'
         ));
     }
-
-    public function lang($locale)
-    {
-        App::setLocale($locale);
-        session(['locale' => $locale]);
-        return redirect()->back();
-    }
 }

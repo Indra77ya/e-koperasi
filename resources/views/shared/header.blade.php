@@ -5,7 +5,6 @@
                 {{ __('app_name') }}
             </a>
             <div class="d-flex order-lg-2 ml-auto">
-                @include('shared.lang')
                 <div class="dropdown d-none d-md-flex">
                     <a class="nav-link icon" data-toggle="dropdown">
                         <i class="fe fe-bell"></i>
