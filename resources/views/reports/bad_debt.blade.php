@@ -14,9 +14,9 @@
                     <a href="{{ route('reports.bad_debt', ['export' => 1]) }}" class="btn btn-success btn-pill mr-2">
                         <i class="fa fa-file-excel-o"></i> Export Excel
                     </a>
-                    <button onclick="window.print()" class="btn btn-secondary btn-pill">
+                    <a href="{{ route('reports.bad_debt', ['print' => true] + request()->query()) }}" target="_blank" class="btn btn-secondary btn-pill">
                         <i class="fa fa-print"></i> PDF/Print
-                    </button>
+                    </a>
                 </div>
             </div>
             <div class="card-body">

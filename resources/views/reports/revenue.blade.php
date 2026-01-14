@@ -26,9 +26,9 @@
                      <a href="{{ route('reports.revenue', array_merge(request()->all(), ['export' => 1])) }}" class="btn btn-success btn-pill mr-2 text-nowrap">
                         <i class="fa fa-file-excel-o"></i> Excel
                     </a>
-                    <button onclick="window.print()" class="btn btn-secondary btn-pill text-nowrap">
+                    <a href="{{ route('reports.revenue', array_merge(request()->all(), ['print' => true])) }}" target="_blank" class="btn btn-secondary btn-pill text-nowrap">
                         <i class="fa fa-print"></i> PDF
-                    </button>
+                    </a>
                 </div>
             </div>
             <div class="card-body">
