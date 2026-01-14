@@ -205,3 +205,17 @@
     </div>
 </div>
 @endsection
+
+@section('js')
+<script>
+    require(['jquery'], function($) {
+        $(document).ready(function() {
+            // Custom file input label update
+            $('.custom-file-input').on('change', function() {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    });
+</script>
+@endsection
