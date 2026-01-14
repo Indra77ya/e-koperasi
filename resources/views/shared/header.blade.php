@@ -152,16 +152,6 @@
                     <li class="nav-item">
                         <a href="{{ url('bankinterests') }}" class="nav-link"><i class="fe fe-box" aria-hidden="true"></i> {{ __('menu.interest') }}</a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{{ url('profile') }}" class="nav-link"><i class="fe fe-user" aria-hidden="true"></i> {{ __('menu.profile') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('logout') }}" class="nav-link" onclick="event.preventDefault();document.getElementById('logout-form').submit();"><i class="fe fe-log-out" aria-hidden="true"></i> {{ __('menu.logout') }}</a>
-
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                            @csrf
-                        </form>
-                    </li>
                 </ul>
             </div>
         </div>
