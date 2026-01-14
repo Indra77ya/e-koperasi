@@ -82,6 +82,9 @@
                         <a class="dropdown-item" href="{{ url('profile') }}">
                             <i class="dropdown-icon fe fe-user" aria-hidden="true"></i> {{ __('menu.profile') }}
                         </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="dropdown-icon fe fe-settings" aria-hidden="true"></i> {{ __('menu.settings') }}
+                        </a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form-profile').submit();">
                             <i class="dropdown-icon fe fe-log-out" aria-hidden="true"></i> {{ __('menu.logout') }}
