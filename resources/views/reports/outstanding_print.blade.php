@@ -32,14 +32,16 @@
             .badge {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                color: white !important; /* Ensure text remains white on dark backgrounds */
+                color: white !important;
+                border: 1px solid #000 !important; /* Add border to match screenshot style */
             }
             .badge-info {
                 background-color: #17a2b8 !important;
             }
             .badge-warning {
                 background-color: #ffc107 !important;
-                color: #212529 !important; /* Warning usually has dark text */
+                color: #212529 !important;
+                border-color: #d39e00 !important; /* Darker border for yellow */
             }
             .badge-primary {
                 background-color: #007bff !important;
