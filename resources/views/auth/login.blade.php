@@ -9,8 +9,6 @@
                     <div class="text-center mb-6">
                         @if($logo = \App\Models\Setting::get('company_logo'))
                             <img src="{{ asset($logo) }}" class="mb-3" alt="logo" style="max-height: 80px;">
-                        @else
-                            <img src="{{ asset('images/logo-default.png') }}" class="mb-3" alt="logo" style="max-height: 80px;">
                         @endif
                         <div class="display-4 font-weight-bold">{{ \App\Models\Setting::get('company_name', __('app_name')) }}</div>
                     </div>

@@ -76,8 +76,6 @@
         <div class="report-header">
             @if($logo = \App\Models\Setting::get('company_logo'))
                 <img src="{{ asset($logo) }}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;">
-            @else
-                <img src="{{ asset('images/logo-default.png') }}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;">
             @endif
             <div class="company-name">{{ \App\Models\Setting::get('company_name', 'Koperasi Tabungan Sukarela') }}</div>
             <div style="font-size: 14px; margin-bottom: 5px;">
