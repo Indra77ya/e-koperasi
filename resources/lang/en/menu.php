@@ -8,6 +8,7 @@ return [
     'mutation' => 'List Mutations',
     'interest' => 'Interest',
     'profile' => 'Profile',
+    'settings' => 'Settings',
     'login' => 'Login',
     'logout' => 'Logout'
 ];

@@ -4,7 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ __('full_app_name') }}</title>
+        <title>{{ \App\Models\Setting::get('company_name', __('full_app_name')) }}</title>
+
+        @if($logo = \App\Models\Setting::get('company_logo'))
+            <link rel="icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+            <link rel="shortcut icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+        @else
+            <link rel="icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
+            <link rel="shortcut icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
+        @endif
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet" type="text/css">
@@ -18,10 +26,18 @@
                 font-weight: 200;
                 height: 100vh;
                 margin: 0;
+                @if($bg = \App\Models\Setting::get('front_background'))
+                background-image: url('{{ asset($bg) }}');
+                background-size: cover;
+                background-position: center;
+                @endif
             }
 
             .full-height {
                 height: 100vh;
+                @if(\App\Models\Setting::get('front_background'))
+                background-color: rgba(255, 255, 255, 0.8); /* Overlay for readability */
+                @endif
             }
 
             .flex-center {
@@ -77,7 +93,7 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    {{ __('full_app_name') }}
+                    {{ \App\Models\Setting::get('company_name', __('full_app_name')) }}
                 </div>
             </div>
         </div>

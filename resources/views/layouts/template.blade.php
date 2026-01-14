@@ -16,10 +16,15 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
-    <link rel="shortcut icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
+    @if($logo = \App\Models\Setting::get('company_logo'))
+        <link rel="icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+        <link rel="shortcut icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+    @else
+        <link rel="icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
+        <link rel="shortcut icon" href="{{ asset('images/logo-default.png') }}" type="image/png"/>
+    @endif
 
-    <title>Koperasi Tabungan Sukarela</title>
+    <title>{{ \App\Models\Setting::get('company_name', 'Koperasi Tabungan Sukarela') }}</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,400,400i,500,500i,600,600i,700,700i&amp;subset=latin-ext">
