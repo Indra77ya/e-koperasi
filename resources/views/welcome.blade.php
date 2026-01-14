@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ __('full_app_name') }}</title>
+        <title>{{ \App\Models\Setting::get('company_name', __('full_app_name')) }}</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet" type="text/css">
@@ -77,7 +77,7 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    {{ __('full_app_name') }}
+                    {{ \App\Models\Setting::get('company_name', __('full_app_name')) }}
                 </div>
             </div>
         </div>
