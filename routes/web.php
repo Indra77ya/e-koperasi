@@ -42,7 +42,6 @@ Route::get('/dev/seed', function () {
 Auth::routes(['register' => false, 'reset' => false, 'verify' => false]);
 
 Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/lang/{locale}', 'HomeController@lang')->name('lang');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('profile', 'ProfileController@index');
