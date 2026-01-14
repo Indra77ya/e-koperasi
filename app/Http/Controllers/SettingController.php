@@ -54,4 +54,32 @@ class SettingController extends Controller
 
         return redirect()->back()->with('success', 'Pengaturan berhasil disimpan.');
     }
+
+    public function removeLogo()
+    {
+        $path = Setting::get('company_logo');
+        if ($path) {
+            // Remove 'storage/' prefix for Storage facade
+            $relativePath = str_replace('storage/', 'public/', $path);
+            if (Storage::exists($relativePath)) {
+                Storage::delete($relativePath);
+            }
+            Setting::set('company_logo', null);
+        }
+        return redirect()->back()->with('success', 'Logo berhasil dihapus.');
+    }
+
+    public function removeBackground()
+    {
+        $path = Setting::get('front_background');
+        if ($path) {
+            // Remove 'storage/' prefix for Storage facade
+            $relativePath = str_replace('storage/', 'public/', $path);
+            if (Storage::exists($relativePath)) {
+                Storage::delete($relativePath);
+            }
+            Setting::set('front_background', null);
+        }
+        return redirect()->back()->with('success', 'Background berhasil dihapus.');
+    }
 }

@@ -131,4 +131,6 @@ Route::middleware(['auth'])->group(function () {
     // Settings
     Route::get('settings', 'SettingController@index')->name('settings.index');
     Route::post('settings', 'SettingController@update')->name('settings.update');
+    Route::delete('settings/remove-logo', 'SettingController@removeLogo')->name('settings.remove_logo');
+    Route::delete('settings/remove-background', 'SettingController@removeBackground')->name('settings.remove_background');
 });

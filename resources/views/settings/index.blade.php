@@ -58,8 +58,11 @@
                             <div class="form-group">
                                 <label class="form-label">Logo</label>
                                 @if(isset($settings['company_logo']) && $settings['company_logo'])
-                                    <div class="mb-2">
-                                        <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 50px;">
+                                    <div class="mb-2 d-flex align-items-center">
+                                        <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 50px;" class="mr-3">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault(); if(confirm('Hapus logo?')) document.getElementById('delete-logo-form').submit();">
+                                            <i class="fe fe-trash"></i> Hapus
+                                        </button>
                                     </div>
                                 @endif
                                 <div class="custom-file">
@@ -71,8 +74,11 @@
                             <div class="form-group">
                                 <label class="form-label">Background Halaman Depan</label>
                                 @if(isset($settings['front_background']) && $settings['front_background'])
-                                    <div class="mb-2">
-                                        <img src="{{ asset($settings['front_background']) }}" alt="Background" style="max-height: 100px; border: 1px solid #ddd; padding: 2px;">
+                                    <div class="mb-2 d-flex align-items-center">
+                                        <img src="{{ asset($settings['front_background']) }}" alt="Background" style="max-height: 100px; border: 1px solid #ddd; padding: 2px;" class="mr-3">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="event.preventDefault(); if(confirm('Hapus background?')) document.getElementById('delete-bg-form').submit();">
+                                            <i class="fe fe-trash"></i> Hapus
+                                        </button>
                                     </div>
                                 @endif
                                 <div class="custom-file">
@@ -87,6 +93,16 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden Forms for Delete Actions -->
+                <form id="delete-logo-form" action="{{ route('settings.remove_logo') }}" method="POST" style="display: none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
+                <form id="delete-bg-form" action="{{ route('settings.remove_background') }}" method="POST" style="display: none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
 
                 <!-- Loan -->
                 <div class="tab-pane fade" id="loan">
