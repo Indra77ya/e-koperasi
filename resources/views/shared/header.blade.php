@@ -106,51 +106,101 @@
             </div>
             <div class="col-lg order-lg-first">
                 <ul class="nav nav-tabs border-0 flex-column flex-lg-row">
+                    <!-- Beranda -->
                     <li class="nav-item">
-                        <a href="{{ route('home') }}" class="nav-link"><i class="fe fe-home" aria-hidden="true"></i> {{ __('menu.home') }}</a>
+                        <a href="{{ route('home') }}" class="nav-link {{ Request::is('home') ? 'active' : '' }}">
+                            <i class="fe fe-home" aria-hidden="true"></i> {{ __('menu.home') }}
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{{ route('members.index') }}" class="nav-link"><i class="fe fe-users" aria-hidden="true"></i> {{ __('menu.member') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('nasabahs.index') }}" class="nav-link"><i class="fe fe-user-check" aria-hidden="true"></i> Nasabah</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('loans.index') }}" class="nav-link"><i class="fe fe-activity" aria-hidden="true"></i> Pinjaman</a>
-                    </li>
+
+                    <!-- Anggota -->
                     <li class="nav-item dropdown">
-                        <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-book" aria-hidden="true"></i> Akuntansi</a>
+                        <a href="#" class="nav-link {{ (Request::is('members*') || Request::is('nasabahs*')) ? 'active' : '' }}" data-toggle="dropdown">
+                            <i class="fe fe-users" aria-hidden="true"></i> Anggota
+                        </a>
                         <div class="dropdown-menu dropdown-menu-arrow">
-                            <a href="{{ route('accounting.cash_book') }}" class="dropdown-item">Buku Kas & Bank</a>
-                            <a href="{{ route('accounting.journals') }}" class="dropdown-item">Jurnal Umum</a>
-                            <a href="{{ route('accounting.coa') }}" class="dropdown-item">Chart of Accounts</a>
+                            <a href="{{ route('members.index') }}" class="dropdown-item {{ Request::is('members*') ? 'active' : '' }}">
+                                {{ __('menu.member') }}
+                            </a>
+                            <a href="{{ route('nasabahs.index') }}" class="dropdown-item {{ Request::is('nasabahs*') ? 'active' : '' }}">
+                                Nasabah
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Pinjaman -->
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link {{ (Request::is('loans*') || Request::is('collections*')) ? 'active' : '' }}" data-toggle="dropdown">
+                            <i class="fe fe-activity" aria-hidden="true"></i> Pinjaman
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-arrow">
+                            <a href="{{ route('loans.index') }}" class="dropdown-item {{ Request::is('loans*') ? 'active' : '' }}">
+                                Data Pinjaman
+                            </a>
                             <div class="dropdown-divider"></div>
-                            <a href="{{ route('accounting.reports.neraca') }}" class="dropdown-item">Neraca</a>
-                            <a href="{{ route('accounting.reports.laba_rugi') }}" class="dropdown-item">Laba Rugi</a>
-                            <a href="{{ route('accounting.reports.arus_kas') }}" class="dropdown-item">Arus Kas</a>
+                            <a href="{{ route('collections.index') }}" class="dropdown-item {{ (Request::is('collections') || Request::is('collections/data')) ? 'active' : '' }}">
+                                Dashboard Penagihan
+                            </a>
+                            <a href="{{ route('collections.queue') }}" class="dropdown-item {{ Request::is('collections/queue*') ? 'active' : '' }}">
+                                Antrian Lapangan
+                            </a>
                         </div>
                     </li>
-                    <li class="nav-item">
-                        <a href="{{ route('reports.index') }}" class="nav-link"><i class="fe fe-file-text" aria-hidden="true"></i> Laporan</a>
-                    </li>
+
+                    <!-- Transaksi -->
                     <li class="nav-item dropdown">
-                        <a href="#" class="nav-link" data-toggle="dropdown"><i class="fe fe-bell" aria-hidden="true"></i> Penagihan</a>
+                        <a href="#" class="nav-link {{ (Request::is('deposits*') || Request::is('withdrawals*') || Request::is('mutations*') || Request::is('bankinterests*')) ? 'active' : '' }}" data-toggle="dropdown">
+                            <i class="fe fe-dollar-sign" aria-hidden="true"></i> Transaksi
+                        </a>
                         <div class="dropdown-menu dropdown-menu-arrow">
-                            <a href="{{ route('collections.index') }}" class="dropdown-item">Dashboard Penagihan</a>
-                            <a href="{{ route('collections.queue') }}" class="dropdown-item">Antrian Lapangan</a>
+                            <a href="{{ route('deposits.index') }}" class="dropdown-item {{ Request::is('deposits*') ? 'active' : '' }}">
+                                {{ __('menu.deposit') }}
+                            </a>
+                            <a href="{{ route('withdrawals.index') }}" class="dropdown-item {{ Request::is('withdrawals*') ? 'active' : '' }}">
+                                {{ __('menu.withdrawal') }}
+                            </a>
+                            <a href="{{ url('mutations') }}" class="dropdown-item {{ Request::is('mutations*') ? 'active' : '' }}">
+                                {{ __('menu.mutation') }}
+                            </a>
+                            <a href="{{ url('bankinterests') }}" class="dropdown-item {{ Request::is('bankinterests*') ? 'active' : '' }}">
+                                {{ __('menu.interest') }}
+                            </a>
                         </div>
                     </li>
-                    <li class="nav-item">
-                        <a href="{{ route('deposits.index') }}" class="nav-link"><i class="fe fe-dollar-sign" aria-hidden="true"></i> {{ __('menu.deposit') }}</a>
+
+                    <!-- Akuntansi -->
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link {{ Request::is('accounting*') ? 'active' : '' }}" data-toggle="dropdown">
+                            <i class="fe fe-book" aria-hidden="true"></i> Akuntansi
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-arrow">
+                            <a href="{{ route('accounting.cash_book') }}" class="dropdown-item {{ Request::is('accounting/cash-book*') ? 'active' : '' }}">
+                                Buku Kas & Bank
+                            </a>
+                            <a href="{{ route('accounting.journals') }}" class="dropdown-item {{ Request::is('accounting/journals*') ? 'active' : '' }}">
+                                Jurnal Umum
+                            </a>
+                            <a href="{{ route('accounting.coa') }}" class="dropdown-item {{ Request::is('accounting/coa*') ? 'active' : '' }}">
+                                Chart of Accounts
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('accounting.reports.neraca') }}" class="dropdown-item {{ Request::is('accounting/reports/neraca*') ? 'active' : '' }}">
+                                Neraca
+                            </a>
+                            <a href="{{ route('accounting.reports.laba_rugi') }}" class="dropdown-item {{ Request::is('accounting/reports/laba-rugi*') ? 'active' : '' }}">
+                                Laba Rugi
+                            </a>
+                            <a href="{{ route('accounting.reports.arus_kas') }}" class="dropdown-item {{ Request::is('accounting/reports/arus-kas*') ? 'active' : '' }}">
+                                Arus Kas
+                            </a>
+                        </div>
                     </li>
+
+                    <!-- Laporan -->
                     <li class="nav-item">
-                        <a href="{{ route('withdrawals.index') }}" class="nav-link"><i class="fe fe-hash" aria-hidden="true"></i> {{ __('menu.withdrawal') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ url('mutations') }}" class="nav-link"><i class="fe fe-printer" aria-hidden="true"></i> {{ __('menu.mutation') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ url('bankinterests') }}" class="nav-link"><i class="fe fe-box" aria-hidden="true"></i> {{ __('menu.interest') }}</a>
+                        <a href="{{ route('reports.index') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
+                            <i class="fe fe-file-text" aria-hidden="true"></i> Laporan
+                        </a>
                     </li>
                 </ul>
             </div>
