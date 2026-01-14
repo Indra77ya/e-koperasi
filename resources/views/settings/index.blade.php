@@ -66,6 +66,7 @@
                                     <input type="file" class="custom-file-input" name="company_logo">
                                     <label class="custom-file-label">Pilih file logo (SVG/PNG/JPG)</label>
                                 </div>
+                                <small class="text-muted d-block mt-1">Digunakan pada Header, Halaman Login, dan Laporan cetak. Disarankan format PNG/SVG transparan, tinggi min. 50px.</small>
                             </div>
                         </div>
                         <div class="card-footer text-right">
