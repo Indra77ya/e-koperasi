@@ -74,7 +74,20 @@
 <body onload="window.print()">
     <div class="container-fluid page-print">
         <div class="report-header">
-            <div class="company-name">Koperasi Tabungan Sukarela</div>
+            @if($logo = \App\Models\Setting::get('company_logo'))
+                <img src="{{ asset($logo) }}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;">
+            @endif
+            <div class="company-name">{{ \App\Models\Setting::get('company_name', 'Koperasi Tabungan Sukarela') }}</div>
+            <div style="font-size: 14px; margin-bottom: 5px;">
+                {{ \App\Models\Setting::get('company_address') }}
+                @if(\App\Models\Setting::get('company_phone'))
+                    <br>Telp: {{ \App\Models\Setting::get('company_phone') }}
+                @endif
+                @if(\App\Models\Setting::get('company_email'))
+                    | Email: {{ \App\Models\Setting::get('company_email') }}
+                @endif
+            </div>
+            <hr style="border-top: 2px solid #333;">
             <div class="report-title">@yield('title')</div>
             <div class="report-date">@yield('date')</div>
         </div>

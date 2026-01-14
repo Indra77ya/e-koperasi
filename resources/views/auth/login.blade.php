@@ -7,7 +7,10 @@
             <div class="row">
                 <div class="col col-login mx-auto">
                     <div class="text-center mb-6">
-                        <div class="display-4 font-weight-bold">{{ __('app_name') }}</div>
+                        @if($logo = \App\Models\Setting::get('company_logo'))
+                            <img src="{{ asset($logo) }}" class="mb-3" alt="logo" style="max-height: 80px;">
+                        @endif
+                        <div class="display-4 font-weight-bold">{{ \App\Models\Setting::get('company_name', __('app_name')) }}</div>
                     </div>
                     <form class="card" method="POST" action="{{ route('login') }}">
                         @csrf

@@ -50,7 +50,10 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Jumlah Pinjaman (Rp)</label>
-                                    <input type="number" name="jumlah_pinjaman" id="amount" class="form-control" required min="0">
+                                    <input type="number" name="jumlah_pinjaman" id="amount" class="form-control" required min="0" {{ isset($defaults['limit']) && $defaults['limit'] > 0 ? 'max='.$defaults['limit'] : '' }}>
+                                    @if(isset($defaults['limit']) && $defaults['limit'] > 0)
+                                        <small class="text-muted">Maksimal: Rp {{ number_format($defaults['limit'], 0, ',', '.') }}</small>
+                                    @endif
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-checkbox mb-2">
@@ -74,7 +77,7 @@
                                 <div class="form-group">
                                     <label>Suku Bunga (%)</label>
                                     <div class="input-group">
-                                        <input type="number" name="suku_bunga" id="rate" class="form-control" required step="0.01">
+                                        <input type="number" name="suku_bunga" id="rate" class="form-control" required step="0.01" value="{{ $defaults['interest_rate'] ?? 0 }}">
                                         <div class="input-group-append">
                                             <select name="satuan_bunga" id="unit" class="form-control">
                                                 <option value="tahun">Per Tahun</option>
@@ -95,7 +98,7 @@
                                 <div class="form-group">
                                     <label>Biaya Admin (%)</label>
                                     <div class="input-group">
-                                        <input type="number" name="biaya_admin" id="admin_fee_percent" class="form-control" value="0" step="0.01" min="0">
+                                        <input type="number" name="biaya_admin" id="admin_fee_percent" class="form-control" value="{{ $defaults['admin_fee'] ?? 0 }}" step="0.01" min="0">
                                         <div class="input-group-append">
                                             <span class="input-group-text" id="admin_fee_amount_display">Rp 0</span>
                                         </div>
@@ -103,7 +106,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Denda Keterlambatan (Rp)</label>
-                                    <input type="number" name="denda_keterlambatan" class="form-control" value="0" min="0">
+                                    <input type="number" name="denda_keterlambatan" class="form-control" value="{{ $defaults['penalty'] ?? 0 }}" min="0">
                                 </div>
                                 <div class="form-group">
                                     <label>Tanggal Pengajuan</label>

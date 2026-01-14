@@ -2,7 +2,10 @@
     <div class="container">
         <div class="d-flex">
             <a class="header-brand" href="{{ route('home') }}">
-                {{ __('app_name') }}
+                @if($logo = \App\Models\Setting::get('company_logo'))
+                    <img src="{{ asset($logo) }}" class="header-brand-img" alt="logo" style="height: 2rem;">
+                @endif
+                {{ \App\Models\Setting::get('company_name', __('app_name')) }}
             </a>
             <div class="d-flex order-lg-2 ml-auto">
                 <div class="dropdown d-none d-md-flex">
@@ -82,7 +85,7 @@
                         <a class="dropdown-item" href="{{ url('profile') }}">
                             <i class="dropdown-icon fe fe-user" aria-hidden="true"></i> {{ __('menu.profile') }}
                         </a>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ route('settings.index') }}">
                             <i class="dropdown-icon fe fe-settings" aria-hidden="true"></i> {{ __('menu.settings') }}
                         </a>
                         <div class="dropdown-divider"></div>

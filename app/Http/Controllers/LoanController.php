@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\LoanSubmittedNotification;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Setting;
 
 class LoanController extends Controller
 {
@@ -94,7 +95,13 @@ class LoanController extends Controller
     {
         $members = Member::all();
         $nasabahs = Nasabah::all();
-        return view('loans.create', compact('members', 'nasabahs'));
+        $defaults = [
+            'interest_rate' => Setting::get('default_interest_rate', 0),
+            'admin_fee' => Setting::get('default_admin_fee', 0),
+            'penalty' => Setting::get('default_penalty', 0),
+            'limit' => Setting::get('loan_limit', 0),
+        ];
+        return view('loans.create', compact('members', 'nasabahs', 'defaults'));
     }
 
     public function calculate(Request $request)
@@ -205,19 +212,7 @@ class LoanController extends Controller
 
         try {
             DB::transaction(function () use ($loan) {
-                // Ensure required COAs exist (Self-Healing)
-                $coas = [
-                    ['code' => '1103', 'name' => 'Piutang Pinjaman', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
-                    ['code' => '1101', 'name' => 'Kas', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
-                    ['code' => '4102', 'name' => 'Pendapatan Admin', 'type' => 'REVENUE', 'normal_balance' => 'CREDIT'],
-                ];
-
-                foreach ($coas as $coa) {
-                    ChartOfAccount::firstOrCreate(
-                        ['code' => $coa['code']],
-                        $coa
-                    );
-                }
+                // Ensure required COAs exist (Self-Healing logic removed to rely on Settings)
 
                 $loan->update(['status' => 'berjalan']);
 
@@ -288,17 +283,20 @@ class LoanController extends Controller
                 }
 
                 // Create Journal: Dr Piutang Pinjaman, Cr Kas, Cr Pendapatan Admin
-                // Codes based on Seeder: Piutang Pinjaman (1103), Kas (1101), Pendapatan Admin (4102)
                 $adminFee = $loan->biaya_admin ?? 0;
                 $disbursedAmount = $loan->jumlah_pinjaman - $adminFee;
 
+                $coaReceivable = Setting::get('coa_receivable', '1103');
+                $coaCash = Setting::get('coa_cash', '1101');
+                $coaAdmin = Setting::get('coa_revenue_admin', '4102');
+
                 $journalItems = [
-                    ['code' => '1103', 'debit' => $loan->jumlah_pinjaman, 'credit' => 0], // Piutang
-                    ['code' => '1101', 'debit' => 0, 'credit' => $disbursedAmount], // Kas
+                    ['code' => $coaReceivable, 'debit' => $loan->jumlah_pinjaman, 'credit' => 0], // Piutang
+                    ['code' => $coaCash, 'debit' => 0, 'credit' => $disbursedAmount], // Kas
                 ];
 
                 if ($adminFee > 0) {
-                    $journalItems[] = ['code' => '4102', 'debit' => 0, 'credit' => $adminFee]; // Pendapatan Admin
+                    $journalItems[] = ['code' => $coaAdmin, 'debit' => 0, 'credit' => $adminFee]; // Pendapatan Admin
                 }
 
                 $this->accountingService->createJournal(
@@ -486,14 +484,19 @@ class LoanController extends Controller
                 $denda = $installment->denda ?? 0;
                 $totalMasuk = $installment->pokok + $installment->bunga + $denda;
 
+                $coaCash = Setting::get('coa_cash', '1101');
+                $coaReceivable = Setting::get('coa_receivable', '1103');
+                $coaInterest = Setting::get('coa_revenue_interest', '4101');
+                $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+
                 $items = [
-                    ['code' => '1101', 'debit' => $totalMasuk, 'credit' => 0], // Kas
-                    ['code' => '1103', 'debit' => 0, 'credit' => $installment->pokok], // Piutang
-                    ['code' => '4101', 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
+                    ['code' => $coaCash, 'debit' => $totalMasuk, 'credit' => 0], // Kas
+                    ['code' => $coaReceivable, 'debit' => 0, 'credit' => $installment->pokok], // Piutang
+                    ['code' => $coaInterest, 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
                 ];
 
                 if ($denda > 0) {
-                    $items[] = ['code' => '4103', 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
+                    $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
                 }
 
                 $this->accountingService->createJournal(

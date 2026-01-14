@@ -21,8 +21,9 @@ class HeaderComposer
         // System Alerts
         $pendingLoansCount = Loan::where('status', 'diajukan')->count();
 
-        $dueTodayCount = LoanInstallment::where('tanggal_jatuh_tempo', date('Y-m-d'))
-            ->where('status', 'belum_lunas')
+        $threshold = \App\Models\Setting::get('notification_due_date_threshold', 0);
+        $dueTodayCount = LoanInstallment::where('status', 'belum_lunas')
+            ->whereBetween('tanggal_jatuh_tempo', [now()->format('Y-m-d'), now()->addDays($threshold)->format('Y-m-d')])
             ->count();
 
         $notifications = collect([]);
