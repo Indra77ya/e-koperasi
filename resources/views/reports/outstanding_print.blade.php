@@ -16,6 +16,10 @@
             padding: 20px;
         }
         @media print {
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
             .no-print {
                 display: none;
             }
@@ -23,6 +27,31 @@
             .card {
                 box-shadow: none;
                 border: none;
+            }
+            /* Force badge colors */
+            .badge {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color: white !important; /* Ensure text remains white on dark backgrounds */
+            }
+            .badge-info {
+                background-color: #17a2b8 !important;
+            }
+            .badge-warning {
+                background-color: #ffc107 !important;
+                color: #212529 !important; /* Warning usually has dark text */
+            }
+            .badge-primary {
+                background-color: #007bff !important;
+            }
+            .badge-success {
+                background-color: #28a745 !important;
+            }
+            .badge-danger {
+                background-color: #dc3545 !important;
+            }
+            .badge-secondary {
+                background-color: #6c757d !important;
             }
         }
     </style>
