@@ -75,7 +75,11 @@
                 </div>
                 <div class="dropdown">
                     <a href="#" class="nav-link pr-0 leading-none" data-toggle="dropdown">
-                    <span class="avatar" style="background-image: url(https://randomuser.me/api/portraits/men/43.jpg)"></span>
+                    @if(Auth::user()->photo)
+                        <span class="avatar" style="background-image: url({{ asset('storage/' . Auth::user()->photo) }})"></span>
+                    @else
+                        <span class="avatar" style="background-image: url(https://randomuser.me/api/portraits/men/43.jpg)"></span>
+                    @endif
                     <span class="ml-2 d-none d-lg-block">
                         <span class="text-default">{{ Auth::user()->name }}</span>
                         <small class="text-muted d-block mt-1">Administrator</small>

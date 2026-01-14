@@ -10,10 +10,24 @@
                     <a href="{{ url('/profile') }}" class="btn btn-sm btn-pill btn-secondary">{{ __('back') }}</a>
                 </div>
             </div>
-            <form action="{{ url('/profile/' . $user->id) }}" method="POST">
+            <form action="{{ url('/profile/' . $user->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 {{ method_field('PATCH') }}
                 <div class="card-body">
+                    <div class="form-group">
+                        <div class="row align-items-center">
+                            <label class="col-sm-3">Foto Profil</label>
+                            <div class="col-sm-9">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" name="photo" accept="image/*">
+                                    <label class="custom-file-label">Pilih foto...</label>
+                                </div>
+                                @if ($errors->has('photo'))
+                                    <span class="invalid-feedback d-block">{{ $errors->first('photo') }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="row align-items-center">
                             <label class="col-sm-3">{{ __('full_name') }}</label>
@@ -59,4 +73,18 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('js')
+<script>
+    require(['jquery'], function($) {
+        $(document).ready(function() {
+            // Custom file input label update
+            $('.custom-file-input').on('change', function() {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+        });
+    });
+</script>
 @endsection

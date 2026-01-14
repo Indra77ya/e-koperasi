@@ -21,6 +21,16 @@
                 <table class="table card-table" aria-describedby="profile_desc">
                     <tbody>
                         <tr>
+                            <td style="width: 25%;" class="text-muted">Foto Profil</td>
+                            <td>
+                                @if($user->photo)
+                                    <span class="avatar avatar-xl" style="background-image: url({{ asset('storage/' . $user->photo) }})"></span>
+                                @else
+                                    <span class="avatar avatar-xl" style="background-image: url(https://randomuser.me/api/portraits/men/43.jpg)"></span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
                             <td style="width: 25%;" class="text-muted">{{ __('full_name') }}</td>
                             <td>{{ $user->name }}</td>
                         </tr>
