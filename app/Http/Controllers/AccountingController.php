@@ -162,6 +162,10 @@ class AccountingController extends Controller
 
         $currentEarnings = $revenue - $expense;
 
+        if ($request->has('print')) {
+            return view('accounting.reports.neraca_print', compact('assets', 'liabilities', 'equities', 'currentEarnings', 'endDate'));
+        }
+
         return view('accounting.reports.neraca', compact('assets', 'liabilities', 'equities', 'currentEarnings', 'endDate'));
     }
 
@@ -191,6 +195,10 @@ class AccountingController extends Controller
 
         $revenues = $getAccountsWithBalance('REVENUE', 'CREDIT');
         $expenses = $getAccountsWithBalance('EXPENSE', 'DEBIT');
+
+        if ($request->has('print')) {
+            return view('accounting.reports.laba_rugi_print', compact('revenues', 'expenses', 'startDate', 'endDate'));
+        }
 
         return view('accounting.reports.laba_rugi', compact('revenues', 'expenses', 'startDate', 'endDate'));
     }
@@ -224,6 +232,10 @@ class AccountingController extends Controller
             ->join('journal_entries', 'journal_items.journal_entry_id', '=', 'journal_entries.id')
             ->select('journal_items.*', 'journal_entries.reference_number as ref_number', 'journal_entries.description as description')
             ->get();
+
+        if ($request->has('print')) {
+            return view('accounting.reports.arus_kas_print', compact('cashInItems', 'cashOutItems', 'startDate', 'endDate'));
+        }
 
         return view('accounting.reports.arus_kas', compact('cashInItems', 'cashOutItems', 'startDate', 'endDate'));
     }

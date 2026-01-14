@@ -27,6 +27,11 @@ class ReportController extends Controller
         }
 
         $loans = $query->paginate(20);
+
+        if ($request->has('print')) {
+            return view('reports.outstanding_print', compact('loans'));
+        }
+
         return view('reports.outstanding', compact('loans'));
     }
 
@@ -40,6 +45,11 @@ class ReportController extends Controller
         }
 
         $loans = $query->paginate(20);
+
+        if ($request->has('print')) {
+            return view('reports.bad_debt_print', compact('loans'));
+        }
+
         return view('reports.bad_debt', compact('loans'));
     }
 
@@ -52,6 +62,11 @@ class ReportController extends Controller
         }
 
         $collaterals = $query->paginate(20);
+
+        if ($request->has('print')) {
+            return view('reports.collateral_print', compact('collaterals'));
+        }
+
         return view('reports.collateral', compact('collaterals'));
     }
 
@@ -82,6 +97,10 @@ class ReportController extends Controller
 
         $transactions = $baseQuery->paginate(50);
 
+        if ($request->has('print')) {
+            return view('reports.cash_flow_print', compact('transactions', 'filter', 'startDate', 'endDate', 'totalIn', 'totalOut'));
+        }
+
         return view('reports.cash_flow', compact('transactions', 'filter', 'startDate', 'endDate', 'totalIn', 'totalOut'));
     }
 
@@ -107,6 +126,10 @@ class ReportController extends Controller
         $totalRevenue = (clone $baseQuery)->sum(DB::raw('credit - debit')); // Revenue is Credit normal
 
         $revenues = $baseQuery->paginate(50);
+
+        if ($request->has('print')) {
+            return view('reports.revenue_print', compact('revenues', 'startDate', 'endDate', 'totalRevenue'));
+        }
 
         return view('reports.revenue', compact('revenues', 'startDate', 'endDate', 'totalRevenue'));
     }
