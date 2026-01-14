@@ -66,7 +66,7 @@
                                     <input type="file" class="custom-file-input" name="company_logo">
                                     <label class="custom-file-label">Pilih file logo (SVG/PNG/JPG)</label>
                                 </div>
-                                <small class="text-muted d-block mt-1">Digunakan pada Header (max 32px), Login (max 80px), dan Laporan (max 60px). Disarankan format PNG/SVG transparan dengan tinggi minimal 100px agar tampilan tetap tajam.</small>
+                                <small class="text-muted d-block mt-1">Digunakan pada Header, Login, dan Laporan. Disarankan format PNG/SVG transparan. <strong>Ukuran optimal: Tinggi 100px, Lebar menyesuaikan (rasio aspek terjaga).</strong> Maksimal ukuran file 2MB.</small>
                             </div>
                         </div>
                         <div class="card-footer text-right">
