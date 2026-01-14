@@ -32,6 +32,7 @@ class UpdateProfile extends FormRequest
                 'max:35'
             ],
             'password' => 'nullable|min:6',
+            'photo' => 'nullable|image|max:2048',
         ];
     }
 }
