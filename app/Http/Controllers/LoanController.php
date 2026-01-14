@@ -6,11 +6,13 @@ use App\Models\Loan;
 use App\Models\LoanInstallment;
 use App\Models\Member;
 use App\Models\Nasabah;
+use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountingService;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\LoanSubmittedNotification;
 use Illuminate\Support\Facades\Schema;
@@ -196,8 +198,27 @@ class LoanController extends Controller
     public function disburse(Request $request, $id)
     {
         $loan = Loan::findOrFail($id);
-        if ($loan->status == 'disetujui') {
+
+        if ($loan->status != 'disetujui') {
+             return redirect()->back()->with('error', 'Status pinjaman tidak valid untuk pencairan.');
+        }
+
+        try {
             DB::transaction(function () use ($loan) {
+                // Ensure required COAs exist (Self-Healing)
+                $coas = [
+                    ['code' => '1103', 'name' => 'Piutang Pinjaman', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
+                    ['code' => '1101', 'name' => 'Kas', 'type' => 'ASSET', 'normal_balance' => 'DEBIT'],
+                    ['code' => '4102', 'name' => 'Pendapatan Admin', 'type' => 'REVENUE', 'normal_balance' => 'CREDIT'],
+                ];
+
+                foreach ($coas as $coa) {
+                    ChartOfAccount::firstOrCreate(
+                        ['code' => $coa['code']],
+                        $coa
+                    );
+                }
+
                 $loan->update(['status' => 'berjalan']);
 
                 if ($loan->tenor == 0) {
@@ -288,8 +309,13 @@ class LoanController extends Controller
                     $loan
                 );
             });
+
+            return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
+
+        } catch (\Exception $e) {
+            Log::error('Loan Disbursement Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mencairkan dana: ' . $e->getMessage());
         }
-        return redirect()->back()->with('success', 'Dana dicairkan, jadwal angsuran dibuat.');
     }
 
     public function markBadDebt($id)

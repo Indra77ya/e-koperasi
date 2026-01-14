@@ -9,6 +9,19 @@
                 <div class="page-header">
                     <h1 class="page-title">@yield('page-title')</h1>
                 </div>
+
+                @if(session('success'))
+                    <div class="alert alert-icon alert-success" role="alert">
+                        <i class="fe fe-check mr-2" aria-hidden="true"></i> {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-icon alert-danger" role="alert">
+                        <i class="fe fe-alert-triangle mr-2" aria-hidden="true"></i> {{ session('error') }}
+                    </div>
+                @endif
+
                 @yield('content-app')
             </div>
         </div>
