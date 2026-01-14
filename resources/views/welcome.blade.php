@@ -6,6 +6,14 @@
 
         <title>{{ \App\Models\Setting::get('company_name', __('full_app_name')) }}</title>
 
+        @if($logo = \App\Models\Setting::get('company_logo'))
+            <link rel="icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+            <link rel="shortcut icon" href="{{ asset($logo) }}" type="image/x-icon"/>
+        @else
+            <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
+            <link rel="shortcut icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml"/>
+        @endif
+
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet" type="text/css">
 
