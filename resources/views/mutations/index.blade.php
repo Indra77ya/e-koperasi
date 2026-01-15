@@ -54,6 +54,20 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <div class="row align-items-center">
+                            <label class="col-sm-2">Periode</label>
+                            <div class="col-sm-5">
+                                <input type="date" name="from_date" class="form-control" value="{{ date('Y-m-01') }}">
+                                <small class="text-muted">Dari Tanggal</small>
+                            </div>
+                            <div class="col-sm-5">
+                                <input type="date" name="to_date" class="form-control" value="{{ date('Y-m-d') }}">
+                                <small class="text-muted">Sampai Tanggal</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer text-right">
                     <button id="btn-check-mutations" class="btn btn-primary">{{ __('check') }} {{ __('menu.mutation') }}</button>
@@ -100,6 +114,8 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
 
             var type = $('input[name="type"]:checked').val();
             var id = (type == 'anggota') ? $('select[name="anggota"]').val() : $('select[name="nasabah"]').val();
+            var from_date = $('input[name="from_date"]').val();
+            var to_date = $('input[name="to_date"]').val();
 
             if (!id) {
                 alert('Silakan pilih Anggota atau Nasabah terlebih dahulu.');
@@ -111,7 +127,9 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
                 url: "{{ url('mutations/check-mutations') }}",
                 data: {
                     type: type,
-                    id: id
+                    id: id,
+                    from_date: from_date,
+                    to_date: to_date
                 },
                 success: function(data) {
                     $('.result').html(data.html);

@@ -23,6 +23,8 @@ class MutationController extends Controller
     {
         $type = Input::get('type');
         $id = Input::get('id');
+        $fromDate = Input::get('from_date');
+        $toDate = Input::get('to_date');
 
         $queryHistory = SavingHistory::query();
         $queryBalance = Saving::query();
@@ -33,6 +35,10 @@ class MutationController extends Controller
         } else {
             $queryHistory->where('nasabah_id', $id);
             $queryBalance->where('nasabah_id', $id);
+        }
+
+        if ($fromDate && $toDate) {
+            $queryHistory->whereBetween('tanggal', [$fromDate, $toDate]);
         }
 
         $savings_history = $queryHistory->orderBy('id', 'asc')->get();
