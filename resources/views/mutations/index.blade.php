@@ -103,6 +103,9 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
             }
         });
 
+        // Trigger default state on load
+        $('input[name="type"]:checked').trigger('change');
+
         $('#btn-check-mutations').click(function(e) {
             e.preventDefault();
 
@@ -133,6 +136,10 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
                 },
                 success: function(data) {
                     $('.result').html(data.html);
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
+                    alert('Terjadi kesalahan saat memuat data mutasi.');
                 }
             });
         });
