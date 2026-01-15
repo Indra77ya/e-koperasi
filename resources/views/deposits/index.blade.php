@@ -47,13 +47,14 @@ require(['datatables', 'jquery'], function(datatable, $) {
         serverSide: true,
         ajax: '{{ url('deposits/get-json') }}',
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-            { data: 'anggota', name: 'anggota' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'anggota', name: 'anggota', orderable: false },
             { data: 'jumlah', name: 'jumlah' },
             { data: 'keterangan', name: 'keterangan', orderable: false },
             { data: 'tanggal', name: 'tanggal' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
+        order: [[ 4, "desc" ]],
         language: {
             "url": '{{ lang_url() }}'
         },
