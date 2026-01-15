@@ -15,4 +15,12 @@ class SavingHistory extends Model
     {
         return $this->belongsTo('App\Models\Member', 'anggota_id');
     }
+
+    /**
+     * Get the nasabah that owns the saving history.
+     */
+    public function nasabah()
+    {
+        return $this->belongsTo('App\Models\Nasabah', 'nasabah_id');
+    }
 }

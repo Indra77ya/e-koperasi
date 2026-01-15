@@ -24,7 +24,7 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="w-1">No.</th>
-                                <th scope="col">{{ __('menu.member') }}</th>
+                                <th scope="col">Nama (Anggota / Nasabah)</th>
                                 <th scope="col">{{ __('amount') }}</th>
                                 <th scope="col">{{ __('note') }}</th>
                                 <th scope="col">{{ __('date') }}</th>
@@ -43,17 +43,17 @@
 <script>
 require(['datatables', 'jquery'], function(datatable, $) {
     $('#datatable').DataTable({
-        lengthChange: false,
         serverSide: true,
         ajax: '{{ url('deposits/get-json') }}',
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-            { data: 'anggota', name: 'anggota' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'anggota', name: 'anggota', orderable: false },
             { data: 'jumlah', name: 'jumlah' },
             { data: 'keterangan', name: 'keterangan', orderable: false },
             { data: 'tanggal', name: 'tanggal' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
+        order: [[ 4, "desc" ]],
         language: {
             "url": '{{ lang_url() }}'
         },

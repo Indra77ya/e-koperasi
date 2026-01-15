@@ -24,8 +24,10 @@ class StoreDeposit extends FormRequest
     public function rules()
     {
         return [
-            'anggota' => 'required',
-            'jumlah' => 'required|integer',
+            'tipe_penyetor' => 'required|in:anggota,nasabah',
+            'anggota' => 'required_if:tipe_penyetor,anggota|nullable|exists:anggota,id',
+            'nasabah' => 'required_if:tipe_penyetor,nasabah|nullable|exists:nasabahs,id',
+            'jumlah' => 'required|integer|min:1',
         ];
     }
 }

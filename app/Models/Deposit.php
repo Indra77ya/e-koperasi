@@ -15,4 +15,12 @@ class Deposit extends Model
     {
         return $this->belongsTo('App\Models\Member', 'anggota_id');
     }
+
+    /**
+     * Get the nasabah that owns the deposit.
+     */
+    public function nasabah()
+    {
+        return $this->belongsTo('App\Models\Nasabah', 'nasabah_id');
+    }
 }

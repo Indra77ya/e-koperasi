@@ -155,6 +155,16 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label class="form-label">Akun Simpanan Anggota</label>
+                                <select class="form-control custom-select" name="coa_savings">
+                                    @foreach($coas as $coa)
+                                        <option value="{{ $coa->code }}" {{ ($settings['coa_savings'] ?? '2101') == $coa->code ? 'selected' : '' }}>
+                                            {{ $coa->code }} - {{ $coa->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Akun Piutang Pinjaman</label>
                                 <select class="form-control custom-select" name="coa_receivable">
                                     @foreach($coas as $coa)
