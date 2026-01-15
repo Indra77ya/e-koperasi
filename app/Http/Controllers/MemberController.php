@@ -119,7 +119,7 @@ class MemberController extends Controller
 
     public function jsonMembers()
     {
-        $members = Member::orderBy('id', 'desc')->get();
+        $members = Member::with('balance')->select('anggota.*')->orderBy('id', 'desc');
         return DataTables::of($members)
             ->addIndexColumn()
             ->addColumn('action', function($member) {

@@ -43,11 +43,11 @@
                     </tr>
                     <tr>
                         <td class="text-muted">{{ __('address') }}</td>
-                        <td>{{ $member->pekerjaan }}</td>
+                        <td>{{ $member->alamat }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">{{ __('employment') }}</td>
-                        <td>{{ $member->alamat }}</td>
+                        <td>{{ $member->pekerjaan }}</td>
                     </tr>
                 </tbody>
             </table>
