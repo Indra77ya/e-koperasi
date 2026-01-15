@@ -24,7 +24,7 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="w-1">No.</th>
-                                <th scope="col">{{ __('menu.member') }}</th>
+                                <th scope="col">{{ __('menu.member') }} / Nasabah</th>
                                 <th scope="col">{{ __('amount') }}</th>
                                 <th scope="col">{{ __('note') }}</th>
                                 <th scope="col">{{ __('date') }}</th>

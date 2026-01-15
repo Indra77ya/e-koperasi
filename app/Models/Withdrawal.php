@@ -15,4 +15,12 @@ class Withdrawal extends Model
     {
         return $this->belongsTo('App\Models\Member', 'anggota_id');
     }
+
+    /**
+     * Get the nasabah that owns the withdrawal.
+     */
+    public function nasabah()
+    {
+        return $this->belongsTo('App\Models\Nasabah', 'nasabah_id');
+    }
 }
