@@ -22,6 +22,12 @@
                         <td>{{ $member->nama }}</td>
                     </tr>
                     <tr>
+                        <td class="text-muted">Saldo Tabungan</td>
+                        <td class="font-weight-bold text-success">
+                            Rp {{ number_format($member->balance->saldo ?? 0, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    <tr>
                         <td class="text-muted">Email</td>
                         <td>{{ $member->email }}</td>
                     </tr>

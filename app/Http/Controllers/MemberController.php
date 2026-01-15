@@ -62,7 +62,7 @@ class MemberController extends Controller
      */
     public function show($id)
     {
-        $member = Member::findOrFail($id);
+        $member = Member::with('balance')->findOrFail($id);
         return view('members.show', ['member' => $member]);
     }
 
