@@ -48,12 +48,12 @@ require(['datatables', 'jquery'], function(datatable, $) {
         serverSide: true,
         ajax: '{{ url('members/get-json') }}',
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nik', name: 'nik' },
             { data: 'nama', name: 'nama' },
             { data: 'pekerjaan', name: 'pekerjaan' },
             { data: 'no_hp', name: 'no_hp' },
-            { data: 'saldo', name: 'saldo' },
+            { data: 'saldo', name: 'saldo', orderable: false, searchable: false },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
         language: {

@@ -48,7 +48,7 @@ require(['datatables', 'jquery'], function(datatable, $) {
         serverSide: true,
         ajax: '{{ route('nasabahs.get-json') }}',
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nik', name: 'nik' },
             { data: 'nama', name: 'nama' },
             { data: 'pekerjaan', name: 'pekerjaan' },
