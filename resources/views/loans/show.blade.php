@@ -336,7 +336,8 @@
                                         @if($log->tanggal_janji_bayar)
                                             <span class="text-danger">Janji Bayar: {{ \Carbon\Carbon::parse($log->tanggal_janji_bayar)->format('d/m/Y') }}</span><br>
                                         @endif
-                                        Catatan: {{ $log->catatan }}
+                                        Catatan: <br>
+                                        {!! nl2br(e($log->catatan)) !!}
                                     </div>
                                 </div>
                             </li>
