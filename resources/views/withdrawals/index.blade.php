@@ -47,8 +47,8 @@ require(['datatables', 'jquery'], function(datatable, $) {
         serverSide: true,
         ajax: '{{ url('withdrawals/get-json') }}',
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-            { data: 'anggota', name: 'anggota' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'anggota', name: 'anggota', orderable: false, searchable: false },
             { data: 'jumlah', name: 'jumlah' },
             { data: 'keterangan', name: 'keterangan', orderable: false },
             { data: 'tanggal', name: 'tanggal' },
