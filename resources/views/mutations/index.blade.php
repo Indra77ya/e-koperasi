@@ -139,7 +139,11 @@ require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js
                 },
                 error: function(xhr) {
                     console.log(xhr.responseText);
-                    alert('Terjadi kesalahan saat memuat data mutasi.');
+                    var msg = 'Terjadi kesalahan saat memuat data mutasi.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        msg = xhr.responseJSON.error;
+                    }
+                    alert(msg);
                 }
             });
         });

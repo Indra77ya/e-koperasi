@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use App\Models\SavingHistory;
 use App\Models\Saving;
+use Illuminate\Support\Facades\Log;
 
 class MutationController extends Controller
 {
@@ -21,38 +22,47 @@ class MutationController extends Controller
 
     public function check_mutations()
     {
-        $type = Input::get('type');
-        $id = Input::get('id');
-        $fromDate = Input::get('from_date');
-        $toDate = Input::get('to_date');
+        try {
+            $type = Input::get('type');
+            $id = Input::get('id');
+            $fromDate = Input::get('from_date');
+            $toDate = Input::get('to_date');
 
-        $queryHistory = SavingHistory::query();
-        $queryBalance = Saving::query();
+            if (!$type || !$id) {
+                return response()->json(['error' => 'Tipe dan ID harus dipilih.'], 400);
+            }
 
-        if ($type == 'anggota') {
-            $queryHistory->where('anggota_id', $id);
-            $queryBalance->where('anggota_id', $id);
-        } else {
-            $queryHistory->where('nasabah_id', $id);
-            $queryBalance->where('nasabah_id', $id);
+            $queryHistory = SavingHistory::query();
+            $queryBalance = Saving::query();
+
+            if ($type == 'anggota') {
+                $queryHistory->where('anggota_id', $id);
+                $queryBalance->where('anggota_id', $id);
+            } else {
+                $queryHistory->where('nasabah_id', $id);
+                $queryBalance->where('nasabah_id', $id);
+            }
+
+            if ($fromDate && $toDate) {
+                $queryHistory->whereBetween('tanggal', [$fromDate, $toDate]);
+            }
+
+            $savings_history = $queryHistory->orderBy('id', 'asc')->get();
+            $total_credit = $savings_history->sum('kredit');
+            $total_debet = $savings_history->sum('debet');
+            $balance = $queryBalance->first();
+
+            // Prevent error if no balance record exists yet
+            $currentBalance = $balance ? $balance->saldo : 0;
+
+            $view = view('mutations.check_mutations', compact('savings_history', 'currentBalance', 'total_credit', 'total_debet'))->render();
+
+            return response()->json([
+                'html'=> $view,
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        if ($fromDate && $toDate) {
-            $queryHistory->whereBetween('tanggal', [$fromDate, $toDate]);
-        }
-
-        $savings_history = $queryHistory->orderBy('id', 'asc')->get();
-        $total_credit = $savings_history->sum('kredit');
-        $total_debet = $savings_history->sum('debet');
-        $balance = $queryBalance->first();
-
-        // Prevent error if no balance record exists yet
-        $currentBalance = $balance ? $balance->saldo : 0;
-
-        $view = view('mutations.check_mutations', compact('savings_history', 'currentBalance', 'total_credit', 'total_debet'))->render();
-
-        return response()->json([
-            'html'=> $view,
-        ]);
     }
 }
