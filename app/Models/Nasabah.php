@@ -22,4 +22,9 @@ class Nasabah extends Model
     {
         return $this->hasMany('App\Models\Loan', 'nasabah_id');
     }
+
+    public function balance()
+    {
+        return $this->hasOne('App\Models\Saving', 'nasabah_id');
+    }
 }
