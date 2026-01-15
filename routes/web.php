@@ -53,12 +53,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('deposits/get-json', 'DepositController@jsonDeposits');
     Route::resource('deposits', 'DepositController')->only([
-        'index', 'create', 'store', 'show'
+        'index', 'create', 'store', 'show', 'destroy'
     ]);
 
     Route::get('withdrawals/get-json', 'WithdrawalController@jsonWithdrawals');
     Route::resource('withdrawals', 'WithdrawalController')->only([
-        'index', 'create', 'store', 'show'
+        'index', 'create', 'store', 'show', 'destroy'
     ]);
 
     Route::get('mutations', 'MutationController@index');
