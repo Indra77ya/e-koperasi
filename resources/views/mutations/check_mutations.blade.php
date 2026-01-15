@@ -19,14 +19,14 @@
                     @forelse ($savings_history as $saving_history)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $saving_history->tanggal }}</td>
+                            <td>{{ \Carbon\Carbon::parse($saving_history->tanggal)->format('d/m/Y') }}</td>
                             <td>{{ $saving_history->keterangan }}</td>
                             <td class="text-right">{{ format_rupiah($saving_history->debet) }}</td>
                             <td class="text-right">{{ format_rupiah($saving_history->kredit) }}</td>
                             <td class="text-right">{{ format_rupiah($saving_history->saldo) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="6">Riwayat Mutasi tidak ditemukan.</td></tr>
+                        <tr><td colspan="6" class="text-center">Riwayat Mutasi tidak ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -36,16 +36,16 @@
             <table class="table card-table mt-5" aria-describedby="mutation_result_desc">
                 <tbody>
                     <tr>
-                        <td style="width: 20%;" class="font-weight-bold text-muted">Total {{ __('credit') }}</td>
-                        <td>{{ format_rupiah($total_credit) }}</td>
+                        <td style="width: 20%;" class="font-weight-bold text-muted">Total {{ __('credit') }} (Uang Masuk)</td>
+                        <td class="text-right">{{ format_rupiah($total_credit) }}</td>
                     </tr>
                     <tr>
-                        <td class="font-weight-bold text-muted">Total {{ __('debit') }}</td>
-                        <td>{{ format_rupiah($total_debet) }}</td>
+                        <td class="font-weight-bold text-muted">Total {{ __('debit') }} (Uang Keluar)</td>
+                        <td class="text-right">{{ format_rupiah($total_debet) }}</td>
                     </tr>
                     <tr>
-                        <td class="font-weight-bold text-muted">{{ __('balance') }}</td>
-                        <td>{{ format_rupiah($balance->saldo) }}</td>
+                        <td class="font-weight-bold text-success">{{ __('balance') }} Akhir</td>
+                        <td class="text-right font-weight-bold text-success">{{ format_rupiah($currentBalance) }}</td>
                     </tr>
                 </tbody>
             </table>
