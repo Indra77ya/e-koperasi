@@ -144,7 +144,7 @@ class NasabahController extends Controller
 
     public function jsonNasabah()
     {
-        $nasabahs = Nasabah::orderBy('id', 'desc')->get();
+        $nasabahs = Nasabah::select('nasabahs.*')->orderBy('id', 'desc');
         return DataTables::of($nasabahs)
             ->addIndexColumn()
             ->addColumn('action', function($nasabah) {
