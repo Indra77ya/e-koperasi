@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://select2.github.io/select2-bootstrap-theme/css/select2-bootstrap.css">
+@endsection
+
 @section('content-app')
 <div class="row row-cards row-deck">
     <div class="col-10 offset-md-1">
@@ -109,7 +114,7 @@
 
 @section('js')
 <script>
-require(['jquery', 'select2'], function ($) {
+require(['jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js'], function ($) {
     $(document).ready(function () {
         $('.select2').select2({
             theme: "bootstrap",
