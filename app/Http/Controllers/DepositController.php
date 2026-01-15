@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\Nasabah;
 use App\Models\Saving;
 use App\Models\Deposit;
 use App\Models\Setting;
@@ -41,8 +42,9 @@ class DepositController extends Controller
     public function create()
     {
         $members = Member::orderBy('nama', 'asc')->get();
+        $nasabahs = Nasabah::orderBy('nama', 'asc')->get();
 
-        return view('deposits.create', ['members' => $members]);
+        return view('deposits.create', compact('members', 'nasabahs'));
     }
 
     /**
@@ -54,21 +56,32 @@ class DepositController extends Controller
     public function store(StoreDeposit $request)
     {
         DB::transaction(function () use ($request) {
+            // Determine depositor
+            $anggotaId = ($request->tipe_penyetor == 'anggota') ? $request->anggota : null;
+            $nasabahId = ($request->tipe_penyetor == 'nasabah') ? $request->nasabah : null;
+
             // Insert into deposit
             $deposit = new Deposit;
-            $deposit->anggota_id = $request->anggota;
+            $deposit->anggota_id = $anggotaId;
+            $deposit->nasabah_id = $nasabahId;
             $deposit->jumlah = $request->jumlah;
             $deposit->keterangan = $request->keterangan;
             $deposit->save();
 
             // Create or Update Saving
-            $balance = Saving::firstOrNew(['anggota_id' => $request->anggota]);
+            if ($anggotaId) {
+                $balance = Saving::firstOrNew(['anggota_id' => $anggotaId]);
+            } else {
+                $balance = Saving::firstOrNew(['nasabah_id' => $nasabahId]);
+            }
+
             $balance->saldo = ($balance->saldo ?? 0) + $request->jumlah;
             $balance->save();
 
             // Insert into history saving
             $saving_history = new SavingHistory;
-            $saving_history->anggota_id = $request->anggota;
+            $saving_history->anggota_id = $anggotaId;
+            $saving_history->nasabah_id = $nasabahId;
             $saving_history->tanggal = \Carbon\Carbon::today()->toDateString();
             $saving_history->keterangan = 'setoran';
             $saving_history->kredit = $request->jumlah;
@@ -84,10 +97,17 @@ class DepositController extends Controller
                 ['code' => $coaSavings, 'debit' => 0, 'credit' => $request->jumlah], // Credit Simpanan
             ];
 
+            // Get depositor name
+            if ($anggotaId) {
+                $name = Member::find($anggotaId)->nama ?? 'Anggota';
+            } else {
+                $name = Nasabah::find($nasabahId)->nama ?? 'Nasabah';
+            }
+
             $this->accountingService->createJournal(
                 now(),
                 'DEP-' . $deposit->id,
-                'Setoran Simpanan ' . $deposit->member->nama,
+                'Setoran Simpanan ' . $name,
                 $journalItems,
                 $deposit
             );
@@ -105,7 +125,7 @@ class DepositController extends Controller
      */
     public function show($id)
     {
-        $deposit = Deposit::with('member')->findOrFail($id);
+        $deposit = Deposit::with(['member', 'nasabah'])->findOrFail($id);
         return view('deposits.show', ['deposit' => $deposit]);
     }
 
@@ -120,7 +140,12 @@ class DepositController extends Controller
         try {
             DB::transaction(function () use ($deposit) {
                 // 1. Revert Saving Balance
-                $saving = Saving::where('anggota_id', $deposit->anggota_id)->first();
+                if ($deposit->anggota_id) {
+                     $saving = Saving::where('anggota_id', $deposit->anggota_id)->first();
+                } else {
+                     $saving = Saving::where('nasabah_id', $deposit->nasabah_id)->first();
+                }
+
                 if ($saving) {
                     $saving->saldo -= $deposit->jumlah;
                     $saving->save();
@@ -129,6 +154,7 @@ class DepositController extends Controller
                 // 2. Add Reversal History
                 $saving_history = new SavingHistory;
                 $saving_history->anggota_id = $deposit->anggota_id;
+                $saving_history->nasabah_id = $deposit->nasabah_id;
                 $saving_history->tanggal = \Carbon\Carbon::today()->toDateString();
                 $saving_history->keterangan = 'koreksi setoran (hapus)';
                 $saving_history->debit = $deposit->jumlah; // Debit to reduce balance
@@ -157,7 +183,7 @@ class DepositController extends Controller
 
     public function jsonDeposits()
     {
-        $deposits = Deposit::with('member')->select('setoran.*');
+        $deposits = Deposit::with(['member', 'nasabah'])->select('setoran.*');
 
         return DataTables::of($deposits)
             ->addIndexColumn()
@@ -165,7 +191,12 @@ class DepositController extends Controller
                 return view('deposits.datatables.action', compact('deposit'))->render();
             })
             ->addColumn('anggota', function($deposit) {
-                return $deposit->member->nama;
+                if ($deposit->member) {
+                    return $deposit->member->nama . ' (Anggota)';
+                } elseif ($deposit->nasabah) {
+                    return $deposit->nasabah->nama . ' (Nasabah)';
+                }
+                return '-';
             })
             ->addColumn('tanggal', function($deposit) {
                 return $deposit->created_at->format('d/m/Y H:i');
