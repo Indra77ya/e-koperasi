@@ -135,12 +135,24 @@ class CollectionController extends Controller
     public function updateFieldQueueStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:selesai,batal',
+            'status' => 'required|in:selesai,batal,dalam_proses',
         ]);
 
         $task = PenagihanLapangan::findOrFail($id);
         $task->status = $request->status;
         $task->save();
+
+        // Sync with Collection History (Timeline)
+        if ($request->status == 'selesai' || $request->status == 'batal') {
+            PenagihanLog::create([
+                'pinjaman_id' => $task->pinjaman_id,
+                'user_id' => Auth::id(),
+                'metode_penagihan' => 'Kunjungan Lapangan',
+                'hasil_penagihan' => $request->status == 'selesai' ? 'Tugas Selesai' : 'Tugas Dibatalkan',
+                'catatan' => "Status antrian lapangan diperbarui menjadi " . $request->status . ". \nCatatan Tugas: " . $task->catatan_tugas,
+                'tanggal_janji_bayar' => null,
+            ]);
+        }
 
         return back()->with('success', 'Status tugas berhasil diperbarui.');
     }
