@@ -38,14 +38,30 @@
                                 </td>
                                 <td>{{ $item->petugas ? $item->petugas->name : '-' }}</td>
                                 <td>
-                                    <span class="badge badge-{{ $item->status == 'selesai' ? 'success' : ($item->status == 'batal' ? 'secondary' : 'warning') }}">
-                                        {{ ucfirst($item->status) }}
+                                    @php
+                                        $badgeClass = 'secondary';
+                                        if($item->status == 'selesai') $badgeClass = 'success';
+                                        elseif($item->status == 'dalam_proses') $badgeClass = 'warning';
+                                        elseif($item->status == 'baru') $badgeClass = 'info';
+                                    @endphp
+                                    <span class="badge badge-{{ $badgeClass }}">
+                                        {{ ucwords(str_replace('_', ' ', $item->status)) }}
                                     </span>
                                 </td>
                                 <td style="max-width: 300px;">{{ $item->catatan_tugas }}</td>
                                 <td class="text-nowrap">
                                     <div class="d-flex">
                                         <a href="{{ route('loans.show', $item->pinjaman_id) }}" class="btn btn-sm btn-primary mr-1">Lihat Pinjaman</a>
+
+                                        @if($item->status == 'baru')
+                                            <form action="{{ route('collections.queue.update', $item->id) }}" method="POST" onsubmit="return confirm('Mulai proses penagihan?');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="dalam_proses">
+                                                <button type="submit" class="btn btn-sm btn-info mr-1" title="Mulai Proses"><i class="fe fe-play"></i></button>
+                                            </form>
+                                        @endif
+
                                         @if($item->status == 'baru' || $item->status == 'dalam_proses')
                                             <form action="{{ route('collections.queue.update', $item->id) }}" method="POST" onsubmit="return confirm('Tandai tugas ini sebagai Selesai?');">
                                                 @csrf

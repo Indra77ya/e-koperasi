@@ -135,7 +135,7 @@ class CollectionController extends Controller
     public function updateFieldQueueStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:selesai,batal',
+            'status' => 'required|in:selesai,batal,dalam_proses',
         ]);
 
         $task = PenagihanLapangan::findOrFail($id);
