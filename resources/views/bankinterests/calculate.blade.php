@@ -118,7 +118,7 @@ require(['datatables', 'jquery'], function(datatable, $) {
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'periode', name: 'periode', orderable: false },
+            { data: 'periode', name: 'periode' },
             { data: 'saldo_terendah', name: 'saldo_terendah', className: 'text-right' },
             { data: 'nominal_bunga', name: 'nominal_bunga', className: 'text-right' },
         ],

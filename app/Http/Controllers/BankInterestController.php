@@ -247,12 +247,15 @@ class BankInterestController extends Controller
             $query->where('anggota_id', $id);
         }
 
-        $interests = $query->orderBy('id', 'desc')->get();
+        $interests = $query->orderBy('id', 'desc');
 
         return DataTables::of($interests)
             ->addIndexColumn()
             ->addColumn('periode', function($interest) {
                 return month_id($interest->bulan) . ' ' . $interest->tahun;
+            })
+            ->orderColumn('periode', function ($query, $order) {
+                $query->orderBy('tahun', $order)->orderBy('bulan', $order);
             })
             ->editColumn('nominal_bunga', function($interest) {
                 return format_rupiah($interest->nominal_bunga);
