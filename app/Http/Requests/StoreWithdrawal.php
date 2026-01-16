@@ -24,8 +24,10 @@ class StoreWithdrawal extends FormRequest
     public function rules()
     {
         return [
-            'anggota' => 'required',
-            'jumlah' => 'required|integer',
+            'tipe_penarik' => 'required|in:anggota,nasabah',
+            'anggota' => 'required_if:tipe_penarik,anggota|nullable|exists:anggota,id',
+            'nasabah' => 'required_if:tipe_penarik,nasabah|nullable|exists:nasabahs,id',
+            'jumlah' => 'required|integer|min:1',
         ];
     }
 }

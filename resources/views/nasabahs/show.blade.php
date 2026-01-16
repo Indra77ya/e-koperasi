@@ -33,6 +33,12 @@
                                 <td>{{ $nasabah->alamat }}</td>
                             </tr>
                             <tr>
+                                <th>Saldo Tabungan</th>
+                                <td class="font-weight-bold text-success">
+                                    Rp {{ number_format($nasabah->balance->saldo ?? 0, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Status Risiko</th>
                                 <td>
                                     @if($nasabah->status == 'aman')

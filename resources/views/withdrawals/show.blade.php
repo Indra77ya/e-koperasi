@@ -13,9 +13,15 @@
             <table class="table card-table" aria-describedby="withdrawal_detail_desc">
                 <tbody>
                     <tr>
-                        <td style="width: 25%;" class="text-muted">{{ __('menu.member') }}</td>
+                        <td style="width: 25%;" class="text-muted">{{ __('menu.member') }} / Nasabah</td>
                         <td>
-                            <a href="{{ route('members.show', $withdrawal->anggota_id) }}" target="_blank">{{ $withdrawal->member->nama }} - {{ $withdrawal->member->nik }}</a>
+                            @if($withdrawal->member)
+                                <a href="{{ route('members.show', $withdrawal->anggota_id) }}" target="_blank">{{ $withdrawal->member->nama }} - {{ $withdrawal->member->nik }} (Anggota)</a>
+                            @elseif($withdrawal->nasabah)
+                                <a href="{{ route('nasabahs.show', $withdrawal->nasabah_id) }}" target="_blank">{{ $withdrawal->nasabah->nama }} - {{ $withdrawal->nasabah->nik }} (Nasabah)</a>
+                            @else
+                                -
+                            @endif
                         </td>
                     </tr>
                     <tr>

@@ -12,23 +12,9 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // Fix for "Target class [NasabahTableSeeder] does not exist" when composer dump-autoload hasn't been run
-        if (!class_exists('NasabahTableSeeder')) {
-            require_once __DIR__ . '/NasabahTableSeeder.php';
-        }
-        if (!class_exists('LoanSeeder')) {
-            require_once __DIR__ . '/LoanSeeder.php';
-        }
-        if (!class_exists('CollectionSeeder')) {
-            require_once __DIR__ . '/CollectionSeeder.php';
-        }
-        if (!class_exists('CoaSeeder')) {
-            require_once __DIR__ . '/CoaSeeder.php';
-        }
-        if (!class_exists('JournalSeeder')) {
-            require_once __DIR__ . '/JournalSeeder.php';
-        }
-        if (!class_exists('ReportSeeder')) {
-            require_once __DIR__ . '/ReportSeeder.php';
+        // Require all seeders to be safe
+        foreach (glob(__DIR__ . '/*.php') as $filename) {
+            require_once $filename;
         }
 
         $this->call([
@@ -40,6 +26,7 @@ class DatabaseSeeder extends Seeder
             CoaSeeder::class,
             JournalSeeder::class,
             ReportSeeder::class,
+            MutationSeeder::class,
         ]);
     }
 }

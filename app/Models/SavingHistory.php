@@ -8,6 +8,16 @@ class SavingHistory extends Model
 {
     protected $table = 'riwayat_tabungan';
 
+    protected $fillable = [
+        'anggota_id',
+        'nasabah_id',
+        'tanggal',
+        'keterangan',
+        'debet',
+        'kredit',
+        'saldo'
+    ];
+
     /**
      * Get the member that owns the saving history.
      */

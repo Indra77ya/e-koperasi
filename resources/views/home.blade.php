@@ -188,10 +188,19 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
-                                    <div>{{ $mutation->member->nama }}</div>
-                                    <div class="small text-muted">
-                                        NIK: {{ $mutation->member->nik }}
-                                    </div>
+                                    @if($mutation->member)
+                                        <div>{{ $mutation->member->nama }} (Anggota)</div>
+                                        <div class="small text-muted">
+                                            NIK: {{ $mutation->member->nik }}
+                                        </div>
+                                    @elseif($mutation->nasabah)
+                                        <div>{{ $mutation->nasabah->nama }} (Nasabah)</div>
+                                        <div class="small text-muted">
+                                            NIK: {{ $mutation->nasabah->nik }}
+                                        </div>
+                                    @else
+                                        <div>-</div>
+                                    @endif
                                 </td>
                                 <td>{{ $mutation->tanggal }}</td>
                                 <td>{{ $mutation->keterangan }}</td>

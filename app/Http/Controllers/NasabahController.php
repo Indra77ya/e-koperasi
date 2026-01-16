@@ -67,7 +67,7 @@ class NasabahController extends Controller
      */
     public function show($id)
     {
-        $nasabah = Nasabah::findOrFail($id);
+        $nasabah = Nasabah::with('balance')->findOrFail($id);
         return view('nasabahs.show', compact('nasabah'));
     }
 
@@ -144,7 +144,7 @@ class NasabahController extends Controller
 
     public function jsonNasabah()
     {
-        $nasabahs = Nasabah::select('nasabahs.*')->orderBy('id', 'desc');
+        $nasabahs = Nasabah::with('balance')->select('nasabahs.*');
         return DataTables::of($nasabahs)
             ->addIndexColumn()
             ->addColumn('action', function($nasabah) {
@@ -158,6 +158,9 @@ class NasabahController extends Controller
                 ];
                 $color = $badges[$nasabah->status] ?? 'secondary';
                 return '<span class="tag tag-' . $color . '">' . ucfirst($nasabah->status) . '</span>';
+            })
+            ->addColumn('saldo', function($nasabah) {
+                return 'Rp ' . number_format($nasabah->balance->saldo ?? 0, 0, ',', '.');
             })
             ->rawColumns(['action', 'status'])
             ->toJson();

@@ -28,6 +28,7 @@
                                 <th scope="col">Nama Lengkap</th>
                                 <th scope="col">Pekerjaan</th>
                                 <th scope="col">No. HP</th>
+                                <th scope="col">Saldo</th>
                                 <th scope="col">Status</th>
                                 <th scope="col"></th>
                             </tr>
@@ -53,6 +54,7 @@ require(['datatables', 'jquery'], function(datatable, $) {
             { data: 'nama', name: 'nama' },
             { data: 'pekerjaan', name: 'pekerjaan' },
             { data: 'no_hp', name: 'no_hp' },
+            { data: 'saldo', name: 'saldo', orderable: false, searchable: false },
             { data: 'status', name: 'status' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
@@ -65,7 +67,11 @@ require(['datatables', 'jquery'], function(datatable, $) {
                 className: "text-center"
             },
             {
-                targets: [6],
+                targets: [5],
+                className: "text-right"
+            },
+            {
+                targets: [7],
                 className: "text-right"
             }
         ]
