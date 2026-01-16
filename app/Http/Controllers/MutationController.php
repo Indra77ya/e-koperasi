@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\Nasabah;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
 use App\Models\SavingHistory;
 use App\Models\Saving;
 use Illuminate\Support\Facades\Log;
@@ -20,13 +19,13 @@ class MutationController extends Controller
         return view('mutations.index', compact('members', 'nasabahs'));
     }
 
-    public function check_mutations()
+    public function check_mutations(Request $request)
     {
         try {
-            $type = Input::get('type');
-            $id = Input::get('id');
-            $fromDate = Input::get('from_date');
-            $toDate = Input::get('to_date');
+            $type = $request->query('type');
+            $id = $request->query('id');
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
 
             if (!$type || !$id) {
                 return response()->json(['error' => 'Tipe dan ID harus dipilih.'], 400);
