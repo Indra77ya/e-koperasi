@@ -39,6 +39,15 @@ Route::get('/dev/seed', function () {
     }
 });
 
+Route::get('/dev/seed-dummy', function () {
+    try {
+        \Artisan::call('db:seed', ['--force' => true]);
+        return "Database seeded successfully (Dummy Data)!";
+    } catch (\Exception $e) {
+        return "Error seeding database: " . $e->getMessage();
+    }
+});
+
 Auth::routes(['register' => false, 'reset' => false, 'verify' => false]);
 
 Route::get('/home', 'HomeController@index')->name('home');

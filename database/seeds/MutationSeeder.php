@@ -10,6 +10,7 @@ use App\Models\SavingHistory;
 use App\Models\Setting;
 use App\Services\AccountingService;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class MutationSeeder extends Seeder
 {
@@ -20,6 +21,16 @@ class MutationSeeder extends Seeder
      */
     public function run()
     {
+        // Truncate tables
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Deposit::truncate();
+        Withdrawal::truncate();
+        Saving::truncate();
+        SavingHistory::truncate();
+        DB::table('journal_entries')->truncate();
+        DB::table('journal_items')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         // Dependencies
         $accountingService = new AccountingService();
         $faker = Faker::create('id_ID');
@@ -28,16 +39,14 @@ class MutationSeeder extends Seeder
         $coaCash = Setting::get('coa_cash', '1101');
         $coaSavings = Setting::get('coa_savings', '2101');
 
-        // 1. Process for some Random Members
-        $members = Member::inRandomOrder()->take(5)->get();
-
+        // 1. Process Members
+        $members = Member::all();
         foreach ($members as $member) {
             $this->generateTransactions($member, 'anggota', $faker, $accountingService, $coaCash, $coaSavings);
         }
 
-        // 2. Process for some Random Nasabahs
-        $nasabahs = Nasabah::inRandomOrder()->take(5)->get();
-
+        // 2. Process Nasabahs
+        $nasabahs = Nasabah::all();
         foreach ($nasabahs as $nasabah) {
             $this->generateTransactions($nasabah, 'nasabah', $faker, $accountingService, $coaCash, $coaSavings);
         }
@@ -51,18 +60,18 @@ class MutationSeeder extends Seeder
         $saving = Saving::firstOrNew([$idField => $entity->id]);
         $currentBalance = $saving->saldo ?? 0;
 
-        // Generate 5-10 transactions
-        $numTransactions = rand(5, 10);
-        $startDate = \Carbon\Carbon::now()->subMonths(3);
+        // Generate 10-25 transactions per user
+        $numTransactions = rand(10, 25);
+        $startDate = \Carbon\Carbon::now()->subMonths(6); // 6 months history
 
         for ($i = 0; $i < $numTransactions; $i++) {
-            $date = $startDate->copy()->addDays(rand(1, 10));
+            $date = $startDate->copy()->addDays(rand(2, 7)); // Spread out
             $startDate = $date; // Advance date
 
-            $isDeposit = (rand(0, 10) > 3); // 70% chance deposit
-            $amount = rand(50000, 1000000);
-            // round to thousands
-            $amount = ceil($amount / 50000) * 50000;
+            // Higher chance of deposit (income) than withdrawal to build balance
+            $isDeposit = (rand(0, 100) > 30); // 70% deposit
+            $amount = rand(50000, 2000000);
+            $amount = ceil($amount / 50000) * 50000; // Round to 50k
 
             if ($isDeposit) {
                 // Deposit
@@ -96,9 +105,7 @@ class MutationSeeder extends Seeder
                      $accountingService->createJournal(
                         $date, 'DEP-SEED-' . $deposit->id, 'Setoran ' . $entity->nama, $journalItems, $deposit
                     );
-                } catch (\Exception $e) {
-                    // Ignore missing COA in seeder
-                }
+                } catch (\Exception $e) { }
 
             } else {
                 // Withdrawal
@@ -134,9 +141,7 @@ class MutationSeeder extends Seeder
                      $accountingService->createJournal(
                         $date, 'WDR-SEED-' . $withdrawal->id, 'Penarikan ' . $entity->nama, $journalItems, $withdrawal
                     );
-                } catch (\Exception $e) {
-                    // Ignore missing COA
-                }
+                } catch (\Exception $e) { }
             }
         }
 

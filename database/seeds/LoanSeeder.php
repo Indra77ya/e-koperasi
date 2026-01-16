@@ -2,9 +2,12 @@
 
 use Illuminate\Database\Seeder;
 use App\Models\Loan;
+use App\Models\LoanInstallment;
 use App\Models\Member;
 use App\Models\Nasabah;
 use Carbon\Carbon;
+use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class LoanSeeder extends Seeder
 {
@@ -15,83 +18,151 @@ class LoanSeeder extends Seeder
      */
     public function run()
     {
-        // Ensure we have Members and Nasabahs
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Loan::truncate();
+        LoanInstallment::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        $faker = Faker::create('id_ID');
+
+        // Check if members/nasabahs exist, if not call their seeders (optional, but good for safety)
         if (Member::count() == 0) {
-            // Create a dummy member if none exists (though usually other seeders handle this)
-            // But assume MemberSeeder ran.
+            $this->call(AnggotaTableSeeder::class);
+        }
+        if (Nasabah::count() == 0) {
+            $this->call(NasabahTableSeeder::class);
         }
 
-        $member = Member::first();
-        $nasabah = Nasabah::first();
+        $members = Member::all();
+        $nasabahs = Nasabah::all();
 
-        // Create a Loan for Member
-        if ($member) {
-            Loan::create([
-                'kode_pinjaman' => 'P-' . date('Ymd') . '-001',
-                'anggota_id' => $member->id,
-                'jenis_pinjaman' => 'produktif',
-                'jumlah_pinjaman' => 10000000,
-                'tenor' => 12,
-                'suku_bunga' => 10,
-                'jenis_bunga' => 'flat',
-                'biaya_admin' => 50000,
-                'tanggal_pengajuan' => Carbon::now()->subDays(5),
-                'status' => 'diajukan',
-                'keterangan' => 'Modal usaha warung',
-            ]);
+        // 1. Process Members (approx 70% get loans)
+        foreach ($members as $member) {
+            if (rand(1, 100) <= 70) {
+                $this->createLoan($member, 'anggota', $faker);
+            }
         }
 
-        // Create a Loan for Nasabah (that is already disbursed)
-        if ($nasabah) {
-            $loan = Loan::create([
-                'kode_pinjaman' => 'P-' . date('Ymd') . '-002',
-                'nasabah_id' => $nasabah->id,
-                'jenis_pinjaman' => 'konsumtif',
-                'jumlah_pinjaman' => 5000000,
-                'tenor' => 6,
-                'suku_bunga' => 12,
-                'jenis_bunga' => 'anuitas',
-                'biaya_admin' => 25000,
-                'tanggal_pengajuan' => Carbon::now()->subMonth(),
-                'tanggal_persetujuan' => Carbon::now()->subMonth()->addDay(),
-                'status' => 'disetujui', // Will disburse manually or via logic
-                'keterangan' => 'Renovasi rumah',
-            ]);
+        // 2. Process Nasabahs (approx 60% get loans)
+        foreach ($nasabahs as $nasabah) {
+            if (rand(1, 100) <= 60) {
+                $this->createLoan($nasabah, 'nasabah', $faker);
+            }
+        }
+    }
 
-            // Simulate disbursement for this one
-            // Call the controller logic conceptually, or just direct DB insert
-            // Since we are in seeder, we can't easily call controller methods that return redirects.
-            // We replicate the logic.
+    private function createLoan($entity, $type, $faker)
+    {
+        $status = $faker->randomElement(['diajukan', 'disetujui', 'ditolak', 'berjalan', 'lunas', 'macet']);
 
-            DB::transaction(function () use ($loan) {
-                $loan->update(['status' => 'berjalan']);
+        // Adjust dates based on status
+        $submitDate = Carbon::now()->subMonths(rand(1, 24));
+        $approvalDate = null;
 
-                // Calculate Annuity Schedule
-                $amount = $loan->jumlah_pinjaman;
-                $tenor = $loan->tenor;
-                $rate = $loan->suku_bunga;
+        if ($status != 'diajukan' && $status != 'ditolak') {
+            $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
+        } elseif ($status == 'ditolak') {
+             // Rejected loans also have "processed" date usually, but let's keep it simple
+             $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
+        }
 
-                $balance = $amount;
-                $ratePerMonth = ($rate / 100) / 12;
-                $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+        // Loan Details
+        $amount = $faker->randomElement([5000000, 10000000, 15000000, 20000000, 25000000, 50000000]);
+        $tenor = $faker->randomElement([6, 12, 18, 24, 36]);
+        $rate = $faker->randomFloat(2, 10, 18); // 10-18% per year
+        $adminFee = 50000;
 
-                for ($i = 1; $i <= $tenor; $i++) {
-                    $interest = $balance * $ratePerMonth;
-                    $principal = $pmt - $interest;
-                    $balance -= $principal;
+        // Prepare data array
+        $data = [
+            'kode_pinjaman' => 'P-' . $submitDate->format('Ymd') . '-' . rand(1000, 9999),
+            'jenis_pinjaman' => $faker->randomElement(['produktif', 'konsumtif', 'investasi']),
+            'jumlah_pinjaman' => $amount,
+            'tenor' => $tenor,
+            'suku_bunga' => $rate,
+            'satuan_bunga' => 'tahun', // Defaulting to annual rate
+            'tempo_angsuran' => 'bulan',
+            'jenis_bunga' => 'anuitas', // Focusing on Annuity for complex calculation
+            'biaya_admin' => $adminFee,
+            'tanggal_pengajuan' => $submitDate,
+            'tanggal_persetujuan' => $approvalDate,
+            'status' => ($status == 'macet') ? 'berjalan' : $status, // 'macet' is logic status, db status usually 'berjalan' with bad collection
+            'keterangan' => $faker->sentence,
+            'kolektabilitas' => ($status == 'macet') ? 'Macet' : 'Lancar', // Helper for CollectionSeeder
+        ];
 
-                    \App\Models\LoanInstallment::create([
-                        'pinjaman_id' => $loan->id,
-                        'angsuran_ke' => $i,
-                        'tanggal_jatuh_tempo' => Carbon::now()->subMonth()->addMonths($i),
-                        'total_angsuran' => $pmt,
-                        'pokok' => $principal,
-                        'bunga' => $interest,
-                        'sisa_pinjaman' => max(0, $balance),
-                        'status' => 'belum_lunas',
-                    ]);
+        if ($type == 'anggota') {
+            $data['anggota_id'] = $entity->id;
+        } else {
+            $data['nasabah_id'] = $entity->id;
+        }
+
+        $loan = Loan::create($data);
+
+        // Generate Installments if active/paid/macet
+        if (in_array($status, ['berjalan', 'lunas', 'macet'])) {
+            $this->generateInstallments($loan, $status);
+        }
+    }
+
+    private function generateInstallments($loan, $status)
+    {
+        $amount = $loan->jumlah_pinjaman;
+        $tenor = $loan->tenor;
+        $rate = $loan->suku_bunga;
+
+        // Annuity Calculation
+        $balance = $amount;
+        $ratePerMonth = ($rate / 100) / 12;
+        $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
+
+        // Start from approval date (next month usually)
+        $dueDate = Carbon::parse($loan->tanggal_persetujuan)->addMonth();
+
+        for ($i = 1; $i <= $tenor; $i++) {
+            $interest = $balance * $ratePerMonth;
+            $principal = $pmt - $interest;
+            $balance -= $principal;
+
+            // Determine status of this installment
+            $instStatus = 'belum_lunas';
+            $paidDate = null;
+            $paidAmount = 0;
+
+            if ($status == 'lunas') {
+                $instStatus = 'lunas';
+                $paidDate = $dueDate->copy()->subDays(rand(0, 5));
+                $paidAmount = $pmt;
+            } elseif ($status == 'berjalan') {
+                if ($dueDate->isPast()) {
+                    $instStatus = 'lunas';
+                    $paidDate = $dueDate->copy()->subDays(rand(0, 5));
+                    $paidAmount = $pmt;
                 }
-            });
+            } elseif ($status == 'macet') {
+                // Pay first 3 months, then stop
+                if ($i <= 3 && $dueDate->isPast()) {
+                    $instStatus = 'lunas';
+                    $paidDate = $dueDate->copy()->subDays(rand(0, 5));
+                    $paidAmount = $pmt;
+                } elseif ($dueDate->isPast()) {
+                     $instStatus = 'belum_lunas'; // Overdue
+                }
+            }
+
+            LoanInstallment::create([
+                'pinjaman_id' => $loan->id,
+                'angsuran_ke' => $i,
+                'tanggal_jatuh_tempo' => $dueDate->copy(),
+                'tanggal_bayar' => $paidDate,
+                'total_angsuran' => $pmt,
+                'pokok' => $principal,
+                'bunga' => $interest,
+                'sisa_pinjaman' => max(0, $balance),
+                'status' => $instStatus,
+                'metode_pembayaran' => ($instStatus == 'lunas') ? 'tunai' : null,
+            ]);
+
+            $dueDate->addMonth();
         }
     }
 }
