@@ -39,31 +39,50 @@ class LoanSeeder extends Seeder
         $nasabahs = Nasabah::all();
 
         // 1. Process Members (approx 70% get loans)
-        foreach ($members as $member) {
-            if (rand(1, 100) <= 70) {
-                $this->createLoan($member, 'anggota', $faker);
+        foreach ($members as $index => $member) {
+            // Force the first few members to have a loan due today
+            $forceDueToday = ($index < 3);
+            if ($forceDueToday || rand(1, 100) <= 70) {
+                $this->createLoan($member, 'anggota', $faker, $forceDueToday);
             }
         }
 
         // 2. Process Nasabahs (approx 60% get loans)
-        foreach ($nasabahs as $nasabah) {
-            if (rand(1, 100) <= 60) {
-                $this->createLoan($nasabah, 'nasabah', $faker);
+        foreach ($nasabahs as $index => $nasabah) {
+             // Force the first few nasabahs to have a loan due today
+            $forceDueToday = ($index < 3);
+            if ($forceDueToday || rand(1, 100) <= 60) {
+                $this->createLoan($nasabah, 'nasabah', $faker, $forceDueToday);
             }
         }
     }
 
-    private function createLoan($entity, $type, $faker)
+    private function createLoan($entity, $type, $faker, $forceDueToday = false)
     {
         $status = $faker->randomElement(['diajukan', 'disetujui', 'ditolak', 'berjalan', 'lunas', 'macet']);
 
-        $submitDate = Carbon::now()->subMonths(rand(1, 24));
-        $approvalDate = null;
+        if ($forceDueToday) {
+            $status = 'berjalan'; // Must be active to be due
+        }
 
-        if ($status != 'diajukan' && $status != 'ditolak') {
-            $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
-        } elseif ($status == 'ditolak') {
-             $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
+        $submitDate = Carbon::now()->subMonths(rand(1, 24));
+
+        // Adjust submit date if we need to force a due date today
+        if ($forceDueToday) {
+            // If we want an installment due today, the loan must have been approved X months ago.
+            // Let's say we want the 1st installment to be due today.
+            // Approval date should be 1 month ago.
+            // Submit date should be slightly before that.
+            $monthsAgo = rand(1, 5); // 1st to 5th installment due today
+            $approvalDate = Carbon::today()->subMonths($monthsAgo);
+            $submitDate = $approvalDate->copy()->subDays(rand(1, 5));
+        } else {
+            $approvalDate = null;
+            if ($status != 'diajukan' && $status != 'ditolak') {
+                $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
+            } elseif ($status == 'ditolak') {
+                 $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
+            }
         }
 
         // Loan Details
@@ -104,7 +123,7 @@ class LoanSeeder extends Seeder
 
         // Generate Installments
         if (in_array($status, ['berjalan', 'lunas', 'macet'])) {
-            $this->generateInstallments($loan, $status);
+            $this->generateInstallments($loan, $status, $approvalDate);
         }
     }
 
@@ -124,7 +143,7 @@ class LoanSeeder extends Seeder
         ]);
     }
 
-    private function generateInstallments($loan, $status)
+    private function generateInstallments($loan, $status, $approvalDate)
     {
         $amount = $loan->jumlah_pinjaman;
         $tenor = $loan->tenor;
@@ -135,7 +154,7 @@ class LoanSeeder extends Seeder
         $ratePerMonth = ($rate / 100) / 12;
         $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
 
-        $dueDate = Carbon::parse($loan->tanggal_persetujuan)->addMonth();
+        $dueDate = Carbon::parse($approvalDate)->addMonth();
 
         for ($i = 1; $i <= $tenor; $i++) {
             $interest = $balance * $ratePerMonth;
@@ -151,11 +170,15 @@ class LoanSeeder extends Seeder
                 $paidDate = $dueDate->copy()->subDays(rand(0, 5));
                 $paidAmount = $pmt;
             } elseif ($status == 'berjalan') {
-                if ($dueDate->isPast()) {
-                    $instStatus = 'lunas';
-                    $paidDate = $dueDate->copy()->subDays(rand(0, 5));
-                    $paidAmount = $pmt;
+                if ($dueDate->isPast() && !$dueDate->isToday()) {
+                    // Past dues are likely paid unless we want arrears
+                    if (rand(0, 100) > 10) { // 90% paid on time
+                         $instStatus = 'lunas';
+                         $paidDate = $dueDate->copy()->subDays(rand(0, 5));
+                         $paidAmount = $pmt;
+                    }
                 }
+                // If isToday(), leave as belum_lunas so it shows up in "Due Today"
             } elseif ($status == 'macet') {
                 if ($i <= 3 && $dueDate->isPast()) {
                     $instStatus = 'lunas';
