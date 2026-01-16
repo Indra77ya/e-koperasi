@@ -19,7 +19,7 @@ class UsersTableSeeder extends Seeder
                 'name' => 'Administrator',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
-                'email_verified_at' => now(),
+                // 'email_verified_at' => now(), // Column does not exist in migration
             ]);
         }
 
