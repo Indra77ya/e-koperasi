@@ -3,7 +3,7 @@
 @section('content-app')
 <div class="row">
     <div class="col-lg-5">
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-header">
                 <h3 class="card-title">{{ __('calculate') }} {{ __('savings_interest') }}</h3>
                 <div class="card-options">
@@ -40,15 +40,15 @@
                         <i class="fe fe-calculator mr-2"></i>{{ __('calculate') }}
                     </button>
                 </form>
+
+                {{-- Result Container (Hidden Initially) --}}
+                <div class="result-interest mt-4"></div>
             </div>
         </div>
-
-        {{-- Result Container (Hidden Initially) --}}
-        <div class="result-interest"></div>
     </div>
 
     <div class="col-lg-7">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header">
                 <h3 class="card-title">{{ __('history') }} {{ __('savings_interest') }}</h3>
                 <div class="card-options">
