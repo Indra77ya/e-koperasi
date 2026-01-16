@@ -31,7 +31,10 @@ class DepositController extends Controller
      */
     public function index()
     {
-        return view('deposits.index');
+        $members = Member::orderBy('nama', 'asc')->get();
+        $nasabahs = Nasabah::orderBy('nama', 'asc')->get();
+
+        return view('deposits.index', compact('members', 'nasabahs'));
     }
 
     /**
@@ -181,9 +184,27 @@ class DepositController extends Controller
         }
     }
 
-    public function jsonDeposits()
+    public function jsonDeposits(Request $request)
     {
         $deposits = Deposit::with(['member', 'nasabah'])->select('setoran.*');
+
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $deposits->whereBetween('created_at', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+        }
+
+        if ($request->filled('type')) {
+            if ($request->type == 'anggota') {
+                $deposits->whereNotNull('anggota_id');
+                if ($request->filled('anggota_id')) {
+                    $deposits->where('anggota_id', $request->anggota_id);
+                }
+            } elseif ($request->type == 'nasabah') {
+                $deposits->whereNotNull('nasabah_id');
+                if ($request->filled('nasabah_id')) {
+                    $deposits->where('nasabah_id', $request->nasabah_id);
+                }
+            }
+        }
 
         return DataTables::of($deposits)
             ->addIndexColumn()
