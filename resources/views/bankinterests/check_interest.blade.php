@@ -1,88 +1,82 @@
-<div class="card mt-3">
-    <div class="card-status bg-green"></div>
-    <div class="card-header">
-        <h3 class="card-title" id="savings_interest_result_desc">{{ __('result') }} {{ __('savings_interest') }}</h3>
-        <div class="card-options">
-            <a href="#" class="card-options-remove" data-toggle="card-remove"><i class="fe fe-x" aria-hidden="true"></i></a>
-        </div>
+@if ($greater_than_periode)
+    <div class="alert alert-danger mt-3 mb-0" role="alert">
+        <i class="fe fe-alert-triangle mr-2"></i>Periode melebihi waktu sekarang.
     </div>
-    <div class="card-body">
-        @if ($greater_than_periode)
-            <div class="alert alert-danger" role="alert">
-                Periode melebihi waktu sekarang.
+@else
+    <div class="border rounded p-3 bg-light border-info" style="border-left-width: 4px;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h5 class="text-muted mb-1 text-uppercase small font-weight-bold">Hasil Perhitungan</h5>
+                <div class="h2 font-weight-bold text-info mb-0">{{ format_rupiah($format_calculate_interest) }}</div>
+                <small class="text-muted">Bunga yang didapat</small>
             </div>
-        @else
             @if ($count_interest == 1)
-                <div class="alert alert-info" role="alert">
-                    Bunga sudah ditambahkan ke saldo
-                </div>
+                <span class="badge badge-success"><i class="fe fe-check mr-1"></i>Sudah Disimpan</span>
             @endif
-            <table class="table card-table" aria-describedby="savings_interest_result_desc">
-                <tbody>
-                    <tr>
-                        <td style="width: 40%;" class="font-weight-bold text-muted">Periode</td>
-                        <td>{{ $periode }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-weight-bold text-muted">{{ __('lowest_balance') }}</td>
-                        <td>{{ format_rupiah($lowest_balance) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-weight-bold text-muted">{{ __('interest_rate') }}</td>
-                        <td>{{ $interest_rate }}%</td>
-                    </tr>
-                    <tr class="table-success">
-                        <td class="font-weight-bold text-muted">{{ __('interest') }}</td>
-                        <td class="font-weight-bold">{{ format_rupiah($format_calculate_interest) }}</td>
-                    </tr>
-                    @if ($count_interest == 0)
-                        <tr>
-                            <td class="font-weight-bold text-muted">&nbsp;</td>
-                            <td>
-                                <button id="btn-add-to-balance" class="btn btn-secondary"><i class="fe fe-save mr-2" aria-hidden="true"></i>Tambah ke Saldo Tabungan</button>
-                            </td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
+        </div>
+
+        <div class="row mt-4 pt-3 border-top">
+            <div class="col-6">
+                <small class="text-muted d-block">Periode</small>
+                <strong>{{ $periode }}</strong>
+            </div>
+            <div class="col-6 text-right">
+                <small class="text-muted d-block">{{ __('interest_rate') }}</small>
+                <strong>{{ $interest_rate }}%</strong>
+            </div>
+            <div class="col-12 mt-2">
+                <small class="text-muted d-block">{{ __('lowest_balance') }}</small>
+                <strong>{{ format_rupiah($lowest_balance) }}</strong>
+            </div>
+        </div>
+
+        @if ($count_interest == 0)
+            <div class="mt-4">
+                <button id="btn-add-to-balance" class="btn btn-success btn-block">
+                    <i class="fe fe-save mr-2"></i>Simpan & Tambah Saldo
+                </button>
+            </div>
         @endif
     </div>
-</div>
+@endif
 
 <script>
 require(['jquery'], function ($) {
     $(document).ready(function () {
-        const DIV_CARD = 'div.card';
-
-        /** Function for remove card */
-        $('[data-toggle="card-remove"]').on('click', function(e) {
-            let $card = $(this).closest(DIV_CARD);
-
-            $card.remove();
-
-            e.preventDefault();
-            return false;
-        });
-
         $('#btn-add-to-balance').click(function(e) {
-            var anggota_id = '{{ $anggota_id }}';
+            var id = '{{ $id }}';
+            var type = '{{ $type }}';
             var month = '{{ $month }}';
             var year = '{{ $year }}';
             var lowest_balance = '{{ $lowest_balance }}';
             var interest_rate = '{{ $interest_rate }}';
             var calculate_interest = '{{ $format_calculate_interest }}';
 
+            $(this).addClass('btn-loading');
+
             $.ajax({
                 type: "POST",
                 url: "{{ url('bankinterests/') }}",
-                data: {anggota_id: anggota_id, month: month, year: year, lowest_balance: lowest_balance, interest_rate: interest_rate, calculate_interest: calculate_interest},
+                data: {
+                    id: id,
+                    type: type,
+                    month: month,
+                    year: year,
+                    lowest_balance: lowest_balance,
+                    interest_rate: interest_rate,
+                    calculate_interest: calculate_interest
+                },
                 success: function(data) {
                     if (data.status == true) {
-                        alert("Bunga berhasil ditambahkan ke Saldo Tabungan");
                         window.location = data.url
                     } else {
                         alert("Terjadi kesalahan");
+                        $('#btn-add-to-balance').removeClass('btn-loading');
                     }
+                },
+                error: function() {
+                    alert("Terjadi kesalahan server");
+                    $('#btn-add-to-balance').removeClass('btn-loading');
                 }
             });
         });

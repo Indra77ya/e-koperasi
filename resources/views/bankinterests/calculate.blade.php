@@ -1,74 +1,68 @@
 @extends('layouts.app')
 
 @section('content-app')
-<div class="row row-cards row-deck">
-    <div class="col-5">
+<div class="row">
+    <div class="col-lg-5">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title" id="savings_interest_calculate_desc">{{ __('calculate') }} {{ __('savings_interest') }}</h3>
+                <h3 class="card-title">{{ __('calculate') }} {{ __('savings_interest') }}</h3>
                 <div class="card-options">
-                    <a href="{{ url('/bankinterests') }}" class="btn btn-sm btn-pill btn-secondary"><i class="fe fe-arrow-left mr-2" aria-hidden="true"></i>{{ __('back') }}</a>
+                    <a href="{{ url('/bankinterests') }}" class="btn btn-sm btn-outline-secondary"><i class="fe fe-arrow-left mr-1"></i>{{ __('back') }}</a>
                 </div>
             </div>
             <div class="card-body">
-                <table class="table card-table mt-5" aria-describedby="savings_interest_calculate_desc">
-                    <tbody>
-                        <tr>
-                            <td style="width: 25%;" class="font-weight-bold text-muted">{{ __('nin') }}</td>
-                            <td>{{ $member->nik }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold text-muted">{{ __('full_name') }}</td>
-                            <td>{{ $member->nama }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold text-muted">{{ __('balance') }}</td>
-                            <td>{{ $member->balance ? format_rupiah($member->balance->saldo) : '0' }}</td>
-                        </tr>
-                    </tbody>
-                    <form id="form-check-interest">
-                        <tbody>
-                            <tr>
-                                <td class="font-weight-bold text-muted">Periode</td>
-                                <td>
-                                    <div class="form-row">
-                                        <div class="col">
-                                            <input type="text" id="onlmonth" name="month" autocomplete="off" class="form-control" required placeholder="Bulan">
-                                        </div>
-                                        <div class="col">
-                                            <input type="text" id="onlyear" name="year" autocomplete="off" class="form-control" required placeholder="Tahun">
-                                        </div>
-                                        <div class="col-md-5">
-                                            <button id="btn-check-interest" class="btn btn-primary">{{ __('calculate') }}</button>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </form>
-                </table>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span class="text-muted">{{ __('nin') }}</span>
+                        <span class="font-weight-bold">{{ $data->nik }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span class="text-muted">{{ __('full_name') }}</span>
+                        <span class="font-weight-bold">{{ $data->nama }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span class="text-muted">{{ __('balance') }}</span>
+                        <span class="font-weight-bold text-success">{{ $data->balance ? format_rupiah($data->balance->saldo) : '0' }}</span>
+                    </div>
+                </div>
 
-                {{-- Result Calculate Interest --}}
-                <div class="result-interest"></div>
+                <form id="form-check-interest">
+                    <label class="form-label">Periode Perhitungan</label>
+                    <div class="form-row">
+                        <div class="col-6">
+                            <input type="number" id="onlmonth" name="month" autocomplete="off" class="form-control" required placeholder="Bulan" min="1" max="12">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" id="onlyear" name="year" autocomplete="off" class="form-control" required placeholder="Tahun" min="2000">
+                        </div>
+                    </div>
+                    <button id="btn-check-interest" class="btn btn-primary btn-block mt-3">
+                        <i class="fe fe-calculator mr-2"></i>{{ __('calculate') }}
+                    </button>
+                </form>
+
+                {{-- Result Container (Hidden Initially) --}}
+                <div class="result-interest mt-4"></div>
             </div>
         </div>
     </div>
-    <div class="col">
+
+    <div class="col-lg-7">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title" id="savings_interest_history_desc">{{ __('history') }} {{ __('savings_interest') }}</h3>
+                <h3 class="card-title">{{ __('history') }} {{ __('savings_interest') }}</h3>
                 <div class="card-options">
-                    <a href="javascript:void(0)" id="reload-table" class="btn btn-sm btn-pill btn-secondary"><i class="fe fe-refresh-cw mr-2" aria-hidden="true"></i>{{ __('refresh') }}</a>
+                    <a href="javascript:void(0)" id="reload-table" class="btn btn-sm btn-outline-secondary"><i class="fe fe-refresh-cw mr-1"></i>{{ __('refresh') }}</a>
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap" id="datatable" aria-describedby="savings_interest_history_desc">
+                <table class="table card-table table-vcenter table-striped text-nowrap" id="datatable">
                     <thead>
                         <tr>
-                            <th scope="col" class="w-1">No.</th>
+                            <th scope="col" class="w-1 text-center">No.</th>
                             <th scope="col">Periode</th>
-                            <th scope="col">{{ __('lowest_balance') }}</th>
-                            <th scope="col">{{ __('interest') }}</th>
+                            <th scope="col" class="text-right">{{ __('lowest_balance') }}</th>
+                            <th scope="col" class="text-right">{{ __('interest') }}</th>
                         </tr>
                     </thead>
                 </table>
@@ -84,8 +78,8 @@ require(['datatables', 'jquery'], function(datatable, $) {
     $(document).ready(function () {
 
         $('#btn-check-interest').click(function(e) {
-            var isValid = $('#form-check-interest')[0].checkValidity();
-            if (isValid) {
+            var form = $('#form-check-interest')[0];
+            if (form.checkValidity()) {
                 e.preventDefault();
 
                 $.ajaxSetup({
@@ -94,18 +88,21 @@ require(['datatables', 'jquery'], function(datatable, $) {
                     }
                 });
 
-                var anggota_id = '{{ $member->id }}';
+                var id = '{{ $data->id }}';
+                var type = '{{ $type }}';
                 var month = $('input[name="month"]').val();
                 var year = $('input[name="year"]').val();
 
                 $.ajax({
                     type: "GET",
                     url: "{{ url('bankinterests/check-interest') }}",
-                    data: {anggota_id: anggota_id, month: month, year: year},
+                    data: {id: id, type: type, month: month, year: year},
                     success: function(data) {
                         $('.result-interest').html(data.html);
                     }
                 });
+            } else {
+                form.reportValidity();
             }
         });
     });
@@ -113,29 +110,23 @@ require(['datatables', 'jquery'], function(datatable, $) {
     var oTable = $('#datatable').DataTable({
         lengthChange: false,
         serverSide: true,
-        ajax: '{{ url('bankinterests/get-history-interests/' . $member->id) }}',
+        ajax: {
+            url: '{{ url('bankinterests/get-history-interests/' . $data->id) }}',
+            data: function(d) {
+                d.type = '{{ $type }}';
+            }
+        },
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'periode', name: 'periode' },
-            { data: 'saldo_terendah', name: 'saldo_terendah' },
-            { data: 'nominal_bunga', name: 'nominal_bunga' },
+            { data: 'saldo_terendah', name: 'saldo_terendah', className: 'text-right' },
+            { data: 'nominal_bunga', name: 'nominal_bunga', className: 'text-right' },
         ],
         language: {
             "url": '{{ lang_url() }}'
         },
         columnDefs: [
-            {
-                targets: [0],
-                className: "text-center"
-            },
-            {
-                targets: [2],
-                className: "text-right"
-            },
-            {
-                targets: [3],
-                className: "text-right"
-            }
+            { targets: 0, className: "text-center" }
         ]
     });
     $("#reload-table").click(function() {

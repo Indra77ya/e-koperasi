@@ -6,6 +6,22 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title" id="savings_interest_calculate_desc">{{ __('calculate') }} {{ __('savings_interest') }}</h3>
+                <div class="card-options">
+                    <form>
+                        <div class="input-group">
+                            <div class="form-group mb-0 mr-2">
+                                <label class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" class="custom-control-input" name="type" value="anggota" checked>
+                                    <span class="custom-control-label">Anggota</span>
+                                </label>
+                                <label class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" class="custom-control-input" name="type" value="nasabah">
+                                    <span class="custom-control-label">Nasabah</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table card-table table-vcenter text-nowrap" id="datatable" aria-describedby="savings_interest_calculate_desc">
@@ -30,17 +46,22 @@
 @section('js')
 <script>
 require(['datatables', 'jquery'], function(datatable, $) {
-    $('#datatable').DataTable({
+    var table = $('#datatable').DataTable({
         lengthChange: false,
         serverSide: true,
-        ajax: '{{ url('bankinterests/get-members') }}',
+        ajax: {
+            url: '{{ url('bankinterests/get-list') }}',
+            data: function(d) {
+                d.type = $('input[name="type"]:checked').val();
+            }
+        },
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nik', name: 'nik' },
             { data: 'nama', name: 'nama' },
             { data: 'pekerjaan', name: 'pekerjaan' },
             { data: 'no_hp', name: 'no_hp' },
-            { data: 'saldo', name: 'saldo' },
+            { data: 'saldo', name: 'saldo', orderable: false, searchable: false },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ],
         language: {
@@ -60,6 +81,10 @@ require(['datatables', 'jquery'], function(datatable, $) {
                 className: "text-right"
             }
         ]
+    });
+
+    $('input[name="type"]').on('change', function() {
+        table.ajax.reload();
     });
 });
 </script>
