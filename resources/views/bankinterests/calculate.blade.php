@@ -60,7 +60,7 @@
                     <thead>
                         <tr>
                             <th scope="col" class="w-1 text-center">No.</th>
-                            <th scope="col" class="text-center">Periode</th>
+                            <th scope="col">Periode</th>
                             <th scope="col" class="text-right">{{ __('lowest_balance') }}</th>
                             <th scope="col" class="text-right">{{ __('interest') }}</th>
                         </tr>
@@ -118,7 +118,7 @@ require(['datatables', 'jquery'], function(datatable, $) {
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'periode', name: 'periode', className: 'text-center' },
+            { data: 'periode', name: 'periode', orderable: false },
             { data: 'saldo_terendah', name: 'saldo_terendah', className: 'text-right' },
             { data: 'nominal_bunga', name: 'nominal_bunga', className: 'text-right' },
         ],
