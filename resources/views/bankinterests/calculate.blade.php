@@ -2,7 +2,7 @@
 
 @section('content-app')
 <div class="row">
-    <div class="col-lg-4">
+    <div class="col-lg-5">
         <div class="card mb-4">
             <div class="card-header">
                 <h3 class="card-title">{{ __('calculate') }} {{ __('savings_interest') }}</h3>
@@ -47,7 +47,7 @@
         <div class="result-interest"></div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-lg-7">
         <div class="card h-100">
             <div class="card-header">
                 <h3 class="card-title">{{ __('history') }} {{ __('savings_interest') }}</h3>
@@ -56,7 +56,7 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap" id="datatable">
+                <table class="table card-table table-vcenter table-striped text-nowrap" id="datatable">
                     <thead>
                         <tr>
                             <th class="w-1 text-center">No.</th>
