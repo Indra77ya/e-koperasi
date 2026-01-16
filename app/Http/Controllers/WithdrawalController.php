@@ -31,7 +31,10 @@ class WithdrawalController extends Controller
      */
     public function index()
     {
-        return view('withdrawals.index');
+        $members = Member::orderBy('nama', 'asc')->get();
+        $nasabahs = Nasabah::orderBy('nama', 'asc')->get();
+
+        return view('withdrawals.index', compact('members', 'nasabahs'));
     }
 
     /**
@@ -184,9 +187,27 @@ class WithdrawalController extends Controller
         }
     }
 
-    public function jsonWithdrawals()
+    public function jsonWithdrawals(Request $request)
     {
         $withdrawals = Withdrawal::with(['member', 'nasabah'])->select('penarikan.*');
+
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $withdrawals->whereBetween('created_at', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+        }
+
+        if ($request->filled('type')) {
+            if ($request->type == 'anggota') {
+                $withdrawals->whereNotNull('anggota_id');
+                if ($request->filled('anggota_id')) {
+                    $withdrawals->where('anggota_id', $request->anggota_id);
+                }
+            } elseif ($request->type == 'nasabah') {
+                $withdrawals->whereNotNull('nasabah_id');
+                if ($request->filled('nasabah_id')) {
+                    $withdrawals->where('nasabah_id', $request->nasabah_id);
+                }
+            }
+        }
 
         return DataTables::of($withdrawals)
             ->addIndexColumn()
