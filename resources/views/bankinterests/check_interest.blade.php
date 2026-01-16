@@ -65,7 +65,8 @@ require(['jquery'], function ($) {
         });
 
         $('#btn-add-to-balance').click(function(e) {
-            var anggota_id = '{{ $anggota_id }}';
+            var id = '{{ $id }}';
+            var type = '{{ $type }}';
             var month = '{{ $month }}';
             var year = '{{ $year }}';
             var lowest_balance = '{{ $lowest_balance }}';
@@ -75,7 +76,15 @@ require(['jquery'], function ($) {
             $.ajax({
                 type: "POST",
                 url: "{{ url('bankinterests/') }}",
-                data: {anggota_id: anggota_id, month: month, year: year, lowest_balance: lowest_balance, interest_rate: interest_rate, calculate_interest: calculate_interest},
+                data: {
+                    id: id,
+                    type: type,
+                    month: month,
+                    year: year,
+                    lowest_balance: lowest_balance,
+                    interest_rate: interest_rate,
+                    calculate_interest: calculate_interest
+                },
                 success: function(data) {
                     if (data.status == true) {
                         alert("Bunga berhasil ditambahkan ke Saldo Tabungan");

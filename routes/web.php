@@ -66,7 +66,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('bankinterests', 'BankInterestController@index');
     Route::get('bankinterests/calculate/{member}', 'BankInterestController@calculate');
-    Route::get('bankinterests/get-members', 'BankInterestController@jsonMembers');
+    Route::get('bankinterests/get-list', 'BankInterestController@jsonList');
     Route::get('bankinterests/get-history-interests/{member}', 'BankInterestController@jsonHistoryInterests');
     Route::get('bankinterests/check-interest', 'BankInterestController@check_interest');
     Route::post('bankinterests', 'BankInterestController@store');

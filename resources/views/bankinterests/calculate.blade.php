@@ -15,15 +15,15 @@
                     <tbody>
                         <tr>
                             <td style="width: 25%;" class="font-weight-bold text-muted">{{ __('nin') }}</td>
-                            <td>{{ $member->nik }}</td>
+                            <td>{{ $data->nik }}</td>
                         </tr>
                         <tr>
                             <td class="font-weight-bold text-muted">{{ __('full_name') }}</td>
-                            <td>{{ $member->nama }}</td>
+                            <td>{{ $data->nama }}</td>
                         </tr>
                         <tr>
                             <td class="font-weight-bold text-muted">{{ __('balance') }}</td>
-                            <td>{{ $member->balance ? format_rupiah($member->balance->saldo) : '0' }}</td>
+                            <td>{{ $data->balance ? format_rupiah($data->balance->saldo) : '0' }}</td>
                         </tr>
                     </tbody>
                     <form id="form-check-interest">
@@ -94,14 +94,15 @@ require(['datatables', 'jquery'], function(datatable, $) {
                     }
                 });
 
-                var anggota_id = '{{ $member->id }}';
+                var id = '{{ $data->id }}';
+                var type = '{{ $type }}';
                 var month = $('input[name="month"]').val();
                 var year = $('input[name="year"]').val();
 
                 $.ajax({
                     type: "GET",
                     url: "{{ url('bankinterests/check-interest') }}",
-                    data: {anggota_id: anggota_id, month: month, year: year},
+                    data: {id: id, type: type, month: month, year: year},
                     success: function(data) {
                         $('.result-interest').html(data.html);
                     }
@@ -113,7 +114,12 @@ require(['datatables', 'jquery'], function(datatable, $) {
     var oTable = $('#datatable').DataTable({
         lengthChange: false,
         serverSide: true,
-        ajax: '{{ url('bankinterests/get-history-interests/' . $member->id) }}',
+        ajax: {
+            url: '{{ url('bankinterests/get-history-interests/' . $data->id) }}',
+            data: function(d) {
+                d.type = '{{ $type }}';
+            }
+        },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex' },
             { data: 'periode', name: 'periode' },

@@ -13,6 +13,9 @@
             <a href="#loan" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-dollar-sign"></i></span>Pinjaman
             </a>
+            <a href="#saving" data-toggle="list" class="list-group-item list-group-item-action">
+                <span class="icon mr-3"><i class="fe fe-briefcase"></i></span>Simpanan
+            </a>
             <a href="#accounting" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-book"></i></span>Akuntansi
             </a>
@@ -134,6 +137,24 @@
                     </div>
                 </div>
 
+                <!-- Saving -->
+                <div class="tab-pane fade" id="saving">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Pengaturan Simpanan</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Suku Bunga Simpanan (%)</label>
+                                <input type="number" step="0.01" class="form-control" name="savings_interest_rate" value="{{ $settings['savings_interest_rate'] ?? 0 }}">
+                            </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Accounting -->
                 <div class="tab-pane fade" id="accounting">
                     <div class="card">
@@ -149,6 +170,16 @@
                                 <select class="form-control custom-select" name="coa_cash">
                                     @foreach($coas as $coa)
                                         <option value="{{ $coa->code }}" {{ ($settings['coa_cash'] ?? '1101') == $coa->code ? 'selected' : '' }}>
+                                            {{ $coa->code }} - {{ $coa->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Akun Beban Bunga Simpanan</label>
+                                <select class="form-control custom-select" name="coa_interest_expense">
+                                    @foreach($coas as $coa)
+                                        <option value="{{ $coa->code }}" {{ ($settings['coa_interest_expense'] ?? '') == $coa->code ? 'selected' : '' }}>
                                             {{ $coa->code }} - {{ $coa->name }}
                                         </option>
                                     @endforeach
