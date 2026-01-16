@@ -59,10 +59,10 @@
                 <table class="table card-table table-vcenter table-striped text-nowrap" id="datatable">
                     <thead>
                         <tr>
-                            <th class="w-1 text-center">No.</th>
-                            <th>Periode</th>
-                            <th class="text-right">{{ __('lowest_balance') }}</th>
-                            <th class="text-right">{{ __('interest') }}</th>
+                            <th scope="col" class="w-1 text-center">No.</th>
+                            <th scope="col" class="text-center">Periode</th>
+                            <th scope="col" class="text-right">{{ __('lowest_balance') }}</th>
+                            <th scope="col" class="text-right">{{ __('interest') }}</th>
                         </tr>
                     </thead>
                 </table>
@@ -118,7 +118,7 @@ require(['datatables', 'jquery'], function(datatable, $) {
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'periode', name: 'periode' },
+            { data: 'periode', name: 'periode', className: 'text-center' },
             { data: 'saldo_terendah', name: 'saldo_terendah', className: 'text-right' },
             { data: 'nominal_bunga', name: 'nominal_bunga', className: 'text-right' },
         ],
