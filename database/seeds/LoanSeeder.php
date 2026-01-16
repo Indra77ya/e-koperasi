@@ -3,6 +3,7 @@
 use Illuminate\Database\Seeder;
 use App\Models\Loan;
 use App\Models\LoanInstallment;
+use App\Models\Collateral;
 use App\Models\Member;
 use App\Models\Nasabah;
 use Carbon\Carbon;
@@ -21,11 +22,12 @@ class LoanSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Loan::truncate();
         LoanInstallment::truncate();
+        Collateral::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $faker = Faker::create('id_ID');
 
-        // Check if members/nasabahs exist, if not call their seeders (optional, but good for safety)
+        // Check if members/nasabahs exist, if not call their seeders
         if (Member::count() == 0) {
             $this->call(AnggotaTableSeeder::class);
         }
@@ -55,14 +57,12 @@ class LoanSeeder extends Seeder
     {
         $status = $faker->randomElement(['diajukan', 'disetujui', 'ditolak', 'berjalan', 'lunas', 'macet']);
 
-        // Adjust dates based on status
         $submitDate = Carbon::now()->subMonths(rand(1, 24));
         $approvalDate = null;
 
         if ($status != 'diajukan' && $status != 'ditolak') {
             $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
         } elseif ($status == 'ditolak') {
-             // Rejected loans also have "processed" date usually, but let's keep it simple
              $approvalDate = $submitDate->copy()->addDays(rand(1, 7));
         }
 
@@ -72,22 +72,21 @@ class LoanSeeder extends Seeder
         $rate = $faker->randomFloat(2, 10, 18); // 10-18% per year
         $adminFee = 50000;
 
-        // Prepare data array
         $data = [
             'kode_pinjaman' => 'P-' . $submitDate->format('Ymd') . '-' . rand(1000, 9999),
             'jenis_pinjaman' => $faker->randomElement(['produktif', 'konsumtif', 'investasi']),
             'jumlah_pinjaman' => $amount,
             'tenor' => $tenor,
             'suku_bunga' => $rate,
-            'satuan_bunga' => 'tahun', // Defaulting to annual rate
+            'satuan_bunga' => 'tahun',
             'tempo_angsuran' => 'bulan',
-            'jenis_bunga' => 'anuitas', // Focusing on Annuity for complex calculation
+            'jenis_bunga' => 'anuitas',
             'biaya_admin' => $adminFee,
             'tanggal_pengajuan' => $submitDate,
             'tanggal_persetujuan' => $approvalDate,
-            'status' => ($status == 'macet') ? 'berjalan' : $status, // 'macet' is logic status, db status usually 'berjalan' with bad collection
+            'status' => ($status == 'macet') ? 'berjalan' : $status,
             'keterangan' => $faker->sentence,
-            'kolektabilitas' => ($status == 'macet') ? 'Macet' : 'Lancar', // Helper for CollectionSeeder
+            'kolektabilitas' => ($status == 'macet') ? 'Macet' : 'Lancar',
         ];
 
         if ($type == 'anggota') {
@@ -98,10 +97,31 @@ class LoanSeeder extends Seeder
 
         $loan = Loan::create($data);
 
-        // Generate Installments if active/paid/macet
+        // Add Collateral (Jaminan) for most loans
+        if (rand(1, 100) <= 90) { // 90% have collateral
+            $this->createCollateral($loan, $faker);
+        }
+
+        // Generate Installments
         if (in_array($status, ['berjalan', 'lunas', 'macet'])) {
             $this->generateInstallments($loan, $status);
         }
+    }
+
+    private function createCollateral($loan, $faker)
+    {
+        Collateral::create([
+            'pinjaman_id' => $loan->id,
+            'jenis' => $faker->randomElement(['BPKB Motor', 'BPKB Mobil', 'Sertifikat Tanah', 'Sertifikat Rumah']),
+            'nomor' => strtoupper($faker->bothify('??####??')),
+            'pemilik' => $faker->name,
+            'nilai_taksasi' => $loan->jumlah_pinjaman * 1.5, // Collateral value usually higher than loan
+            'status' => ($loan->status == 'lunas') ? 'dikembalikan' : 'disimpan',
+            'lokasi_penyimpanan' => 'Lemari Besi A1',
+            'tanggal_masuk' => $loan->tanggal_pengajuan,
+            'tanggal_keluar' => ($loan->status == 'lunas') ? Carbon::now() : null,
+            'keterangan' => $faker->sentence,
+        ]);
     }
 
     private function generateInstallments($loan, $status)
@@ -115,7 +135,6 @@ class LoanSeeder extends Seeder
         $ratePerMonth = ($rate / 100) / 12;
         $pmt = ($amount * $ratePerMonth) / (1 - pow(1 + $ratePerMonth, -$tenor));
 
-        // Start from approval date (next month usually)
         $dueDate = Carbon::parse($loan->tanggal_persetujuan)->addMonth();
 
         for ($i = 1; $i <= $tenor; $i++) {
@@ -123,7 +142,6 @@ class LoanSeeder extends Seeder
             $principal = $pmt - $interest;
             $balance -= $principal;
 
-            // Determine status of this installment
             $instStatus = 'belum_lunas';
             $paidDate = null;
             $paidAmount = 0;
@@ -139,13 +157,12 @@ class LoanSeeder extends Seeder
                     $paidAmount = $pmt;
                 }
             } elseif ($status == 'macet') {
-                // Pay first 3 months, then stop
                 if ($i <= 3 && $dueDate->isPast()) {
                     $instStatus = 'lunas';
                     $paidDate = $dueDate->copy()->subDays(rand(0, 5));
                     $paidAmount = $pmt;
                 } elseif ($dueDate->isPast()) {
-                     $instStatus = 'belum_lunas'; // Overdue
+                     $instStatus = 'belum_lunas';
                 }
             }
 
