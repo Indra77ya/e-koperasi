@@ -403,8 +403,63 @@ class LoanController extends Controller
                         }
                     }
 
-                    // Handle Payment via Savings
-                    if ($request->metode_pembayaran == 'tabungan') {
+                    // Prepare Payment Method Logic
+                    $paymentMethod = $request->metode_pembayaran;
+
+                    // Handle 'Tunai' as Pass-through (Deposit -> Payment)
+                    // This ensures the transaction appears in 'Mutasi' (SavingHistory)
+                    if ($paymentMethod == 'tunai') {
+                        $saving = null;
+                        if ($loan->anggota_id) {
+                            $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
+                        } elseif ($loan->nasabah_id) {
+                            $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first();
+                        }
+
+                        // If no saving account, create one or fail? Usually borrowing implies membership/nasabahship.
+                        // For safety, if no saving exists, we skip mutation logic and fall back to direct cash->receivable.
+                        // But let's try to find it.
+                        if ($saving) {
+                            // 1. Credit Savings (Setoran)
+                            $saving->saldo += $totalPaid;
+                            $saving->save();
+
+                            SavingHistory::create([
+                                'anggota_id' => $loan->anggota_id,
+                                'nasabah_id' => $loan->nasabah_id,
+                                'tanggal' => $request->tanggal_bayar,
+                                'keterangan' => 'Setoran Tunai (Transit Pembayaran Angsuran)',
+                                'debet' => 0,
+                                'kredit' => $totalPaid,
+                                'saldo' => $saving->saldo
+                            ]);
+
+                            // Journal: Dr Cash, Cr Savings (Temporary)
+                            // Note: The final Journal will be Dr Savings, Cr Receivables.
+                            // So we need an intermediate journal here for the Deposit.
+                            $coaCash = Setting::get('coa_cash', '1101');
+                            $coaSavings = Setting::get('coa_savings', '2101');
+
+                            $depositItems = [
+                                ['code' => $coaCash, 'debit' => $totalPaid, 'credit' => 0],
+                                ['code' => $coaSavings, 'debit' => 0, 'credit' => $totalPaid],
+                            ];
+
+                            $this->accountingService->createJournal(
+                                $request->tanggal_bayar,
+                                'DEP-TRANSIT-' . $loan->kode_pinjaman,
+                                'Setoran Transit Angsuran ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                                $depositItems,
+                                $installment // Linked to installment? Or Loan?
+                            );
+
+                            // Switch method to 'tabungan' to proceed with deduction
+                            $paymentMethod = 'tabungan';
+                        }
+                    }
+
+                    // Handle Payment via Savings (Real or Virtualized from Tunai)
+                    if ($paymentMethod == 'tabungan') {
                         $saving = null;
                         if ($loan->anggota_id) {
                             $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
