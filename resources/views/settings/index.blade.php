@@ -88,7 +88,7 @@
                                     <input type="file" class="custom-file-input" name="front_background">
                                     <label class="custom-file-label">Pilih file background (JPG/PNG)</label>
                                 </div>
-                                <small class="text-muted d-block mt-1">Digunakan sebagai background halaman utama (welcome page). Disarankan gambar resolusi tinggi (1920x1080).</small>
+                                <small class="text-muted d-block mt-1">Digunakan sebagai background halaman utama (welcome page). Disarankan gambar resolusi tinggi (1920x1080). Maksimal 1MB.</small>
                             </div>
                         </div>
                         <div class="card-footer text-right">

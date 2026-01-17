@@ -39,7 +39,7 @@ class SettingController extends Controller
         // Handle Front Background Upload
         if ($request->hasFile('front_background')) {
             $request->validate([
-                'front_background' => 'image|mimes:jpeg,png,jpg|max:4096',
+                'front_background' => 'image|mimes:jpeg,png,jpg|max:1024',
             ]);
 
             $file = $request->file('front_background');
