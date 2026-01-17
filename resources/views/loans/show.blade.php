@@ -191,7 +191,8 @@
                                                         data-sisa="{{ $inst->sisa_pinjaman }}"
                                                         data-denda="{{ $inst->denda }}"
                                                         data-tenor="{{ $loan->tenor }}"
-                                                        data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
+                                                        data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}"
+                                                        data-balance="{{ $loan->member ? optional($loan->member->balance)->saldo : optional($loan->nasabah->balance)->saldo }}">
                                                         Bayar
                                                     </button>
                                                     <button type="button" class="btn btn-xs btn-warning btn-penalty mr-1" data-id="{{ $inst->id }}" data-denda="{{ $inst->denda }}"><i class="fe fe-alert-circle"></i></button>
@@ -253,11 +254,13 @@
                         </div>
                         <div class="form-group">
                             <label>Metode Pembayaran</label>
-                            <select name="metode_pembayaran" class="form-control" required>
+                            <select name="metode_pembayaran" id="pay-method" class="form-control" required>
                                 <option value="tunai">Tunai / Kas</option>
+                                <option value="tabungan">Potong Saldo Tabungan</option>
                                 <option value="transfer">Transfer Bank</option>
                                 <option value="lainnya">Lainnya</option>
                             </select>
+                            <small class="text-info d-none" id="balance-info">Saldo Tabungan: Rp <span id="balance-display">0</span></small>
                         </div>
                         <div class="form-group">
                             <label>Denda (Rp)</label>
@@ -553,7 +556,11 @@
                 var denda = parseFloat($(this).data('denda')) || 0;
                 var tenor = parseInt($(this).data('tenor')) || 0;
                 var duedate = $(this).data('duedate');
+                var balance = parseFloat($(this).data('balance')) || 0;
                 var defaultDenda = {{ $loan->denda_keterlambatan ?? 0 }};
+
+                // Store balance
+                $('#modal-pay').data('balance-amount', balance);
 
                 var today = new Date().toISOString().slice(0, 10);
                 var isLate = today > duedate;
@@ -575,6 +582,7 @@
 
                 $('#pay-angsuran-ke').text('Ke-' + angsuranKe);
                 $('#form-pay').attr('action', action);
+                $('#pay-method').val('tunai').trigger('change');
                 $('#pay-denda').val(Math.round(denda));
                 $('#pay-bunga-display').val(Math.round(bunga).toLocaleString('id-ID')); // Show formatted bunga
 
@@ -598,6 +606,16 @@
 
             $('#pay-amount, #pay-denda').on('input', function() {
                 calculateSimulation();
+            });
+
+            $('#pay-method').on('change', function() {
+                if ($(this).val() == 'tabungan') {
+                    var balance = parseFloat($('#modal-pay').data('balance-amount')) || 0;
+                    $('#balance-display').text(balance.toLocaleString('id-ID'));
+                    $('#balance-info').removeClass('d-none');
+                } else {
+                    $('#balance-info').addClass('d-none');
+                }
             });
 
             function calculateSimulation() {

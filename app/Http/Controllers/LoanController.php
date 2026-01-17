@@ -17,6 +17,8 @@ use App\Models\User;
 use App\Notifications\LoanSubmittedNotification;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Setting;
+use App\Models\Saving;
+use App\Models\SavingHistory;
 
 class LoanController extends Controller
 {
@@ -385,130 +387,170 @@ class LoanController extends Controller
                 $bungaPaid = $installment->bunga;
             }
 
-            DB::transaction(function () use ($installment, $request, $denda, $pokokPaid, $bungaPaid, $totalPaid) {
-                // Handle Indefinite Loan Logic Caps
-                if ($installment->loan->tenor == 0) {
-                     $outstandingPrincipal = $installment->sisa_pinjaman;
+            try {
+                DB::transaction(function () use ($installment, $request, $denda, $pokokPaid, $bungaPaid, $totalPaid) {
+                    $loan = $installment->loan;
+                    $coaDebit = Setting::get('coa_cash', '1101'); // Default Cash
 
-                     if ($pokokPaid > $outstandingPrincipal) {
-                         $pokokPaid = $outstandingPrincipal; // Cap at outstanding balance
-                         // Recalculate total
-                         $totalPaid = $pokokPaid + $bungaPaid + $denda;
-                     }
-                }
+                    // Handle Indefinite Loan Logic Caps
+                    if ($installment->loan->tenor == 0) {
+                        $outstandingPrincipal = $installment->sisa_pinjaman;
 
-                $installment->update([
-                    'status' => 'lunas',
-                    'tanggal_bayar' => $request->tanggal_bayar,
-                    'metode_pembayaran' => $request->metode_pembayaran,
-                    'keterangan_pembayaran' => $request->keterangan_pembayaran,
-                    'denda' => $denda,
-                    'pokok' => $pokokPaid,
-                    'total_angsuran' => $pokokPaid + $bungaPaid, // Update total to reflect actual structure (Pokok + Bunga)
-                ]);
-
-                // Check if all installments are paid
-                $loan = $installment->loan;
-                $remaining = $loan->installments()->where('status', 'belum_lunas')->count();
-
-                if ($remaining == 0 && $loan->tenor != 0) {
-                    $loan->update(['status' => 'lunas']);
-                }
-
-                // Indefinite Loan Logic: Create next installment
-                if ($loan->tenor == 0) {
-                    // Calculate New Balance based on what was just paid
-                    // Previous Balance (Sisa Pinjaman at this installment)
-                    // Note: 'sisa_pinjaman' in DB is the balance AFTER this installment.
-                    // But for Indefinite, we generated it with 'sisa_pinjaman' = full loan amount (because principal was 0).
-                    // So we subtract the newly paid principal from that.
-
-                    $prevBalance = $installment->sisa_pinjaman;
-                    $newBalance = $prevBalance - $pokokPaid;
-
-                    if ($newBalance <= 100) { // Tolerance for rounding
-                        $loan->update(['status' => 'lunas']);
-                        // Update this installment to reflect 0 balance
-                        $installment->update(['sisa_pinjaman' => 0]);
-                    } else {
-                        // Update this installment's sisa_pinjaman to reflect the payment?
-                        // Actually, historically sisa_pinjaman is "Outstanding Principal Remaining".
-                        $installment->update(['sisa_pinjaman' => $newBalance]);
-
-                        $nextInstallmentNo = $installment->angsuran_ke + 1;
-                        $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
-
-                        if ($loan->tempo_angsuran == 'harian') {
-                            $nextDueDate->addDay();
-                        } elseif ($loan->tempo_angsuran == 'mingguan') {
-                            $nextDueDate->addWeek();
-                        } else {
-                            $nextDueDate->addMonth();
+                        if ($pokokPaid > $outstandingPrincipal) {
+                            $pokokPaid = $outstandingPrincipal; // Cap at outstanding balance
+                            // Recalculate total
+                            $totalPaid = $pokokPaid + $bungaPaid + $denda;
                         }
-
-                        $ratePercent = $loan->suku_bunga / 100;
-                         // Normalize Rate
-                        if ($loan->satuan_bunga == 'hari') {
-                            $yearlyRate = $ratePercent * 365;
-                        } elseif ($loan->satuan_bunga == 'bulan') {
-                            $yearlyRate = $ratePercent * 12;
-                        } else {
-                            $yearlyRate = $ratePercent;
-                        }
-
-                        // Rate Per Period
-                        if ($loan->tempo_angsuran == 'harian') {
-                            $ratePerPeriod = $yearlyRate / 365;
-                        } elseif ($loan->tempo_angsuran == 'mingguan') {
-                            $ratePerPeriod = $yearlyRate / 52;
-                        } else {
-                            $ratePerPeriod = $yearlyRate / 12;
-                        }
-
-                        $interest = $newBalance * $ratePerPeriod;
-
-                        LoanInstallment::create([
-                            'pinjaman_id' => $loan->id,
-                            'angsuran_ke' => $nextInstallmentNo,
-                            'tanggal_jatuh_tempo' => $nextDueDate,
-                            'total_angsuran' => round($interest, 2),
-                            'pokok' => 0,
-                            'bunga' => round($interest, 2),
-                            'sisa_pinjaman' => $newBalance, // Carry forward new balance
-                            'status' => 'belum_lunas',
-                        ]);
                     }
-                }
 
-                // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)
-                $denda = $installment->denda ?? 0;
-                $totalMasuk = $installment->pokok + $installment->bunga + $denda;
+                    // Handle Payment via Savings
+                    if ($request->metode_pembayaran == 'tabungan') {
+                        $saving = null;
+                        if ($loan->anggota_id) {
+                            $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
+                        } elseif ($loan->nasabah_id) {
+                            $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first();
+                        }
 
-                $coaCash = Setting::get('coa_cash', '1101');
-                $coaReceivable = Setting::get('coa_receivable', '1103');
-                $coaInterest = Setting::get('coa_revenue_interest', '4101');
-                $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+                        if (!$saving) {
+                            throw new \Exception('Rekening tabungan tidak ditemukan untuk peminjam ini.');
+                        }
 
-                $items = [
-                    ['code' => $coaCash, 'debit' => $totalMasuk, 'credit' => 0], // Kas
-                    ['code' => $coaReceivable, 'debit' => 0, 'credit' => $installment->pokok], // Piutang
-                    ['code' => $coaInterest, 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
-                ];
+                        if ($saving->saldo < $totalPaid) {
+                            throw new \Exception('Saldo tabungan tidak mencukupi. Saldo: ' . number_format($saving->saldo, 0) . ', Tagihan: ' . number_format($totalPaid, 0));
+                        }
 
-                if ($denda > 0) {
-                    $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
-                }
+                        // Deduct Balance
+                        $saving->saldo -= $totalPaid;
+                        $saving->save();
 
-                $this->accountingService->createJournal(
-                    $request->tanggal_bayar,
-                    $loan->kode_pinjaman . '-' . $installment->angsuran_ke,
-                    'Pembayaran Angsuran ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
-                    $items,
-                    $installment
-                );
-            });
+                        // Create Mutation History
+                        SavingHistory::create([
+                            'anggota_id' => $loan->anggota_id,
+                            'nasabah_id' => $loan->nasabah_id,
+                            'tanggal' => $request->tanggal_bayar,
+                            'keterangan' => 'Pembayaran Angsuran Pinjaman ' . $loan->kode_pinjaman . ' Ke-' . $installment->angsuran_ke,
+                            'debet' => $totalPaid,
+                            'kredit' => 0,
+                            'saldo' => $saving->saldo
+                        ]);
 
-            return redirect()->back()->with('success', 'Angsuran berhasil dibayar.');
+                        $coaDebit = Setting::get('coa_savings', '2101');
+                    }
+
+                    $installment->update([
+                        'status' => 'lunas',
+                        'tanggal_bayar' => $request->tanggal_bayar,
+                        'metode_pembayaran' => $request->metode_pembayaran,
+                        'keterangan_pembayaran' => $request->keterangan_pembayaran,
+                        'denda' => $denda,
+                        'pokok' => $pokokPaid,
+                        'total_angsuran' => $pokokPaid + $bungaPaid, // Update total to reflect actual structure (Pokok + Bunga)
+                    ]);
+
+                    // Check if all installments are paid
+                    $remaining = $loan->installments()->where('status', 'belum_lunas')->count();
+
+                    if ($remaining == 0 && $loan->tenor != 0) {
+                        $loan->update(['status' => 'lunas']);
+                    }
+
+                    // Indefinite Loan Logic: Create next installment
+                    if ($loan->tenor == 0) {
+                        // Calculate New Balance based on what was just paid
+                        // Previous Balance (Sisa Pinjaman at this installment)
+                        // Note: 'sisa_pinjaman' in DB is the balance AFTER this installment.
+                        // But for Indefinite, we generated it with 'sisa_pinjaman' = full loan amount (because principal was 0).
+                        // So we subtract the newly paid principal from that.
+
+                        $prevBalance = $installment->sisa_pinjaman;
+                        $newBalance = $prevBalance - $pokokPaid;
+
+                        if ($newBalance <= 100) { // Tolerance for rounding
+                            $loan->update(['status' => 'lunas']);
+                            // Update this installment to reflect 0 balance
+                            $installment->update(['sisa_pinjaman' => 0]);
+                        } else {
+                            // Update this installment's sisa_pinjaman to reflect the payment?
+                            // Actually, historically sisa_pinjaman is "Outstanding Principal Remaining".
+                            $installment->update(['sisa_pinjaman' => $newBalance]);
+
+                            $nextInstallmentNo = $installment->angsuran_ke + 1;
+                            $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
+
+                            if ($loan->tempo_angsuran == 'harian') {
+                                $nextDueDate->addDay();
+                            } elseif ($loan->tempo_angsuran == 'mingguan') {
+                                $nextDueDate->addWeek();
+                            } else {
+                                $nextDueDate->addMonth();
+                            }
+
+                            $ratePercent = $loan->suku_bunga / 100;
+                            // Normalize Rate
+                            if ($loan->satuan_bunga == 'hari') {
+                                $yearlyRate = $ratePercent * 365;
+                            } elseif ($loan->satuan_bunga == 'bulan') {
+                                $yearlyRate = $ratePercent * 12;
+                            } else {
+                                $yearlyRate = $ratePercent;
+                            }
+
+                            // Rate Per Period
+                            if ($loan->tempo_angsuran == 'harian') {
+                                $ratePerPeriod = $yearlyRate / 365;
+                            } elseif ($loan->tempo_angsuran == 'mingguan') {
+                                $ratePerPeriod = $yearlyRate / 52;
+                            } else {
+                                $ratePerPeriod = $yearlyRate / 12;
+                            }
+
+                            $interest = $newBalance * $ratePerPeriod;
+
+                            LoanInstallment::create([
+                                'pinjaman_id' => $loan->id,
+                                'angsuran_ke' => $nextInstallmentNo,
+                                'tanggal_jatuh_tempo' => $nextDueDate,
+                                'total_angsuran' => round($interest, 2),
+                                'pokok' => 0,
+                                'bunga' => round($interest, 2),
+                                'sisa_pinjaman' => $newBalance, // Carry forward new balance
+                                'status' => 'belum_lunas',
+                            ]);
+                        }
+                    }
+
+                    // Create Journal: Dr Kas/Savings, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)
+                    $denda = $installment->denda ?? 0;
+                    $totalMasuk = $installment->pokok + $installment->bunga + $denda;
+
+                    $coaReceivable = Setting::get('coa_receivable', '1103');
+                    $coaInterest = Setting::get('coa_revenue_interest', '4101');
+                    $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+
+                    $items = [
+                        ['code' => $coaDebit, 'debit' => $totalMasuk, 'credit' => 0], // Kas or Savings
+                        ['code' => $coaReceivable, 'debit' => 0, 'credit' => $installment->pokok], // Piutang
+                        ['code' => $coaInterest, 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
+                    ];
+
+                    if ($denda > 0) {
+                        $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
+                    }
+
+                    $this->accountingService->createJournal(
+                        $request->tanggal_bayar,
+                        $loan->kode_pinjaman . '-' . $installment->angsuran_ke,
+                        'Pembayaran Angsuran ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                        $items,
+                        $installment
+                    );
+                });
+
+                return redirect()->back()->with('success', 'Angsuran berhasil dibayar.');
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Gagal membayar: ' . $e->getMessage());
+            }
         }
 
         return redirect()->back()->with('error', 'Angsuran sudah lunas atau tidak valid.');
