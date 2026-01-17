@@ -22,14 +22,14 @@ class MutationSeeder extends Seeder
      */
     public function run()
     {
-        // Truncate tables
+        // Truncate tables (EXCEPT journals, which are handled in JournalSeeder)
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Deposit::truncate();
         Withdrawal::truncate();
         Saving::truncate();
         SavingHistory::truncate();
-        DB::table('journal_entries')->truncate();
-        DB::table('journal_items')->truncate();
+        // DB::table('journal_entries')->truncate(); // REMOVED to preserve JournalSeeder data
+        // DB::table('journal_items')->truncate();   // REMOVED to preserve JournalSeeder data
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Dependencies

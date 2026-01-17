@@ -40,6 +40,9 @@ Route::get('/dev/seed', function () {
 });
 
 Route::get('/dev/seed-dummy', function () {
+    if (!App::environment('local')) {
+        abort(403, 'This route is only available in local environment.');
+    }
     try {
         \Artisan::call('db:seed', ['--force' => true]);
         return "Database seeded successfully (Dummy Data)!";
