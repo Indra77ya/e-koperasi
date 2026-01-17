@@ -151,6 +151,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        $currentBalance = 0;
+                                        if($loan->member && $loan->member->balance) {
+                                            $currentBalance = $loan->member->balance->saldo;
+                                        } elseif($loan->nasabah && $loan->nasabah->balance) {
+                                            $currentBalance = $loan->nasabah->balance->saldo;
+                                        }
+                                    @endphp
                                     @foreach($loan->installments as $inst)
                                         <tr>
                                             <td>{{ $inst->angsuran_ke }}</td>
@@ -191,6 +199,7 @@
                                                         data-sisa="{{ $inst->sisa_pinjaman }}"
                                                         data-denda="{{ $inst->denda }}"
                                                         data-tenor="{{ $loan->tenor }}"
+                                                        data-balance="{{ $currentBalance }}"
                                                         data-duedate="{{ $inst->tanggal_jatuh_tempo->format('Y-m-d') }}">
                                                         Bayar
                                                     </button>
@@ -253,11 +262,13 @@
                         </div>
                         <div class="form-group">
                             <label>Metode Pembayaran</label>
-                            <select name="metode_pembayaran" class="form-control" required>
+                            <select name="metode_pembayaran" id="pay-method" class="form-control" required>
                                 <option value="tunai">Tunai / Kas</option>
+                                <option value="tabungan">Potong Saldo Tabungan</option>
                                 <option value="transfer">Transfer Bank</option>
                                 <option value="lainnya">Lainnya</option>
                             </select>
+                            <small class="text-info d-none" id="balance-info"></small>
                         </div>
                         <div class="form-group">
                             <label>Denda (Rp)</label>
@@ -566,10 +577,13 @@
                      $('#pay-denda-info').text('');
                 }
 
+                var userBalance = parseFloat($(this).data('balance')) || 0;
+
                 // Store base values for calculation
                 $('#modal-pay').data('bunga', bunga);
                 $('#modal-pay').data('sisa', currentSisa);
                 $('#modal-pay').data('tenor', tenor);
+                $('#modal-pay').data('balance', userBalance);
 
                 var action = '{{ url('loans/installments') }}/' + id + '/pay';
 
@@ -600,8 +614,36 @@
                 calculateSimulation();
             });
 
+            $('#pay-method').on('change', function() {
+                var method = $(this).val();
+                var balance = parseFloat($('#modal-pay').data('balance')) || 0;
+
+                if(method == 'tabungan') {
+                    $('#balance-info').text('Saldo Tabungan: Rp ' + balance.toLocaleString('id-ID')).removeClass('d-none');
+                } else {
+                    $('#balance-info').addClass('d-none');
+                }
+                calculateSimulation();
+            });
+
             function calculateSimulation() {
                 var inputAmount = parseFloat($('#pay-amount').val()) || 0;
+                var method = $('#pay-method').val();
+                var userBalance = parseFloat($('#modal-pay').data('balance')) || 0;
+
+                // Validate Balance for Tabungan
+                if(method == 'tabungan') {
+                    if(inputAmount > userBalance) {
+                        $('#pay-amount').addClass('is-invalid');
+                        $('#balance-info').text('Saldo Tabungan: Rp ' + userBalance.toLocaleString('id-ID') + ' (Tidak Cukup!)').addClass('text-danger').removeClass('text-info');
+                    } else {
+                        $('#pay-amount').removeClass('is-invalid');
+                        $('#balance-info').text('Saldo Tabungan: Rp ' + userBalance.toLocaleString('id-ID')).removeClass('text-danger').addClass('text-info');
+                    }
+                } else {
+                     $('#pay-amount').removeClass('is-invalid');
+                }
+
                 var inputDenda = parseFloat($('#pay-denda').val()) || 0;
                 var baseBunga = parseFloat($('#modal-pay').data('bunga')) || 0;
                 var currentSisa = parseFloat($('#modal-pay').data('sisa')) || 0;
