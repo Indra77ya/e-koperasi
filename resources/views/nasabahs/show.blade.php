@@ -39,6 +39,12 @@
                                 </td>
                             </tr>
                             <tr>
+                                <th>Saldo Pinjaman</th>
+                                <td class="font-weight-bold text-warning">
+                                    Rp {{ number_format($nasabah->pinjaman->where('status', 'berjalan')->sum('remaining_principal'), 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Status Risiko</th>
                                 <td>
                                     @if($nasabah->status == 'aman')

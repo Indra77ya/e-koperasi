@@ -6,6 +6,8 @@ use App\Models\Loan;
 use App\Models\LoanInstallment;
 use App\Models\Member;
 use App\Models\Nasabah;
+use App\Models\Saving;
+use App\Models\SavingHistory;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
@@ -385,6 +387,20 @@ class LoanController extends Controller
                 $bungaPaid = $installment->bunga;
             }
 
+            // Check Balance for Tabungan
+            if ($request->metode_pembayaran == 'tabungan') {
+                $checkSaving = null;
+                if ($installment->loan->anggota_id) {
+                    $checkSaving = Saving::where('anggota_id', $installment->loan->anggota_id)->first();
+                } elseif ($installment->loan->nasabah_id) {
+                    $checkSaving = Saving::where('nasabah_id', $installment->loan->nasabah_id)->first();
+                }
+
+                if (!$checkSaving || $checkSaving->saldo < $totalPaid) {
+                    return redirect()->back()->with('error', 'Saldo tabungan tidak mencukupi untuk pembayaran ini.');
+                }
+            }
+
             DB::transaction(function () use ($installment, $request, $denda, $pokokPaid, $bungaPaid, $totalPaid) {
                 // Handle Indefinite Loan Logic Caps
                 if ($installment->loan->tenor == 0) {
@@ -485,12 +501,42 @@ class LoanController extends Controller
                 $totalMasuk = $installment->pokok + $installment->bunga + $denda;
 
                 $coaCash = Setting::get('coa_cash', '1101');
+
+                // Handle Savings Payment
+                if ($request->metode_pembayaran == 'tabungan') {
+                    $loan = $installment->loan;
+                    $saving = null;
+                    if ($loan->anggota_id) {
+                        $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
+                    } elseif ($loan->nasabah_id) {
+                        $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first();
+                    }
+
+                    if ($saving) {
+                        $saving->saldo -= $totalPaid;
+                        $saving->save();
+
+                        SavingHistory::create([
+                            'anggota_id' => $loan->anggota_id,
+                            'nasabah_id' => $loan->nasabah_id,
+                            'tanggal' => $request->tanggal_bayar,
+                            'keterangan' => 'Pembayaran Angsuran Pinjaman ' . $loan->kode_pinjaman,
+                            'debet' => $totalPaid,
+                            'kredit' => 0,
+                            'saldo' => $saving->saldo,
+                        ]);
+
+                        // Use Savings COA instead of Cash
+                        $coaCash = Setting::get('coa_savings', '2101');
+                    }
+                }
+
                 $coaReceivable = Setting::get('coa_receivable', '1103');
                 $coaInterest = Setting::get('coa_revenue_interest', '4101');
                 $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
 
                 $items = [
-                    ['code' => $coaCash, 'debit' => $totalMasuk, 'credit' => 0], // Kas
+                    ['code' => $coaCash, 'debit' => $totalMasuk, 'credit' => 0], // Kas or Savings (Liability)
                     ['code' => $coaReceivable, 'debit' => 0, 'credit' => $installment->pokok], // Piutang
                     ['code' => $coaInterest, 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
                 ];

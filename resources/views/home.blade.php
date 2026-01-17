@@ -202,12 +202,25 @@
                                         <div>-</div>
                                     @endif
                                 </td>
-                                <td>{{ $mutation->tanggal }}</td>
-                                <td>{{ $mutation->keterangan }}</td>
-                                <td class="text-right">{{ format_rupiah($mutation->debet) }}</td>
-                                <td class="text-right">{{ format_rupiah($mutation->kredit) }}</td>
-                                <td class="text-right">{{ format_rupiah($mutation->saldo) }}</td>
-                                <td class="text-muted">{{ $mutation->created_at->diffForHumans() }}</td>
+                                <td>{{ $mutation->date instanceof \Carbon\Carbon ? $mutation->date->format('Y-m-d') : $mutation->date }}</td>
+                                <td>{{ $mutation->description }}</td>
+                                <td class="text-right">{{ format_rupiah($mutation->debit) }}</td>
+                                <td class="text-right">{{ format_rupiah($mutation->credit) }}</td>
+                                <td class="text-right">
+                                    <div>{{ format_rupiah($mutation->balance) }}</div>
+                                    <small class="text-muted">
+                                        @if($mutation->balance_type == 'Tabungan')
+                                            <span class="text-success">(Tabungan)</span>
+                                        @else
+                                            <span class="text-warning">(Pinjaman)</span>
+                                        @endif
+                                    </small>
+                                </td>
+                                <td class="text-muted">
+                                    @if($mutation->date instanceof \Carbon\Carbon)
+                                        {{ $mutation->date->diffForHumans() }}
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
