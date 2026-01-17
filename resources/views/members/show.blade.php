@@ -28,6 +28,12 @@
                         </td>
                     </tr>
                     <tr>
+                        <td class="text-muted">Saldo Pinjaman</td>
+                        <td class="font-weight-bold text-warning">
+                            Rp {{ number_format($member->loans->where('status', 'berjalan')->sum('remaining_principal'), 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    <tr>
                         <td class="text-muted">Email</td>
                         <td>{{ $member->email }}</td>
                     </tr>

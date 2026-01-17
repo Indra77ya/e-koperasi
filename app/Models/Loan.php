@@ -78,4 +78,34 @@ class Loan extends Model
 
         return 0;
     }
+
+    /**
+     * Get remaining principal balance.
+     */
+    public function getRemainingPrincipalAttribute()
+    {
+        if ($this->tenor == 0) {
+            // Indefinite Loan: Check latest unpaid installment's sisa_pinjaman
+            // If no unpaid installment (should not happen if active), return 0 or check last paid.
+            $latest = $this->installments()
+                ->where('status', 'belum_lunas')
+                ->latest('angsuran_ke')
+                ->first();
+
+            if ($latest) {
+                return $latest->sisa_pinjaman;
+            }
+
+            // If all paid or none yet (e.g. just disbursed but query runs before installment created - unlikely)
+             return 0;
+
+        } else {
+            // Fixed Loan
+            $paidPrincipal = $this->installments()
+                ->where('status', 'lunas')
+                ->sum('pokok');
+
+            return max(0, $this->jumlah_pinjaman - $paidPrincipal);
+        }
+    }
 }
