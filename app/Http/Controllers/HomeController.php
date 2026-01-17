@@ -133,8 +133,9 @@ class HomeController extends Controller
             });
 
         // 3. Loan Repayments
+        // Filter by updated_at to capture payments made "Today" even if backdated
         $repayments = LoanInstallment::where('status', 'lunas')
-            ->whereDate('tanggal_bayar', $today)
+            ->whereDate('updated_at', $today)
             ->with(['loan.member', 'loan.nasabah'])
             ->get()
             ->map(function ($item) {
@@ -145,7 +146,7 @@ class HomeController extends Controller
                     'type' => 'loan_repayment',
                     'member' => $loan->member,
                     'nasabah' => $loan->nasabah,
-                    'date' => Carbon::parse($item->tanggal_bayar), // Default time?
+                    'date' => $item->updated_at, // Use system timestamp
                     'description' => 'Pembayaran Angsuran ' . $loan->kode_pinjaman . ' (Ke-' . $item->angsuran_ke . ')',
                     'debit' => $item->total_angsuran + $item->denda, // Total paid
                     'credit' => 0,
