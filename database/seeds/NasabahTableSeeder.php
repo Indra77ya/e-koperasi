@@ -17,7 +17,7 @@ class NasabahTableSeeder extends Seeder
         DB::table('nasabahs')->truncate();
         DB::table('nasabah_loans')->truncate();
 
-        factory(App\Models\Nasabah::class, 10)->create()->each(function ($nasabah) {
+        factory(App\Models\Nasabah::class, 100)->create()->each(function ($nasabah) {
             $nasabah->loans()->saveMany(factory(App\Models\NasabahLoan::class, rand(1, 3))->make());
         });
 

@@ -5,6 +5,7 @@ use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class JournalSeeder extends Seeder
 {
@@ -15,6 +16,11 @@ class JournalSeeder extends Seeder
      */
     public function run()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('journal_entries')->truncate();
+        DB::table('journal_items')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         // Only run if we have accounts
         // Matches codes in CoaSeeder.php
         $cash = ChartOfAccount::where('code', '1101')->first(); // Kas
@@ -29,65 +35,80 @@ class JournalSeeder extends Seeder
             return;
         }
 
-        // 1. Initial Capital Injection (Cash In)
+        // 1. Initial Capital Injection (Cash In) - BIGGER
         $this->createEntry(
-            Carbon::now()->subMonths(2)->format('Y-m-d'),
+            Carbon::now()->subMonths(6)->format('Y-m-d'),
             'REF-001',
-            'Setoran Modal Awal',
+            'Setoran Modal Awal (Tunai)',
             [
-                ['account_id' => $cash->id, 'debit' => 50000000, 'credit' => 0],
-                ['account_id' => $capital->id, 'debit' => 0, 'credit' => 50000000],
+                ['account_id' => $cash->id, 'debit' => 500000000, 'credit' => 0], // 500 Juta
+                ['account_id' => $capital->id, 'debit' => 0, 'credit' => 500000000],
             ]
         );
 
-        // 2. Transfer to Bank
+        // 2. Additional Capital Injection directly to Bank
+         $this->createEntry(
+            Carbon::now()->subMonths(6)->addDays(1)->format('Y-m-d'),
+            'REF-001-B',
+            'Setoran Modal Awal (Transfer Bank)',
+            [
+                ['account_id' => $bank->id, 'debit' => 1000000000, 'credit' => 0], // 1 Milyar
+                ['account_id' => $capital->id, 'debit' => 0, 'credit' => 1000000000],
+            ]
+        );
+
+        // 3. Transfer from Cash to Bank
         $this->createEntry(
-            Carbon::now()->subMonths(2)->addDay()->format('Y-m-d'),
+            Carbon::now()->subMonths(5)->format('Y-m-d'),
             'REF-002',
             'Setor Tunai ke Bank',
             [
-                ['account_id' => $bank->id, 'debit' => 20000000, 'credit' => 0],
-                ['account_id' => $cash->id, 'debit' => 0, 'credit' => 20000000],
+                ['account_id' => $bank->id, 'debit' => 200000000, 'credit' => 0], // 200 Juta
+                ['account_id' => $cash->id, 'debit' => 0, 'credit' => 200000000],
             ]
         );
 
-        // 3. Operational Expense (Cash Out)
+        // 4. Operational Expense (Cash Out)
         if ($expense_ops) {
             $this->createEntry(
-                Carbon::now()->subMonth()->format('Y-m-d'),
+                Carbon::now()->subMonths(4)->format('Y-m-d'),
                 'REF-003',
                 'Bayar Sewa Kantor (Operasional)',
                 [
-                    ['account_id' => $expense_ops->id, 'debit' => 5000000, 'credit' => 0],
-                    ['account_id' => $bank->id, 'debit' => 0, 'credit' => 5000000],
+                    ['account_id' => $expense_ops->id, 'debit' => 25000000, 'credit' => 0], // 25 Juta
+                    ['account_id' => $bank->id, 'debit' => 0, 'credit' => 25000000],
                 ]
             );
         }
 
-        // 4. Revenue (Cash In)
+        // 5. Revenue (Cash In) - Periodic
         if ($revenue) {
-            $this->createEntry(
-                Carbon::now()->subDays(15)->format('Y-m-d'),
-                'REF-004',
-                'Pendapatan Bunga Pinjaman',
-                [
-                    ['account_id' => $cash->id, 'debit' => 2500000, 'credit' => 0],
-                    ['account_id' => $revenue->id, 'debit' => 0, 'credit' => 2500000],
-                ]
-            );
+            for ($i=1; $i<=5; $i++) {
+                $this->createEntry(
+                    Carbon::now()->subMonths(6-$i)->format('Y-m-d'),
+                    'REV-' . $i,
+                    'Pendapatan Bunga Pinjaman Bulan ke-'.$i,
+                    [
+                        ['account_id' => $cash->id, 'debit' => 15000000, 'credit' => 0],
+                        ['account_id' => $revenue->id, 'debit' => 0, 'credit' => 15000000],
+                    ]
+                );
+            }
         }
 
-        // 5. Salary Expense (Cash Out)
+        // 6. Salary Expense (Cash Out) - Periodic
         if ($expense_salary) {
-            $this->createEntry(
-                Carbon::now()->subDays(2)->format('Y-m-d'),
-                'REF-005',
-                'Bayar Gaji Karyawan',
-                [
-                    ['account_id' => $expense_salary->id, 'debit' => 15000000, 'credit' => 0],
-                    ['account_id' => $bank->id, 'debit' => 0, 'credit' => 15000000],
-                ]
-            );
+             for ($i=1; $i<=5; $i++) {
+                $this->createEntry(
+                    Carbon::now()->subMonths(6-$i)->endOfMonth()->format('Y-m-d'),
+                    'SAL-' . $i,
+                    'Bayar Gaji Karyawan Bulan ke-'.$i,
+                    [
+                        ['account_id' => $expense_salary->id, 'debit' => 35000000, 'credit' => 0],
+                        ['account_id' => $bank->id, 'debit' => 0, 'credit' => 35000000],
+                    ]
+                );
+            }
         }
     }
 
