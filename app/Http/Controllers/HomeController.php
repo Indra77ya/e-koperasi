@@ -31,33 +31,43 @@ class HomeController extends Controller
         // 1. Total Dana Turun & Trend
         $totalDisbursed = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])->sum('jumlah_pinjaman');
 
-        $disbursedTrendRaw = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
-            ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->get();
+        // Generate last 6 months keys
+        $months = collect([]);
+        for ($i = 5; $i >= 0; $i--) {
+            $months->push(Carbon::now()->subMonths($i)->format('Y-m'));
+        }
 
-        $disbursedTrend = $disbursedTrendRaw->groupBy(function ($item) {
-            return $item->created_at->format('Y-m');
-        })->map(function ($group, $month) {
+        $disbursedTrendRaw = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
+            ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->created_at->format('Y-m');
+            });
+
+        $disbursedTrend = $months->map(function ($month) use ($disbursedTrendRaw) {
+            $group = $disbursedTrendRaw->get($month);
             return (object) [
                 'month' => $month,
-                'total' => $group->sum('jumlah_pinjaman')
+                'total' => $group ? $group->sum('jumlah_pinjaman') : 0
             ];
-        })->sortBy('month')->values();
+        });
 
         // 2. Pendapatan Bunga & Denda
         $revenueStatsRaw = LoanInstallment::where('status', 'lunas')
-            ->where('tanggal_bayar', '>=', Carbon::now()->subMonths(6))
-            ->get();
+            ->where('tanggal_bayar', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->tanggal_bayar ? $item->tanggal_bayar->format('Y-m') : 'N/A';
+            });
 
-        $revenueStats = $revenueStatsRaw->groupBy(function ($item) {
-            return $item->tanggal_bayar ? $item->tanggal_bayar->format('Y-m') : 'N/A';
-        })->map(function ($group, $month) {
+        $revenueStats = $months->map(function ($month) use ($revenueStatsRaw) {
+            $group = $revenueStatsRaw->get($month);
             return (object) [
                 'month' => $month,
-                'total_bunga' => $group->sum('bunga'),
-                'total_denda' => $group->sum('denda')
+                'total_bunga' => $group ? $group->sum('bunga') : 0,
+                'total_denda' => $group ? $group->sum('denda') : 0
             ];
-        })->sortBy('month')->values();
+        });
 
         // 3. Piutang & Kolektabilitas
         $collectibilityStats = DB::table('pinjaman')
