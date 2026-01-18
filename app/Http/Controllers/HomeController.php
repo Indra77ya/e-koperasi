@@ -31,27 +31,33 @@ class HomeController extends Controller
         // 1. Total Dana Turun & Trend
         $totalDisbursed = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])->sum('jumlah_pinjaman');
 
-        $disbursedTrend = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
-            ->select(
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
-                DB::raw("SUM(jumlah_pinjaman) as total")
-            )
+        $disbursedTrendRaw = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
             ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->groupBy('month')
-            ->orderBy('month')
             ->get();
 
+        $disbursedTrend = $disbursedTrendRaw->groupBy(function ($item) {
+            return $item->created_at->format('Y-m');
+        })->map(function ($group, $month) {
+            return (object) [
+                'month' => $month,
+                'total' => $group->sum('jumlah_pinjaman')
+            ];
+        })->sortBy('month')->values();
+
         // 2. Pendapatan Bunga & Denda
-        $revenueStats = LoanInstallment::where('status', 'lunas')
-            ->select(
-                DB::raw("DATE_FORMAT(tanggal_bayar, '%Y-%m') as month"),
-                DB::raw("SUM(bunga) as total_bunga"),
-                DB::raw("SUM(denda) as total_denda")
-            )
+        $revenueStatsRaw = LoanInstallment::where('status', 'lunas')
             ->where('tanggal_bayar', '>=', Carbon::now()->subMonths(6))
-            ->groupBy('month')
-            ->orderBy('month')
             ->get();
+
+        $revenueStats = $revenueStatsRaw->groupBy(function ($item) {
+            return $item->tanggal_bayar ? $item->tanggal_bayar->format('Y-m') : 'N/A';
+        })->map(function ($group, $month) {
+            return (object) [
+                'month' => $month,
+                'total_bunga' => $group->sum('bunga'),
+                'total_denda' => $group->sum('denda')
+            ];
+        })->sortBy('month')->values();
 
         // 3. Piutang & Kolektabilitas
         $collectibilityStats = DB::table('pinjaman')

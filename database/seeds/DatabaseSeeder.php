@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             MutationSeeder::class,
             BankInterestSeeder::class,
             NotificationSeeder::class,
+            CollectibilitySeeder::class,
         ]);
     }
 }
