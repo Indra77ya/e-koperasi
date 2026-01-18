@@ -34,6 +34,15 @@ class LoanController extends Controller
         if ($request->ajax()) {
             $loans = Loan::with(['member', 'nasabah'])->select('pinjaman.*');
             return DataTables::of($loans)
+                ->filterColumn('member_name', function($query, $keyword) {
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('member', function($q) use ($keyword) {
+                            $q->where('nama', 'like', "%{$keyword}%");
+                        })->orWhereHas('nasabah', function($q) use ($keyword) {
+                            $q->where('nama', 'like', "%{$keyword}%");
+                        });
+                    });
+                })
                 ->editColumn('jumlah_pinjaman', function ($loan) {
                     return 'Rp ' . number_format($loan->jumlah_pinjaman, 0, ',', '.');
                 })

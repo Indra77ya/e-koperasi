@@ -47,7 +47,7 @@
             ajax: '{{ route('loans.index') }}',
             columns: [
                 { data: 'kode_pinjaman', name: 'kode_pinjaman' },
-                { data: 'member_name', name: 'member.nama' },
+                { data: 'member_name', name: 'member_name' },
                 { data: 'jenis_pinjaman', name: 'jenis_pinjaman' },
                 { data: 'jumlah_pinjaman', name: 'jumlah_pinjaman' },
                 { data: 'tenor', name: 'tenor' },
