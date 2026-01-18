@@ -140,7 +140,7 @@ require(['datatables', 'jquery', 'https://cdnjs.cloudflare.com/ajax/libs/select2
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'anggota', name: 'anggota', orderable: false },
+            { data: 'anggota', name: 'anggota', orderable: false, searchable: true },
             { data: 'jumlah', name: 'jumlah' },
             { data: 'keterangan', name: 'keterangan', orderable: false },
             { data: 'tanggal', name: 'tanggal' },
