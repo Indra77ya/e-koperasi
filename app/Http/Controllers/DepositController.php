@@ -208,6 +208,15 @@ class DepositController extends Controller
 
         return DataTables::of($deposits)
             ->addIndexColumn()
+            ->filterColumn('anggota', function($query, $keyword) {
+                $query->where(function($q) use ($keyword) {
+                    $q->whereHas('member', function($q) use ($keyword) {
+                        $q->where('nama', 'like', "%{$keyword}%");
+                    })->orWhereHas('nasabah', function($q) use ($keyword) {
+                        $q->where('nama', 'like', "%{$keyword}%");
+                    });
+                });
+            })
             ->addColumn('action', function($deposit) {
                 return view('deposits.datatables.action', compact('deposit'))->render();
             })
