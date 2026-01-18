@@ -490,7 +490,11 @@ class LoanController extends Controller
                             $ratePerPeriod = $yearlyRate / 12;
                         }
 
-                        $interest = $newBalance * $ratePerPeriod;
+                        if ($loan->jenis_bunga == 'flat') {
+                            $interest = $loan->jumlah_pinjaman * $ratePerPeriod;
+                        } else {
+                            $interest = $newBalance * $ratePerPeriod;
+                        }
 
                         LoanInstallment::create([
                             'pinjaman_id' => $loan->id,
