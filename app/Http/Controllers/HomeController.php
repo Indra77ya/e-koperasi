@@ -109,6 +109,9 @@ class HomeController extends Controller
                 ];
             });
 
+        // Convert to Base Collection to allow merging with other collections of stdClass
+        $savings = collect($savings);
+
         // 2. Loan Disbursements (Detected by checking if first installment was created today)
         $disbursements = Loan::where('status', 'berjalan')
             ->whereHas('installments', function($q) use ($today) {
