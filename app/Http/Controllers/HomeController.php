@@ -28,9 +28,9 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // 1. Total Sisa Pinjaman (Outstanding) & Trend
-        // Calculate total outstanding principal from unpaid installments of active/bad debt loans
-        $totalOutstanding = DB::table('pinjaman')
+        // 1. Total Dana Turun (Disbursed) - Calculated as Outstanding
+        // User requested label "Total Dana Turun" but with logic that decreases on payment (Outstanding).
+        $totalDisbursed = DB::table('pinjaman')
             ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
             ->whereIn('pinjaman.status', ['dicairkan', 'macet'])
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
@@ -42,11 +42,12 @@ class HomeController extends Controller
             $months->push(Carbon::now()->subMonths($i)->format('Y-m'));
         }
 
+        // Trend Chart: Use updated_at (Disbursement Date) instead of created_at
         $disbursedTrendRaw = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
-            ->where('created_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+            ->where('updated_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
             ->get()
             ->groupBy(function ($item) {
-                return $item->created_at->format('Y-m');
+                return $item->updated_at->format('Y-m');
             });
 
         $disbursedTrend = $months->map(function ($month) use ($disbursedTrendRaw) {
@@ -183,7 +184,7 @@ class HomeController extends Controller
 
         return view('home', compact(
             'mutations',
-            'totalOutstanding',
+            'totalDisbursed',
             'disbursedTrend',
             'revenueStats',
             'collectibilityStats',
