@@ -164,7 +164,7 @@
                                 <form action="{{ route('accounting.coa.seed') }}" method="POST" class="d-inline-block" onsubmit="return confirm('Apakah Anda yakin ingin melakukan seed COA bawaan? Tindakan ini mungkin akan menduplikasi akun jika sudah ada.');">
                                     @csrf
                                     <button type="submit" class="btn btn-secondary btn-sm">
-                                        <i class="fe fe-refresh-cw"></i> Isi COA
+                                        <i class="fe fe-refresh-cw"></i> Default COA
                                     </button>
                                 </form>
                             </div>
