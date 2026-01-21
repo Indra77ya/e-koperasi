@@ -7,12 +7,6 @@
             <div class="card-header">
                 <h3 class="card-title">Chart of Accounts (COA)</h3>
                 <div class="card-options">
-                    <form action="{{ route('accounting.coa.seed') }}" method="POST" class="d-inline-block mr-2" onsubmit="return confirm('Apakah Anda yakin ingin melakukan seed COA bawaan? Tindakan ini mungkin akan menduplikasi akun jika sudah ada.');">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary btn-pill">
-                            <i class="fe fe-refresh-cw"></i> Auto Seed COA
-                        </button>
-                    </form>
                     <a href="{{ route('accounting.coa.create') }}" class="btn btn-primary btn-pill">Tambah Akun</a>
                 </div>
             </div>
