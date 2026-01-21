@@ -77,6 +77,7 @@ class AccountingController extends Controller
     public function seedCoa()
     {
         try {
+            require_once base_path('database/seeds/CoaSeeder.php');
             Artisan::call('db:seed', [
                 '--class' => 'CoaSeeder',
                 '--force' => true
