@@ -7,6 +7,7 @@ use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Artisan;
 use DB;
 
 class AccountingController extends Controller
@@ -71,6 +72,19 @@ class AccountingController extends Controller
         $account->update($request->all());
 
         return redirect()->route('accounting.coa')->with('success', 'Account updated successfully');
+    }
+
+    public function seedCoa()
+    {
+        try {
+            Artisan::call('db:seed', [
+                '--class' => 'CoaSeeder',
+                '--force' => true
+            ]);
+            return redirect()->route('accounting.coa')->with('success', 'COA Seeded Successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('accounting.coa')->with('error', 'Seeding failed: ' . $e->getMessage());
+        }
     }
 
     // Cash Book

@@ -115,6 +115,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('accounting/coa', 'AccountingController@coaStore')->name('accounting.coa.store');
     Route::get('accounting/coa/{id}/edit', 'AccountingController@coaEdit')->name('accounting.coa.edit');
     Route::put('accounting/coa/{id}', 'AccountingController@coaUpdate')->name('accounting.coa.update');
+    Route::post('accounting/coa/seed', 'AccountingController@seedCoa')->name('accounting.coa.seed');
 
     Route::get('accounting/journals', 'AccountingController@journals')->name('accounting.journals');
     Route::get('accounting/journals/data', 'AccountingController@journalsData')->name('accounting.journals.data');
