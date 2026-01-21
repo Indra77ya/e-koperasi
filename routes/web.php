@@ -39,6 +39,7 @@ Route::get('/dev/seed', function () {
     }
 });
 
+
 Route::get('/dev/seed-dummy', function () {
     if (!App::environment('local')) {
         abort(403, 'This route is only available in local environment.');
