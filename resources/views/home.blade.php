@@ -35,8 +35,8 @@
                         <i class="fe fe-dollar-sign"></i>
                     </span>
                     <div>
-                        <h4 class="m-0"><a href="javascript:void(0)">{{ format_rupiah($totalDisbursed) }}</a></h4>
-                        <small class="text-muted">Total Dana Turun (Disbursed)</small>
+                        <h4 class="m-0"><a href="javascript:void(0)">{{ format_rupiah($totalOutstanding) }}</a></h4>
+                        <small class="text-muted">Sisa Pinjaman (Outstanding)</small>
                     </div>
                 </div>
             </div>

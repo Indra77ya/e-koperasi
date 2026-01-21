@@ -28,8 +28,13 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // 1. Total Dana Turun & Trend
-        $totalDisbursed = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])->sum('jumlah_pinjaman');
+        // 1. Total Sisa Pinjaman (Outstanding) & Trend
+        // Calculate total outstanding principal from unpaid installments of active/bad debt loans
+        $totalOutstanding = DB::table('pinjaman')
+            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
+            ->whereIn('pinjaman.status', ['dicairkan', 'macet'])
+            ->where('pinjaman_angsuran.status', '!=', 'lunas')
+            ->sum('pinjaman_angsuran.pokok');
 
         // Generate last 6 months keys
         $months = collect([]);
@@ -178,7 +183,7 @@ class HomeController extends Controller
 
         return view('home', compact(
             'mutations',
-            'totalDisbursed',
+            'totalOutstanding',
             'disbursedTrend',
             'revenueStats',
             'collectibilityStats',
