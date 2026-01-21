@@ -78,10 +78,10 @@ class AccountingController extends Controller
     {
         try {
             require_once base_path('database/seeds/CoaSeeder.php');
-            Artisan::call('db:seed', [
-                '--class' => 'CoaSeeder',
-                '--force' => true
-            ]);
+
+            $seeder = new \CoaSeeder();
+            $seeder->run();
+
             return redirect()->route('accounting.coa')->with('success', 'COA berhasil di-seed!');
         } catch (\Exception $e) {
             return redirect()->route('accounting.coa')->with('error', 'Seeding gagal: ' . $e->getMessage());
