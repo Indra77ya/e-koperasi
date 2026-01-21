@@ -28,13 +28,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // 1. Total Dana Turun (Disbursed) - Calculated as Outstanding
-        // User requested label "Total Dana Turun" but with logic that decreases on payment (Outstanding).
-        $totalDisbursed = DB::table('pinjaman')
-            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
-            ->whereIn('pinjaman.status', ['dicairkan', 'macet'])
-            ->where('pinjaman_angsuran.status', '!=', 'lunas')
-            ->sum('pinjaman_angsuran.pokok');
+        // 1. Total Dana Turun (Disbursed)
+        // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
+        // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).
+        $totalDisbursed = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
+            ->sum('jumlah_pinjaman');
 
         // Generate last 6 months keys
         $months = collect([]);
@@ -42,12 +40,13 @@ class HomeController extends Controller
             $months->push(Carbon::now()->subMonths($i)->format('Y-m'));
         }
 
-        // Trend Chart: Use updated_at (Disbursement Date) instead of created_at
-        $disbursedTrendRaw = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
-            ->where('updated_at', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+        // Trend Chart: Use tanggal_persetujuan (Approval Date) as proxy for Disbursement Date
+        // updated_at is unreliable as it changes on payment/status update.
+        $disbursedTrendRaw = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
+            ->where('tanggal_persetujuan', '>=', Carbon::now()->subMonths(6)->startOfMonth())
             ->get()
             ->groupBy(function ($item) {
-                return $item->updated_at->format('Y-m');
+                return $item->tanggal_persetujuan ? Carbon::parse($item->tanggal_persetujuan)->format('Y-m') : 'N/A';
             });
 
         $disbursedTrend = $months->map(function ($month) use ($disbursedTrendRaw) {
@@ -78,7 +77,7 @@ class HomeController extends Controller
         // 3. Piutang & Kolektabilitas
         $collectibilityStats = DB::table('pinjaman')
             ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
-            ->whereIn('pinjaman.status', ['dicairkan', 'macet'])
+            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet'])
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
             ->select(
                 'pinjaman.kolektabilitas',
