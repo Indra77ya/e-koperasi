@@ -23,9 +23,9 @@
                         <td>{{ $loan->kode_pinjaman }}</td>
                         <td>
                             @if($loan->member)
-                                {{ $loan->member->name }} <span class="badge badge-info">Anggota</span>
+                                <span class="badge badge-info">Anggota</span> {{ $loan->member->nama }}
                             @elseif($loan->nasabah)
-                                {{ $loan->nasabah->name }} <span class="badge badge-warning">Nasabah</span>
+                                <span class="badge badge-warning">Nasabah</span> {{ $loan->nasabah->nama }}
                             @else
                                 -
                             @endif

@@ -160,6 +160,14 @@
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Mapping Akuntansi (COA)</h3>
+                            <div class="card-options">
+                                <form action="{{ route('accounting.coa.seed') }}" method="POST" class="d-inline-block" onsubmit="return confirm('Apakah Anda yakin ingin melakukan seed COA bawaan? Tindakan ini mungkin akan menduplikasi akun jika sudah ada.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-secondary btn-sm">
+                                        <i class="fe fe-refresh-cw"></i> Default COA
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-info">

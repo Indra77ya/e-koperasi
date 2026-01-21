@@ -28,35 +28,56 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // 1. Total Dana Turun & Trend
-        $totalDisbursed = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])->sum('jumlah_pinjaman');
+        // 1. Total Dana Turun (Disbursed)
+        // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
+        // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).
+        $totalDisbursed = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
+            ->sum('jumlah_pinjaman');
 
-        $disbursedTrend = Loan::whereIn('status', ['dicairkan', 'lunas', 'macet'])
-            ->select(
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
-                DB::raw("SUM(jumlah_pinjaman) as total")
-            )
-            ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        // Generate last 6 months keys
+        $months = collect([]);
+        for ($i = 5; $i >= 0; $i--) {
+            $months->push(Carbon::now()->subMonths($i)->format('Y-m'));
+        }
+
+        // Trend Chart: Use tanggal_persetujuan (Approval Date) as proxy for Disbursement Date
+        // updated_at is unreliable as it changes on payment/status update.
+        $disbursedTrendRaw = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
+            ->where('tanggal_persetujuan', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->tanggal_persetujuan ? Carbon::parse($item->tanggal_persetujuan)->format('Y-m') : 'N/A';
+            });
+
+        $disbursedTrend = $months->map(function ($month) use ($disbursedTrendRaw) {
+            $group = $disbursedTrendRaw->get($month);
+            return (object) [
+                'month' => $month,
+                'total' => $group ? $group->sum('jumlah_pinjaman') : 0
+            ];
+        });
 
         // 2. Pendapatan Bunga & Denda
-        $revenueStats = LoanInstallment::where('status', 'lunas')
-            ->select(
-                DB::raw("DATE_FORMAT(tanggal_bayar, '%Y-%m') as month"),
-                DB::raw("SUM(bunga) as total_bunga"),
-                DB::raw("SUM(denda) as total_denda")
-            )
-            ->where('tanggal_bayar', '>=', Carbon::now()->subMonths(6))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        $revenueStatsRaw = LoanInstallment::where('status', 'lunas')
+            ->where('tanggal_bayar', '>=', Carbon::now()->subMonths(6)->startOfMonth())
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->tanggal_bayar ? $item->tanggal_bayar->format('Y-m') : 'N/A';
+            });
+
+        $revenueStats = $months->map(function ($month) use ($revenueStatsRaw) {
+            $group = $revenueStatsRaw->get($month);
+            return (object) [
+                'month' => $month,
+                'total_bunga' => $group ? $group->sum('bunga') : 0,
+                'total_denda' => $group ? $group->sum('denda') : 0
+            ];
+        });
 
         // 3. Piutang & Kolektabilitas
         $collectibilityStats = DB::table('pinjaman')
             ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
-            ->whereIn('pinjaman.status', ['dicairkan', 'macet'])
+            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet'])
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
             ->select(
                 'pinjaman.kolektabilitas',
@@ -92,6 +113,9 @@ class HomeController extends Controller
                     'balance_type' => 'Tabungan'
                 ];
             });
+
+        // Convert to Base Collection to allow merging with other collections of stdClass
+        $savings = collect($savings);
 
         // 2. Loan Disbursements (Detected by checking if first installment was created today)
         $disbursements = Loan::where('status', 'berjalan')
