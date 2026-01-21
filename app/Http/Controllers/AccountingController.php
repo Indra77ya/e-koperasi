@@ -82,9 +82,9 @@ class AccountingController extends Controller
                 '--class' => 'CoaSeeder',
                 '--force' => true
             ]);
-            return redirect()->route('accounting.coa')->with('success', 'COA Seeded Successfully!');
+            return redirect()->route('accounting.coa')->with('success', 'COA berhasil di-seed!');
         } catch (\Exception $e) {
-            return redirect()->route('accounting.coa')->with('error', 'Seeding failed: ' . $e->getMessage());
+            return redirect()->route('accounting.coa')->with('error', 'Seeding gagal: ' . $e->getMessage());
         }
     }
 
