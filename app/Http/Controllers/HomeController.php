@@ -220,16 +220,6 @@ class HomeController extends Controller
             }
             $query->whereBetween('tanggal_persetujuan', [$start, $end]);
 
-        } elseif ($filter == '3_months') {
-            // Last 3 months (Daily resolution)
-            $start = Carbon::today()->subMonths(3);
-            $end = Carbon::today();
-            $format = 'd M';
-            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                $labels->push($date->format($format));
-            }
-            $query->whereBetween('tanggal_persetujuan', [$start, $end]);
-
         } elseif ($filter == '6_months') {
             $start = Carbon::today()->subMonths(5)->startOfMonth();
             $end = Carbon::today()->endOfMonth();
