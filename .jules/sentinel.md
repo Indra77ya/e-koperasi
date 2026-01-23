@@ -1,0 +1,4 @@
+## 2025-05-15 - Mass Assignment in Settings
+**Vulnerability:** The `SettingController@update` method accepted all request parameters (except `_token` and files) and saved them to the `settings` table without validation or whitelisting. This allowed unauthorized keys to be added and invalid values (e.g., negative interest rates) to be stored.
+**Learning:** Even internal or admin-facing forms must whitelist inputs. Relying on "trusted users" is insufficient as it leaves the system vulnerable to compromised accounts or accidental misconfiguration. In older frameworks (Laravel 5.8), relying on `except` is a common anti-pattern; modern validation with `validated()` is safer.
+**Prevention:** Always use `$request->validate()` with specific rules for every input. Use the returned validated array for database updates, which implicitly acts as a whitelist, ignoring extra parameters.

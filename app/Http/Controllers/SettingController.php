@@ -22,7 +22,32 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->except(['_token', 'company_logo', 'front_background']);
+        // Define allowed keys and validation rules (Security Enhancement)
+        $rules = [
+            'company_name' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string|max:1000',
+            'company_phone' => 'nullable|string|max:50',
+            'company_email' => 'nullable|email|max:100',
+            'default_interest_rate' => 'nullable|numeric|min:0',
+            'default_admin_fee' => 'nullable|numeric|min:0',
+            'default_penalty' => 'nullable|numeric|min:0',
+            'loan_limit' => 'nullable|numeric|min:0',
+            'col_dpk_days' => 'nullable|integer|min:0',
+            'col_kl_days' => 'nullable|integer|min:0',
+            'col_diragukan_days' => 'nullable|integer|min:0',
+            'col_macet_days' => 'nullable|integer|min:0',
+            'savings_interest_rate' => 'nullable|numeric|min:0',
+            'coa_cash' => 'nullable|exists:chart_of_accounts,code',
+            'coa_interest_expense' => 'nullable|exists:chart_of_accounts,code',
+            'coa_savings' => 'nullable|exists:chart_of_accounts,code',
+            'coa_receivable' => 'nullable|exists:chart_of_accounts,code',
+            'coa_revenue_interest' => 'nullable|exists:chart_of_accounts,code',
+            'coa_revenue_admin' => 'nullable|exists:chart_of_accounts,code',
+            'coa_revenue_penalty' => 'nullable|exists:chart_of_accounts,code',
+            'notification_due_date_threshold' => 'nullable|integer|min:0',
+        ];
+
+        $data = $request->validate($rules);
 
         // Handle Company Logo Upload
         if ($request->hasFile('company_logo')) {
