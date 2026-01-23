@@ -59,6 +59,9 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Piutang & Kolektabilitas</h3>
+                <div class="card-options">
+                    <a href="{{ route('collections.index') }}" class="btn btn-sm btn-primary">Lihat Detail</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table card-table table-vcenter text-nowrap">
