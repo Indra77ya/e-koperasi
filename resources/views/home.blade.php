@@ -166,9 +166,9 @@
                         </button>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="disbursedFilterDropdown">
                             <a class="dropdown-item" href="#" data-filter="today">Hari Ini</a>
-                            <a class="dropdown-item" href="#" data-filter="1_month">Per 1 Bulan</a>
-                            <a class="dropdown-item" href="#" data-filter="6_months">6 Bulan</a>
-                            <a class="dropdown-item" href="#" data-filter="1_year">1 Tahun</a>
+                            <a class="dropdown-item" href="#" data-filter="1_month">1 Bulan Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="6_months">6 Bulan Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="1_year">1 Tahun Terakhir</a>
                             <a class="dropdown-item" href="#" data-filter="last_year">Tahun Lalu</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" data-filter="custom">Rentang Waktu</a>
