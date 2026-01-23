@@ -55,6 +55,7 @@ Route::get('/dev/seed-dummy', function () {
 Auth::routes(['register' => false, 'reset' => false, 'verify' => false]);
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/home/chart/disbursed-trend', 'HomeController@getDisbursedTrend')->name('home.chart.disbursed-trend');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('profile', 'ProfileController@index');

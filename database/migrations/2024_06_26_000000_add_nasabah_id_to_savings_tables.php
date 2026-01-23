@@ -16,21 +16,27 @@ class AddNasabahIdToSavingsTables extends Migration
     {
         // 1. Update setoran table
         // Use raw SQL to avoid doctrine/dbal dependency for changing columns
-        DB::statement('ALTER TABLE setoran MODIFY anggota_id BIGINT UNSIGNED NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE setoran MODIFY anggota_id BIGINT UNSIGNED NULL');
+        }
 
         Schema::table('setoran', function (Blueprint $table) {
             $table->unsignedBigInteger('nasabah_id')->nullable()->after('anggota_id');
         });
 
         // 2. Update tabungan table
-        DB::statement('ALTER TABLE tabungan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE tabungan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        }
 
         Schema::table('tabungan', function (Blueprint $table) {
             $table->unsignedBigInteger('nasabah_id')->nullable()->after('anggota_id');
         });
 
         // 3. Update riwayat_tabungan table
-        DB::statement('ALTER TABLE riwayat_tabungan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE riwayat_tabungan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        }
 
         Schema::table('riwayat_tabungan', function (Blueprint $table) {
             $table->unsignedBigInteger('nasabah_id')->nullable()->after('anggota_id');
@@ -53,16 +59,22 @@ class AddNasabahIdToSavingsTables extends Migration
         Schema::table('setoran', function (Blueprint $table) {
              $table->dropColumn('nasabah_id');
         });
-        DB::statement('ALTER TABLE setoran MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE setoran MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        }
 
         Schema::table('tabungan', function (Blueprint $table) {
              $table->dropColumn('nasabah_id');
         });
-        DB::statement('ALTER TABLE tabungan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE tabungan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        }
 
         Schema::table('riwayat_tabungan', function (Blueprint $table) {
              $table->dropColumn('nasabah_id');
         });
-        DB::statement('ALTER TABLE riwayat_tabungan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE riwayat_tabungan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        }
     }
 }

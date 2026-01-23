@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Loan;
 use App\Models\LoanInstallment;
 use App\Models\SavingHistory;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -189,5 +190,102 @@ class HomeController extends Controller
             'collectibilityStats',
             'dueToday'
         ));
+    }
+
+    public function getDisbursedTrend(Request $request)
+    {
+        $filter = $request->get('filter', '6_months');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        // Default query
+        $query = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet']);
+
+        $labels = collect([]);
+        $format = 'Y-m'; // Default format
+
+        if ($filter == 'today') {
+            $start = Carbon::today();
+            $format = 'Y-m-d';
+            $labels->push($start->format($format));
+            $query->whereDate('tanggal_persetujuan', $start);
+
+        } elseif ($filter == '1_month') {
+            // Last 30 days
+            $start = Carbon::today()->subDays(29);
+            $end = Carbon::today();
+            $format = 'd M';
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $labels->push($date->format($format));
+            }
+            $query->whereBetween('tanggal_persetujuan', [$start, $end]);
+
+        } elseif ($filter == '6_months') {
+            $start = Carbon::today()->subMonths(5)->startOfMonth();
+            $end = Carbon::today()->endOfMonth();
+            $format = 'Y-m';
+            for ($date = $start->copy(); $date->lte($end); $date->addMonth()) {
+                $labels->push($date->format($format));
+            }
+            $query->whereBetween('tanggal_persetujuan', [$start, $end]);
+
+        } elseif ($filter == '1_year') {
+            $start = Carbon::today()->subMonths(11)->startOfMonth();
+            $end = Carbon::today()->endOfMonth();
+            $format = 'Y-m';
+            for ($date = $start->copy(); $date->lte($end); $date->addMonth()) {
+                $labels->push($date->format($format));
+            }
+            $query->whereBetween('tanggal_persetujuan', [$start, $end]);
+
+        } elseif ($filter == 'last_year') {
+            $start = Carbon::today()->subYear()->startOfYear();
+            $end = Carbon::today()->subYear()->endOfYear();
+            $format = 'Y-m';
+            for ($date = $start->copy(); $date->lte($end); $date->addMonth()) {
+                $labels->push($date->format($format));
+            }
+            $query->whereBetween('tanggal_persetujuan', [$start, $end]);
+
+        } elseif ($filter == 'custom') {
+            if ($startDate && $endDate) {
+                $start = Carbon::parse($startDate);
+                $end = Carbon::parse($endDate);
+                $diffDays = $start->diffInDays($end);
+
+                // If > 60 days, use Monthly resolution, otherwise Daily
+                if ($diffDays > 60) {
+                    $format = 'Y-m';
+                    $iterStart = $start->copy()->startOfMonth();
+                    $iterEnd = $end->copy()->endOfMonth();
+                    for ($date = $iterStart; $date->lte($iterEnd); $date->addMonth()) {
+                        $labels->push($date->format($format));
+                    }
+                } else {
+                    $format = 'Y-m-d';
+                    for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                        $labels->push($date->format($format));
+                    }
+                }
+                $query->whereBetween('tanggal_persetujuan', [$start, $end]);
+            }
+        }
+
+        // Execute Query
+        $results = $query->get()->groupBy(function($item) use ($format) {
+            return $item->tanggal_persetujuan ? Carbon::parse($item->tanggal_persetujuan)->format($format) : 'N/A';
+        });
+
+        // Map to labels
+        $chartData = $labels->map(function($label) use ($results) {
+            $group = $results->get($label);
+            return $group ? $group->sum('jumlah_pinjaman') : 0;
+        });
+
+        return response()->json([
+            'labels' => $labels,
+            'data' => $chartData,
+            'format' => $format // Helpful for frontend formatting
+        ]);
     }
 }

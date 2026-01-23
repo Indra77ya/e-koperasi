@@ -16,7 +16,9 @@ class UpdatePenarikanTableAddNasabah extends Migration
     {
         // 1. Make anggota_id nullable
         // Use raw SQL to avoid doctrine/dbal dependency for changing columns
-        DB::statement('ALTER TABLE penarikan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE penarikan MODIFY anggota_id BIGINT UNSIGNED NULL');
+        }
 
         // 2. Add nasabah_id column
         Schema::table('penarikan', function (Blueprint $table) {
@@ -40,6 +42,8 @@ class UpdatePenarikanTableAddNasabah extends Migration
         });
 
         // Revert anggota_id to NOT NULL
-        DB::statement('ALTER TABLE penarikan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE penarikan MODIFY anggota_id BIGINT UNSIGNED NOT NULL');
+        }
     }
 }
