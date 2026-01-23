@@ -171,6 +171,9 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title" id="recent_mutations_today_desc">{{ __('recent_mutations_today') }}</h3>
+                <div class="card-options">
+                    <a href="{{ route('mutations.feed') }}" class="btn btn-sm btn-primary">Lihat Semua</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table card-table table-vcenter text-nowrap datatable" aria-describedby="recent_mutations_today_desc">
