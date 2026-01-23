@@ -332,7 +332,13 @@
                 axis: {
                     x: {
                         type: 'category',
-                        categories: [@foreach($disbursedTrend as $stat) '{{ $stat->month }}', @endforeach]
+                        categories: [@foreach($disbursedTrend as $stat) '{{ $stat->month }}', @endforeach],
+                        tick: {
+                            fit: true,
+                            culling: {
+                                max: 8
+                            }
+                        }
                     },
                     y: {
                         tick: {
@@ -398,6 +404,8 @@
                             categories: response.labels,
                             unload: ['Dana Turun']
                         });
+                        // Force redraw to apply tick options potentially
+                        setTimeout(function(){ chartDisbursed.flush(); }, 100);
                     },
                     error: function(xhr) {
                         console.error(xhr);

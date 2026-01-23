@@ -214,7 +214,7 @@ class HomeController extends Controller
             // Last 30 days
             $start = Carbon::today()->subDays(29);
             $end = Carbon::today();
-            $format = 'Y-m-d';
+            $format = 'd M';
             for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
                 $labels->push($date->format($format));
             }
@@ -224,7 +224,7 @@ class HomeController extends Controller
             // Last 3 months (Daily resolution)
             $start = Carbon::today()->subMonths(3);
             $end = Carbon::today();
-            $format = 'Y-m-d';
+            $format = 'd M';
             for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
                 $labels->push($date->format($format));
             }
