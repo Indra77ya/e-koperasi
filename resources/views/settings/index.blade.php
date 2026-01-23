@@ -13,6 +13,9 @@
             <a href="#loan" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-dollar-sign"></i></span>Pinjaman
             </a>
+            <a href="#collectibility" data-toggle="list" class="list-group-item list-group-item-action">
+                <span class="icon mr-3"><i class="fe fe-activity"></i></span>Kolektabilitas
+            </a>
             <a href="#saving" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-briefcase"></i></span>Simpanan
             </a>
@@ -127,6 +130,53 @@
                                     <div class="form-group">
                                         <label class="form-label">Plafon Pinjaman (Rp)</label>
                                         <input type="number" class="form-control" name="loan_limit" value="{{ $settings['loan_limit'] ?? 0 }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collectibility -->
+                <div class="tab-pane fade" id="collectibility">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Pengaturan Kolektabilitas (OJK)</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                Pengaturan batas minimal hari tunggakan untuk klasifikasi kualitas kredit.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">DPK (Dalam Perhatian Khusus) - Hari</label>
+                                        <input type="number" min="0" class="form-control" name="col_dpk_days" value="{{ $settings['col_dpk_days'] ?? 1 }}">
+                                        <small class="text-muted">Default: 1 Hari</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Kurang Lancar - Hari</label>
+                                        <input type="number" min="0" class="form-control" name="col_kl_days" value="{{ $settings['col_kl_days'] ?? 91 }}">
+                                         <small class="text-muted">Default: 91 Hari</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Diragukan - Hari</label>
+                                        <input type="number" min="0" class="form-control" name="col_diragukan_days" value="{{ $settings['col_diragukan_days'] ?? 121 }}">
+                                         <small class="text-muted">Default: 121 Hari</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Macet - Hari</label>
+                                        <input type="number" min="0" class="form-control" name="col_macet_days" value="{{ $settings['col_macet_days'] ?? 181 }}">
+                                         <small class="text-muted">Default: 181 Hari</small>
                                     </div>
                                 </div>
                             </div>

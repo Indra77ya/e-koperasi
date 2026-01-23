@@ -75,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
     ]);
 
     Route::get('mutations', 'MutationController@index');
+    Route::get('mutations/feed', 'MutationController@feed')->name('mutations.feed');
     Route::get('mutations/check-mutations', 'MutationController@check_mutations');
 
     Route::get('bankinterests', 'BankInterestController@index');

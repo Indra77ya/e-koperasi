@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
+use App\Models\Setting;
 use App\Models\PenagihanLog;
 use App\Models\PenagihanLapangan;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class CollectionController extends Controller
         // Counts
         $countLancar = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Lancar')->count();
         $countDPK = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'DPK')->count();
+        $countKL = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Kurang Lancar')->count();
+        $countDiragukan = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Diragukan')->count();
         $countMacet = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Macet')->count();
 
         // Reminders: Loans with installment due in next 3 days OR overdue but marked as Lancar
@@ -37,7 +40,7 @@ class CollectionController extends Controller
             ->limit(10)
             ->get();
 
-        return view('collections.index', compact('countLancar', 'countDPK', 'countMacet', 'reminders'));
+        return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet', 'reminders'));
     }
 
     /**
@@ -166,21 +169,27 @@ class CollectionController extends Controller
         $loans = Loan::where('status', '!=', 'lunas')->get();
         $countUpdated = 0;
 
+        // Fetch thresholds from settings
+        $dpkDays = Setting::get('col_dpk_days', 1);
+        $klDays = Setting::get('col_kl_days', 91);
+        $diragukanDays = Setting::get('col_diragukan_days', 121);
+        $macetDays = Setting::get('col_macet_days', 181);
+
         foreach ($loans as $loan) {
             $dpd = $loan->days_past_due;
             $newStatus = 'Lancar';
 
-            if ($dpd > 0 && $dpd <= 30) {
+            if ($dpd < $dpkDays) {
+                $newStatus = 'Lancar';
+            } elseif ($dpd < $klDays) {
                 $newStatus = 'DPK';
-            } elseif ($dpd > 30) {
+            } elseif ($dpd < $diragukanDays) {
+                $newStatus = 'Kurang Lancar';
+            } elseif ($dpd < $macetDays) {
+                $newStatus = 'Diragukan';
+            } else {
                 $newStatus = 'Macet';
             }
-
-            // Assuming we also update the main status to 'macet' if it is severe,
-            // but the requirement said "Klasifikasi", so we update 'kolektabilitas'.
-            // However, existing system has 'macet' as a main status.
-            // Let's keep main status as is unless we want to auto-move to 'macet'.
-            // For now, just update kolektabilitas column.
 
             if ($loan->kolektabilitas !== $newStatus) {
                 $loan->kolektabilitas = $newStatus;
