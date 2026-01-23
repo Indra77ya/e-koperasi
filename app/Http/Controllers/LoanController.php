@@ -620,19 +620,25 @@ class LoanController extends Controller
         }
 
         if ($type == 'flat') {
-            $principal = $amount / $tenor;
-            $interest = $amount * $ratePerPeriod;
-            $total = $principal + $interest;
+            $monthlyPrincipal = round($amount / $tenor, 2);
+            $interest = round($amount * $ratePerPeriod, 2);
+            $accumulatedPrincipal = 0;
 
             for ($i = 1; $i <= $tenor; $i++) {
-                $balance -= $principal;
-                if ($i == $tenor && $balance != 0) {
-                     // Adjust last? For now simple flat.
+                if ($i == $tenor) {
+                    $principal = $amount - $accumulatedPrincipal;
+                } else {
+                    $principal = $monthlyPrincipal;
                 }
+
+                $accumulatedPrincipal += $principal;
+                $balance -= $principal;
+                $total = $principal + $interest;
+
                 $schedule[] = [
                     'month' => $i,
                     'principal' => round($principal, 2),
-                    'interest' => round($interest, 2),
+                    'interest' => $interest,
                     'total' => round($total, 2),
                     'balance' => max(0, round($balance, 2))
                 ];
