@@ -16,10 +16,10 @@ class JournalSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         DB::table('journal_entries')->truncate();
         DB::table('journal_items')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // Only run if we have accounts
         // Matches codes in CoaSeeder.php

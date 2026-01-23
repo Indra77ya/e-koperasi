@@ -158,9 +158,48 @@
      <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Grafik Total Dana Turun (6 Bulan Terakhir)</h3>
+                <h3 class="card-title" id="chart-disbursed-title">Grafik Total Dana Turun (6 Bulan Terakhir)</h3>
+                <div class="card-options">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="disbursedFilterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fe fe-calendar"></i> Filter Waktu
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="disbursedFilterDropdown">
+                            <a class="dropdown-item" href="#" data-filter="today">Hari Ini</a>
+                            <a class="dropdown-item" href="#" data-filter="1_month">1 Bulan Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="3_months">3 Bulan Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="6_months">6 Bulan Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="1_year">1 Tahun Terakhir</a>
+                            <a class="dropdown-item" href="#" data-filter="last_year">Tahun Lalu</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" data-filter="custom">Rentang Waktu...</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
+                <div id="custom-range-container" class="mb-3" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Dari Tanggal</label>
+                                <input type="text" class="form-control datepicker" id="custom-start-date" placeholder="YYYY-MM-DD" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Sampai Tanggal</label>
+                                <input type="text" class="form-control datepicker" id="custom-end-date" placeholder="YYYY-MM-DD" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-primary btn-block" id="apply-custom-range">Tampilkan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div id="chart-disbursed" style="height: 16rem"></div>
             </div>
         </div>
@@ -279,19 +318,17 @@
             });
 
             // Disbursed Chart
-            var disbursedData = {
-                columns: [
-                    ['Dana Turun', @foreach($disbursedTrend as $stat) {{ $stat->total }}, @endforeach]
-                ],
-                type: 'area', // Area chart for "progress" feel
-                colors: {
-                    'Dana Turun': '#5eba00'
-                }
-            };
-
             var chartDisbursed = c3.generate({
                 bindto: '#chart-disbursed',
-                data: disbursedData,
+                data: {
+                    columns: [
+                        ['Dana Turun', @foreach($disbursedTrend as $stat) {{ $stat->total }}, @endforeach]
+                    ],
+                    type: 'area', // Area chart for "progress" feel
+                    colors: {
+                        'Dana Turun': '#5eba00'
+                    }
+                },
                 axis: {
                     x: {
                         type: 'category',
@@ -304,6 +341,70 @@
                     }
                 }
             });
+
+            // Handle Filter Selection
+            $('[data-filter]').on('click', function(e) {
+                e.preventDefault();
+                var filter = $(this).data('filter');
+                var label = $(this).text();
+
+                if (filter === 'custom') {
+                    $('#custom-range-container').slideDown();
+                } else {
+                    $('#custom-range-container').slideUp();
+                    loadDisbursedChart(filter);
+                    updateChartTitle(label);
+                }
+            });
+
+            // Initialize Datepickers
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            // Handle Custom Range Apply
+            $('#apply-custom-range').on('click', function() {
+                var start = $('#custom-start-date').val();
+                var end = $('#custom-end-date').val();
+
+                if (start && end) {
+                    loadDisbursedChart('custom', start, end);
+                    updateChartTitle('Rentang Waktu (' + start + ' s/d ' + end + ')');
+                } else {
+                    alert('Harap isi kedua tanggal.');
+                }
+            });
+
+            function updateChartTitle(label) {
+                $('#chart-disbursed-title').text('Grafik Total Dana Turun (' + label + ')');
+            }
+
+            function loadDisbursedChart(filter, startDate = null, endDate = null) {
+                $.ajax({
+                    url: '{{ route("home.chart.disbursed-trend") }}',
+                    method: 'GET',
+                    data: {
+                        filter: filter,
+                        start_date: startDate,
+                        end_date: endDate
+                    },
+                    success: function(response) {
+                        chartDisbursed.load({
+                            columns: [
+                                ['Dana Turun'].concat(response.data)
+                            ],
+                            categories: response.labels,
+                            unload: ['Dana Turun']
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        alert('Gagal memuat data grafik.');
+                    }
+                });
+            }
 
         });
     });

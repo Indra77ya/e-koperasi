@@ -20,7 +20,9 @@ class UpdateBungaTabunganTable extends Migration
         });
 
         // Make anggota_id nullable
-        DB::statement('ALTER TABLE bunga_tabungan MODIFY COLUMN anggota_id BIGINT UNSIGNED NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE bunga_tabungan MODIFY COLUMN anggota_id BIGINT UNSIGNED NULL');
+        }
     }
 
     /**
@@ -35,6 +37,8 @@ class UpdateBungaTabunganTable extends Migration
             $table->dropColumn('nasabah_id');
         });
 
-        DB::statement('ALTER TABLE bunga_tabungan MODIFY COLUMN anggota_id BIGINT UNSIGNED NOT NULL');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE bunga_tabungan MODIFY COLUMN anggota_id BIGINT UNSIGNED NOT NULL');
+        }
     }
 }

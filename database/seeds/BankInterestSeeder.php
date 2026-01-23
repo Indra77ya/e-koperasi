@@ -19,9 +19,9 @@ class BankInterestSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         BankInterest::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         $interestRate = Setting::get('savings_interest_rate', 2); // 2% per year default
 
