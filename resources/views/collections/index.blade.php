@@ -9,6 +9,32 @@
     <div class="col-sm-6 col-lg-4">
         <div class="card p-3">
             <div class="d-flex align-items-center">
+                <span class="stamp stamp-md bg-orange mr-3">
+                    <i class="fe fe-alert-triangle"></i>
+                </span>
+                <div>
+                    <h4 class="m-0"><a href="javascript:void(0)">{{ $countKL }}</a></h4>
+                    <small class="text-muted">Kurang Lancar</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center">
+                <span class="stamp stamp-md bg-pink mr-3">
+                    <i class="fe fe-slash"></i>
+                </span>
+                <div>
+                    <h4 class="m-0"><a href="javascript:void(0)">{{ $countDiragukan }}</a></h4>
+                    <small class="text-muted">Diragukan</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center">
                 <span class="stamp stamp-md bg-green mr-3">
                     <i class="fe fe-check"></i>
                 </span>
@@ -110,6 +136,8 @@
                             <option value="">Semua Status</option>
                             <option value="Lancar">Lancar</option>
                             <option value="DPK">DPK</option>
+                            <option value="Kurang Lancar">Kurang Lancar</option>
+                            <option value="Diragukan">Diragukan</option>
                             <option value="Macet">Macet</option>
                         </select>
                     </div>
