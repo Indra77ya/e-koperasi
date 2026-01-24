@@ -488,7 +488,7 @@
                                 @if(isset($settings['company_logo']) && $settings['company_logo'])
                                     <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @else
-                                    <img src="https://drive.google.com/uc?export=view&id=1qOxut5FknHvcS7F-6dxw-55ronZbmpLU" alt="Logo" style="max-height: 80px;" class="mb-3">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_Kementerian_Koperasi_Republik_Indonesia_%282024%29.svg" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @endif
                                 <h2 class="mb-1">{{ $settings['company_name'] ?? 'Sistem Informasi Koperasi' }}</h2>
                                 <p class="text-muted">Versi 1.0.0</p>
