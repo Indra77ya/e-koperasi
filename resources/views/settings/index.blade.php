@@ -315,6 +315,14 @@
                                 <input type="number" class="form-control" name="notification_due_date_threshold" value="{{ $settings['notification_due_date_threshold'] ?? 0 }}">
                                 <small class="text-muted">Masukkan 0 untuk notifikasi pada hari H.</small>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Versi Aplikasi</label>
+                                <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Catatan Pembaruan (Update Notes)</label>
+                                <textarea class="form-control" name="app_update_notes" rows="4">{{ $settings['app_update_notes'] ?? '' }}</textarea>
+                            </div>
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
@@ -489,7 +497,7 @@
                                     <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @endif
                                 <h2 class="mb-1">E-Koperasi</h2>
-                                <p class="text-muted">Versi 1.0.0</p>
+                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.0.0' }}</p>
                             </div>
 
                             <div class="row justify-content-center">
@@ -497,6 +505,13 @@
                                     <p class="lead text-center">
                                         Aplikasi pengelolaan data anggota, simpanan, pinjaman, dan akuntansi keuangan berbasis web untuk membantu operasional koperasi secara efisien dan transparan.
                                     </p>
+
+                                    @if(isset($settings['app_update_notes']) && $settings['app_update_notes'])
+                                        <div class="alert alert-light border">
+                                            <h5 class="alert-heading"><i class="fe fe-tag mr-2"></i>Catatan Pembaruan ({{ $settings['app_version'] ?? '1.0.0' }})</h5>
+                                            <p class="mb-0 text-muted" style="white-space: pre-line;">{{ $settings['app_update_notes'] }}</p>
+                                        </div>
+                                    @endif
 
                                     <hr class="my-5">
 

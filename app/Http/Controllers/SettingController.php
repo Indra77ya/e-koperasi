@@ -45,6 +45,8 @@ class SettingController extends Controller
             'coa_revenue_admin' => 'nullable|exists:chart_of_accounts,code',
             'coa_revenue_penalty' => 'nullable|exists:chart_of_accounts,code',
             'notification_due_date_threshold' => 'nullable|integer|min:0',
+            'app_version' => 'nullable|string|max:20',
+            'app_update_notes' => 'nullable|string|max:1000',
         ];
 
         $data = $request->validate($rules);
