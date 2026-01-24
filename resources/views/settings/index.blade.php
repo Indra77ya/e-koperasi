@@ -25,6 +25,9 @@
             <a href="#system" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-settings"></i></span>Sistem
             </a>
+            <a href="#about" data-toggle="list" class="list-group-item list-group-item-action">
+                <span class="icon mr-3"><i class="fe fe-info"></i></span>Tentang Aplikasi
+            </a>
         </div>
     </div>
 
@@ -312,6 +315,45 @@
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About -->
+                <div class="tab-pane fade" id="about">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tentang Aplikasi</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-5">
+                                @if(isset($settings['company_logo']) && $settings['company_logo'])
+                                    <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 100px;" class="mb-3">
+                                @endif
+                                <h2>{{ $settings['company_name'] ?? config('app.name') }}</h2>
+                                <p class="text-muted">Sistem Informasi Koperasi Simpan Pinjam</p>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Versi Aplikasi
+                                    <span class="badge badge-primary">v1.0.0</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Versi Framework
+                                    <span>Laravel {{ app()->version() }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Versi PHP
+                                    <span>{{ phpversion() }}</span>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">Dikembangkan Oleh</h5>
+                                    </div>
+                                    <p class="mb-1">Tim Pengembang (Internal)</p>
+                                    <small class="text-muted">Hak Cipta &copy; {{ date('Y') }} {{ $settings['company_name'] ?? config('app.name') }}. All rights reserved.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
