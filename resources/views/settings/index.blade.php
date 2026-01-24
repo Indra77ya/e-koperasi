@@ -315,14 +315,6 @@
                                 <input type="number" class="form-control" name="notification_due_date_threshold" value="{{ $settings['notification_due_date_threshold'] ?? 0 }}">
                                 <small class="text-muted">Masukkan 0 untuk notifikasi pada hari H.</small>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Versi Aplikasi</label>
-                                <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Catatan Pembaruan (Update Notes)</label>
-                                <textarea class="form-control" name="app_update_notes" rows="4">{{ $settings['app_update_notes'] ?? '' }}</textarea>
-                            </div>
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
@@ -544,8 +536,24 @@
                                             &copy; {{ date('Y') }} Indra N. Utomo. All rights reserved.
                                         </p>
                                     </div>
+
+                                    <hr class="my-5">
+
+                                    <h4 class="mb-3">Manajemen Versi</h4>
+                                    <div class="form-group text-left">
+                                        <label class="form-label">Versi Aplikasi</label>
+                                        <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}">
+                                    </div>
+                                    <div class="form-group text-left">
+                                        <label class="form-label">Catatan Pembaruan (Update Notes)</label>
+                                        <textarea class="form-control" name="app_update_notes" rows="4">{{ $settings['app_update_notes'] ?? '' }}</textarea>
+                                        <small class="text-muted">Tuliskan detail perubahan pada versi ini.</small>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                         </div>
                     </div>
                 </div>
