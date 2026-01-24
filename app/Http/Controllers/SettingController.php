@@ -138,7 +138,14 @@ class SettingController extends Controller
             // Optional: Run migrations if git pull successful
             // Artisan::call('migrate', ['--force' => true]);
 
-            $message = 'System Updated Successfully. Log: ' . implode(" ", $output);
+            // Combine output to string to search
+            $outputString = implode("\n", $output);
+
+            if (stripos($outputString, 'Already up to date') !== false) {
+                return redirect()->back()->with('success', 'Anda sudah berada di versi terbaru.');
+            }
+
+            $message = 'Sistem berhasil diperbarui. Log: ' . implode(" ", $output);
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
