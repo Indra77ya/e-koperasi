@@ -518,6 +518,8 @@
                                                 <li class="mb-2"><strong>Database:</strong> MySQL</li>
                                                 <li class="mb-2"><strong>Frontend:</strong> Bootstrap 4 & Stisla</li>
                                                 <li class="mb-2"><strong>Pengembang:</strong> Indra N. Utomo</li>
+                                                <li class="mb-2"><strong>Email Support:</strong> Indra77ya@gmail.com</li>
+                                                <li class="mb-2"><strong>WhatsApp:</strong> 083145252733</li>
                                             </ul>
                                         </div>
                                     </div>
