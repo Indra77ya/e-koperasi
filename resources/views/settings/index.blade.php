@@ -489,7 +489,7 @@
                                     <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @endif
                                 <h2 class="mb-1">E-Koperasi</h2>
-                                <p class="text-muted">Versi 1.0.0</p>
+                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.0.0' }}</p>
                             </div>
 
                             <div class="row justify-content-center">
@@ -497,6 +497,13 @@
                                     <p class="lead text-center">
                                         Aplikasi pengelolaan data anggota, simpanan, pinjaman, dan akuntansi keuangan berbasis web untuk membantu operasional koperasi secara efisien dan transparan.
                                     </p>
+
+                                    @if(isset($settings['app_update_notes']) && $settings['app_update_notes'])
+                                        <div class="alert alert-light border">
+                                            <h5 class="alert-heading"><i class="fe fe-tag mr-2"></i>Catatan Pembaruan ({{ $settings['app_version'] ?? '1.0.0' }})</h5>
+                                            <p class="mb-0 text-muted" style="white-space: pre-line;">{{ $settings['app_update_notes'] }}</p>
+                                        </div>
+                                    @endif
 
                                     <hr class="my-5">
 
@@ -518,6 +525,8 @@
                                                 <li class="mb-2"><strong>Database:</strong> MySQL</li>
                                                 <li class="mb-2"><strong>Frontend:</strong> Bootstrap 4 & Stisla</li>
                                                 <li class="mb-2"><strong>Pengembang:</strong> Indra N. Utomo</li>
+                                                <li class="mb-2"><strong>Email Support:</strong> Indra77ya@gmail.com</li>
+                                                <li class="mb-2"><strong>WhatsApp:</strong> 083145252733</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -526,6 +535,13 @@
                                         <p class="text-muted mb-0">
                                             &copy; {{ date('Y') }} Indra N. Utomo. All rights reserved.
                                         </p>
+                                    </div>
+
+                                    <div class="text-center mt-4">
+                                        <button type="button" class="btn btn-outline-primary" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin melakukan cek dan update sistem (Git Pull)? Proses ini memerlukan koneksi internet.')) document.getElementById('system-update-form').submit();">
+                                            <i class="fe fe-download-cloud"></i> Cek & Update Pembaruan
+                                        </button>
+                                        <p class="small text-muted mt-2">Menarik kode terbaru dari repository GitHub.</p>
                                     </div>
                                 </div>
                             </div>
@@ -545,6 +561,9 @@
             @method('DELETE')
         </form>
         <form id="seed-coa-form" action="{{ route('accounting.coa.seed') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+        <form id="system-update-form" action="{{ route('settings.system_update') }}" method="POST" style="display: none;">
             @csrf
         </form>
     </div>

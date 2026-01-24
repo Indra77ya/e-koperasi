@@ -45,6 +45,8 @@ class SettingController extends Controller
             'coa_revenue_admin' => 'nullable|exists:chart_of_accounts,code',
             'coa_revenue_penalty' => 'nullable|exists:chart_of_accounts,code',
             'notification_due_date_threshold' => 'nullable|integer|min:0',
+            'app_version' => 'nullable|string|max:20',
+            'app_update_notes' => 'nullable|string|max:1000',
         ];
 
         $data = $request->validate($rules);
@@ -106,5 +108,41 @@ class SettingController extends Controller
             Setting::set('front_background', null);
         }
         return redirect()->back()->with('success', 'Background berhasil dihapus.');
+    }
+
+    public function systemUpdate(Request $request)
+    {
+        // Increase memory limit and execution time for update process
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        try {
+            // Execute git pull
+            $output = [];
+            $returnVar = 0;
+            exec('git pull origin master 2>&1', $output, $returnVar);
+
+            if ($returnVar !== 0) {
+                // If master fails, try main (common branch naming difference)
+                $output2 = [];
+                $returnVar2 = 0;
+                exec('git pull origin main 2>&1', $output2, $returnVar2);
+
+                if ($returnVar2 !== 0) {
+                    return redirect()->back()->with('error', 'Gagal melakukan update (Git Pull Failed). Output: ' . implode("\n", $output));
+                } else {
+                    $output = $output2;
+                }
+            }
+
+            // Optional: Run migrations if git pull successful
+            // Artisan::call('migrate', ['--force' => true]);
+
+            $message = 'System Updated Successfully. Log: ' . implode(" ", $output);
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat update: ' . $e->getMessage());
+        }
     }
 }
