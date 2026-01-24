@@ -488,9 +488,7 @@
                                 @if(isset($settings['company_logo']) && $settings['company_logo'])
                                     <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @else
-                                    <div class="mb-3">
-                                        <i class="fe fe-command" style="font-size: 4rem; color: #95a5a6;"></i>
-                                    </div>
+                                    <img src="{{ asset('images/logo-default.png') }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @endif
                                 <h2 class="mb-1">{{ $settings['company_name'] ?? 'Sistem Informasi Koperasi' }}</h2>
                                 <p class="text-muted">Versi 1.0.0</p>
@@ -521,7 +519,7 @@
                                                 <li class="mb-2"><strong>Framework:</strong> Laravel 5.8</li>
                                                 <li class="mb-2"><strong>Database:</strong> MySQL</li>
                                                 <li class="mb-2"><strong>Frontend:</strong> Bootstrap 4 & Stisla</li>
-                                                <li class="mb-2"><strong>Pengembang:</strong> IT Department</li>
+                                                <li class="mb-2"><strong>Pengembang:</strong> Indra N. Utomo</li>
                                             </ul>
                                         </div>
                                     </div>
