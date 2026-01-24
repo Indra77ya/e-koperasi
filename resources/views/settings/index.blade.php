@@ -541,7 +541,6 @@
                                         <button type="button" class="btn btn-outline-primary" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin melakukan cek dan update sistem (Git Pull)? Proses ini memerlukan koneksi internet.')) document.getElementById('system-update-form').submit();">
                                             <i class="fe fe-download-cloud"></i> Cek & Update Pembaruan
                                         </button>
-                                        <p class="small text-muted mt-2">Menarik kode terbaru dari repository GitHub.</p>
                                     </div>
                                 </div>
                             </div>
