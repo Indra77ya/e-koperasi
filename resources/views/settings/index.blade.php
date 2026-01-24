@@ -538,9 +538,10 @@
                                     </div>
 
                                     <div class="text-center mt-4">
-                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#updateVersionModal">
-                                            <i class="fe fe-refresh-cw"></i> Update Versi
+                                        <button type="button" class="btn btn-outline-primary" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin melakukan cek dan update sistem (Git Pull)? Proses ini memerlukan koneksi internet.')) document.getElementById('system-update-form').submit();">
+                                            <i class="fe fe-download-cloud"></i> Cek & Update Pembaruan
                                         </button>
+                                        <p class="small text-muted mt-2">Menarik kode terbaru dari repository GitHub.</p>
                                     </div>
                                 </div>
                             </div>
@@ -562,37 +563,9 @@
         <form id="seed-coa-form" action="{{ route('accounting.coa.seed') }}" method="POST" style="display: none;">
             @csrf
         </form>
-
-        <!-- Update Version Modal -->
-        <div class="modal fade" id="updateVersionModal" tabindex="-1" role="dialog" aria-labelledby="updateVersionModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form action="{{ route('settings.update') }}" method="POST">
-                        @csrf
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="updateVersionModalLabel">Update Versi Aplikasi</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label class="form-label">Versi Baru</label>
-                                <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Catatan Pembaruan (Update Notes)</label>
-                                <textarea class="form-control" name="app_update_notes" rows="6" placeholder="Tuliskan detail perubahan...">{{ $settings['app_update_notes'] ?? '' }}</textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary">Simpan Pembaruan</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <form id="system-update-form" action="{{ route('settings.system_update') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 </div>
 @endsection
