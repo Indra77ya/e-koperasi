@@ -61,13 +61,29 @@ class CollectionController extends Controller
             ->addColumn('borrower', function ($loan) {
                 return $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-');
             })
+            ->editColumn('status', function ($loan) {
+                if ($loan->status == 'diajukan') {
+                    return '<span class="badge badge-warning">Diajukan</span>';
+                } elseif ($loan->status == 'disetujui') {
+                    return '<span class="badge badge-info">Disetujui</span>';
+                } elseif ($loan->status == 'berjalan') {
+                    return '<span class="badge badge-primary">Berjalan</span>';
+                } elseif ($loan->status == 'lunas') {
+                    return '<span class="badge badge-success">Lunas</span>';
+                } elseif ($loan->status == 'macet') {
+                    return '<span class="badge badge-danger">Macet</span>';
+                } elseif ($loan->status == 'ditolak') {
+                    return '<span class="badge badge-secondary">Ditolak</span>';
+                }
+                return '<span class="badge badge-secondary">' . $loan->status . '</span>';
+            })
             ->addColumn('overdue_days', function ($loan) {
                 return $loan->days_past_due . ' Hari';
             })
             ->addColumn('action', function ($loan) {
                 return '<a href="'.route('loans.show', $loan->id).'" class="btn btn-sm btn-primary">Detail</a>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['status', 'action'])
             ->make(true);
     }
 
