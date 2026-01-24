@@ -327,56 +327,149 @@
                         </div>
                         <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
                             <div class="alert alert-info">
-                                <i class="fe fe-info mr-2"></i> Panduan ini membantu Anda memahami fitur-fitur utama aplikasi koperasi.
+                                <i class="fe fe-info mr-2"></i> Silakan klik kategori di bawah ini untuk melihat panduan detail setiap fitur.
                             </div>
 
-                            <h4 class="mt-4 text-primary"><i class="fe fe-users mr-2"></i>1. Manajemen Anggota & Nasabah</h4>
-                            <ul>
-                                <li><strong>Menambah Anggota:</strong> Masuk ke menu Anggota, klik tombol "Tambah Anggota". Isi data lengkap seperti NIK, Nama, Alamat, dan No. HP.</li>
-                                <li><strong>Status Anggota:</strong> Anggota aktif dapat melakukan pinjaman dan simpanan. Anggota non-aktif (keluar) datanya tetap tersimpan sebagai arsip.</li>
-                                <li><strong>Nasabah:</strong> Nasabah adalah pihak luar (bukan anggota) yang memiliki transaksi dengan koperasi (misal: hanya menabung atau pinjaman khusus).</li>
-                            </ul>
+                            <div id="guideAccordion">
+                                <!-- 1. Keanggotaan & Nasabah -->
+                                <div class="card mb-2">
+                                    <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="cursor: pointer;">
+                                        <h5 class="mb-0 text-primary"><i class="fe fe-users mr-2"></i> 1. Keanggotaan & Nasabah</h5>
+                                    </div>
+                                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#guideAccordion">
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>Anggota:</strong>
+                                                    <ul>
+                                                        <li>Data anggota mencakup informasi pribadi (NIK, Nama, Alamat) dan status keanggotaan.</li>
+                                                        <li>Hanya anggota <strong>Aktif</strong> yang dapat melakukan pengajuan pinjaman.</li>
+                                                        <li>Anggota dapat melihat riwayat simpanan dan pinjaman mereka.</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Nasabah:</strong>
+                                                    <ul>
+                                                        <li>Pihak eksternal (bukan anggota koperasi) yang memiliki hubungan transaksi, misalnya hanya menabung atau pinjaman khusus.</li>
+                                                        <li>Data nasabah dipisahkan dari anggota untuk memudahkan pelaporan.</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <h4 class="mt-4 text-primary"><i class="fe fe-briefcase mr-2"></i>2. Simpanan (Tabungan)</h4>
-                            <p>Fitur ini mencatat simpanan anggota. Jenis simpanan dapat diatur sesuai kebijakan koperasi.</p>
-                            <ul>
-                                <li><strong>Setoran Tunai:</strong> Pilih menu Simpanan -> Setoran. Masukkan nama anggota dan jumlah uang.</li>
-                                <li><strong>Penarikan Tunai:</strong> Pilih menu Simpanan -> Penarikan. Pastikan saldo anggota mencukupi.</li>
-                                <li><strong>Bunga Simpanan:</strong> Bunga dihitung berdasarkan pengaturan di menu Pengaturan -> Simpanan.</li>
-                            </ul>
+                                <!-- 2. Simpanan & Bunga -->
+                                <div class="card mb-2">
+                                    <div class="card-header" id="headingTwo" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="cursor: pointer;">
+                                        <h5 class="mb-0 text-primary"><i class="fe fe-briefcase mr-2"></i> 2. Transaksi Simpanan & Bunga</h5>
+                                    </div>
+                                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#guideAccordion">
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>Setoran (Deposit):</strong> Transaksi penambahan saldo simpanan. Mengkredit akun Simpanan dan Mendebit akun Kas.</li>
+                                                <li><strong>Penarikan (Withdrawal):</strong> Pengambilan dana simpanan. Sistem akan memvalidasi saldo yang tersedia.</li>
+                                                <li><strong>Daftar Mutasi:</strong> Riwayat lengkap keluar-masuk dana per anggota/nasabah.</li>
+                                                <li><strong>Hitung Bunga (Interest Calculation):</strong>
+                                                    <ul>
+                                                        <li>Bunga dihitung otomatis berdasarkan <strong>Saldo Terendah</strong> (Lowest Balance) dalam bulan tersebut.</li>
+                                                        <li>Rumus: <code>(Saldo Terendah x Suku Bunga% x Hari Bulan) / 365</code>.</li>
+                                                        <li>Saat bunga diposting, sistem otomatis membuat Jurnal Akuntansi (Debit Beban Bunga, Kredit Simpanan).</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <h4 class="mt-4 text-primary"><i class="fe fe-dollar-sign mr-2"></i>3. Pinjaman</h4>
-                            <p>Proses pinjaman melalui beberapa tahap:</p>
-                            <ol>
-                                <li><strong>Pengajuan (Diajukan):</strong> Anggota mengajukan pinjaman. Data dicatat di menu Pinjaman -> Tambah.</li>
-                                <li><strong>Persetujuan (Disetujui):</strong> Pengurus menyetujui pinjaman. Status berubah menjadi "Disetujui".</li>
-                                <li><strong>Pencairan (Berjalan):</strong> Dana diberikan ke anggota. Klik tombol "Cairkan" pada detail pinjaman. Status berubah menjadi "Berjalan".</li>
-                                <li><strong>Angsuran:</strong> Pembayaran cicilan dilakukan melalui menu Pembayaran Angsuran. Saldo pinjaman akan berkurang otomatis.</li>
-                                <li><strong>Lunas:</strong> Jika seluruh pokok dan bunga terbayar, status otomatis berubah menjadi "Lunas".</li>
-                            </ol>
-                            <div class="alert alert-secondary text-dark">
-                                <strong>Tips:</strong> Gunakan menu "Kolektabilitas" untuk memantau kredit macet berdasarkan keterlambatan hari.
+                                <!-- 3. Pinjaman & Penagihan -->
+                                <div class="card mb-2">
+                                    <div class="card-header" id="headingThree" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" style="cursor: pointer;">
+                                        <h5 class="mb-0 text-primary"><i class="fe fe-dollar-sign mr-2"></i> 3. Pinjaman & Penagihan (Collection)</h5>
+                                    </div>
+                                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#guideAccordion">
+                                        <div class="card-body">
+                                            <h6 class="font-weight-bold">A. Siklus Data Pinjaman</h6>
+                                            <ol>
+                                                <li><strong>Diajukan:</strong> Draft awal pinjaman. Belum aktif.</li>
+                                                <li><strong>Disetujui:</strong> Telah diverifikasi, siap dicairkan.</li>
+                                                <li><strong>Berjalan (Cair):</strong> Dana diserahkan. Angsuran mulai berjalan. Status ini yang dihitung dalam portofolio aktif.</li>
+                                                <li><strong>Lunas:</strong> Seluruh kewajiban pokok dan bunga selesai dibayar.</li>
+                                            </ol>
+
+                                            <h6 class="font-weight-bold mt-3">B. Dashboard Penagihan & Kolektabilitas</h6>
+                                            <p>Sistem mengklasifikasikan kualitas kredit (Kolektabilitas) berdasarkan hari keterlambatan (Overdue Days):</p>
+                                            <ul>
+                                                <li><span class="badge badge-success">Lancar</span>: 0 Hari (Tepat waktu)</li>
+                                                <li><span class="badge badge-info">DPK (Dalam Perhatian Khusus)</span>: > 1 Hari</li>
+                                                <li><span class="badge badge-warning">Kurang Lancar</span>: > 91 Hari</li>
+                                                <li><span class="badge badge-danger">Diragukan</span>: > 121 Hari</li>
+                                                <li><span class="badge badge-dark">Macet</span>: > 181 Hari</li>
+                                            </ul>
+                                            <p><small class="text-muted">*Batas hari dapat diubah di menu Pengaturan -> Kolektabilitas.</small></p>
+
+                                            <h6 class="font-weight-bold mt-3">C. Antrian Lapangan (Field Queue)</h6>
+                                            <ul>
+                                                <li>Fitur untuk menugaskan kolektor mengunjungi peminjam bermasalah.</li>
+                                                <li><strong>Tambah Tugas:</strong> Dari detail pinjaman, pilih "Tambah ke Antrian Lapangan".</li>
+                                                <li><strong>Update Status:</strong> Petugas melaporkan hasil (Janji Bayar, Bayar Sebagian, Gagal) dan status tugas (Selesai/Dalam Proses).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Akuntansi -->
+                                <div class="card mb-2">
+                                    <div class="card-header" id="headingFour" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour" style="cursor: pointer;">
+                                        <h5 class="mb-0 text-primary"><i class="fe fe-book mr-2"></i> 4. Akuntansi & Laporan Keuangan</h5>
+                                    </div>
+                                    <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#guideAccordion">
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>COA (Chart of Accounts):</strong>
+                                                    Daftar akun buku besar. Terdiri dari Aset (1xxx), Kewajiban (2xxx), Modal (3xxx), Pendapatan (4xxx), dan Beban (5xxx).
+                                                    <br><em>Gunakan tombol "Default COA" di Pengaturan untuk membuat akun standar otomatis.</em>
+                                                </li>
+                                                <li><strong>Jurnal Umum (General Journal):</strong>
+                                                    Tempat mencatat transaksi manual non-tunai atau penyesuaian. Total Debit harus sama dengan Kredit (Balance).
+                                                </li>
+                                                <li><strong>Buku Kas (Cash Book):</strong>
+                                                    Melihat mutasi spesifik per akun Kas/Bank untuk rekonsiliasi.
+                                                </li>
+                                                <li><strong>Laporan (Reports):</strong>
+                                                    <ul>
+                                                        <li><strong>Neraca (Balance Sheet):</strong> Posisi keuangan per tanggal tertentu. (Aset = Kewajiban + Modal).</li>
+                                                        <li><strong>Laba Rugi (Profit & Loss):</strong> Kinerja operasional (Pendapatan - Beban) dalam periode waktu.</li>
+                                                        <li><strong>Arus Kas (Cash Flow):</strong> Laporan penerimaan dan pengeluaran kas riil.</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Pengaturan -->
+                                <div class="card mb-2">
+                                    <div class="card-header" id="headingFive" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive" style="cursor: pointer;">
+                                        <h5 class="mb-0 text-primary"><i class="fe fe-settings mr-2"></i> 5. Pengaturan Sistem</h5>
+                                    </div>
+                                    <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#guideAccordion">
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>Mapping Akuntansi:</strong>
+                                                    Menghubungkan fitur aplikasi dengan Akun COA agar jurnal terbentuk otomatis.
+                                                    <ul>
+                                                        <li><em>Akun Kas:</em> Untuk pencairan/pembayaran tunai.</li>
+                                                        <li><em>Akun Simpanan:</em> Untuk menampung dana anggota.</li>
+                                                        <li><em>Akun Pendapatan:</em> Untuk bunga pinjaman dan denda.</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Konfigurasi Pinjaman:</strong>
+                                                    Mengatur default suku bunga, denda harian, dan biaya admin.
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-                            <h4 class="mt-4 text-primary"><i class="fe fe-book mr-2"></i>4. Akuntansi & Laporan</h4>
-                            <ul>
-                                <li><strong>Jurnal Otomatis:</strong> Transaksi kas, simpanan, dan pinjaman otomatis menjurnal ke buku besar berdasarkan <em>Mapping COA</em> di Pengaturan.</li>
-                                <li><strong>Laporan Keuangan:</strong>
-                                    <ul>
-                                        <li><em>Neraca (Balance Sheet):</em> Menampilkan posisi aset, kewajiban, dan modal.</li>
-                                        <li><em>Laba Rugi (Profit & Loss):</em> Menampilkan pendapatan dan biaya dalam periode tertentu.</li>
-                                        <li><em>Arus Kas (Cash Flow):</em> Melacak aliran masuk dan keluar uang kas.</li>
-                                    </ul>
-                                </li>
-                                <li><strong>Buku Besar:</strong> Detail transaksi per akun untuk audit lebih mendalam.</li>
-                            </ul>
-
-                            <h4 class="mt-4 text-primary"><i class="fe fe-settings mr-2"></i>5. Pengaturan Sistem</h4>
-                            <ul>
-                                <li><strong>Profil Koperasi:</strong> Ubah nama, alamat, logo, dan background aplikasi di tab "Profil Koperasi".</li>
-                                <li><strong>Suku Bunga & Denda:</strong> Atur default bunga pinjaman, biaya admin, dan denda di tab "Pinjaman".</li>
-                                <li><strong>Mapping COA:</strong> <strong>PENTING!</strong> Pastikan akun-akun terhubung dengan benar di tab "Akuntansi" agar laporan keuangan valid. Gunakan fitur "Default COA" jika belum ada akun sama sekali.</li>
-                            </ul>
                         </div>
                     </div>
                 </div>
