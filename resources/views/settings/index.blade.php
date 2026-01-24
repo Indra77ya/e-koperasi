@@ -25,6 +25,9 @@
             <a href="#system" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-settings"></i></span>Sistem
             </a>
+            <a href="#user-guide" data-toggle="list" class="list-group-item list-group-item-action">
+                <span class="icon mr-3"><i class="fe fe-help-circle"></i></span>Panduan Pengguna
+            </a>
         </div>
     </div>
 
@@ -312,6 +315,68 @@
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Guide -->
+                <div class="tab-pane fade" id="user-guide">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Buku Panduan Pengguna</h3>
+                        </div>
+                        <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="alert alert-info">
+                                <i class="fe fe-info mr-2"></i> Panduan ini membantu Anda memahami fitur-fitur utama aplikasi koperasi.
+                            </div>
+
+                            <h4 class="mt-4 text-primary"><i class="fe fe-users mr-2"></i>1. Manajemen Anggota & Nasabah</h4>
+                            <ul>
+                                <li><strong>Menambah Anggota:</strong> Masuk ke menu Anggota, klik tombol "Tambah Anggota". Isi data lengkap seperti NIK, Nama, Alamat, dan No. HP.</li>
+                                <li><strong>Status Anggota:</strong> Anggota aktif dapat melakukan pinjaman dan simpanan. Anggota non-aktif (keluar) datanya tetap tersimpan sebagai arsip.</li>
+                                <li><strong>Nasabah:</strong> Nasabah adalah pihak luar (bukan anggota) yang memiliki transaksi dengan koperasi (misal: hanya menabung atau pinjaman khusus).</li>
+                            </ul>
+
+                            <h4 class="mt-4 text-primary"><i class="fe fe-briefcase mr-2"></i>2. Simpanan (Tabungan)</h4>
+                            <p>Fitur ini mencatat simpanan anggota. Jenis simpanan dapat diatur sesuai kebijakan koperasi.</p>
+                            <ul>
+                                <li><strong>Setoran Tunai:</strong> Pilih menu Simpanan -> Setoran. Masukkan nama anggota dan jumlah uang.</li>
+                                <li><strong>Penarikan Tunai:</strong> Pilih menu Simpanan -> Penarikan. Pastikan saldo anggota mencukupi.</li>
+                                <li><strong>Bunga Simpanan:</strong> Bunga dihitung berdasarkan pengaturan di menu Pengaturan -> Simpanan.</li>
+                            </ul>
+
+                            <h4 class="mt-4 text-primary"><i class="fe fe-dollar-sign mr-2"></i>3. Pinjaman</h4>
+                            <p>Proses pinjaman melalui beberapa tahap:</p>
+                            <ol>
+                                <li><strong>Pengajuan (Diajukan):</strong> Anggota mengajukan pinjaman. Data dicatat di menu Pinjaman -> Tambah.</li>
+                                <li><strong>Persetujuan (Disetujui):</strong> Pengurus menyetujui pinjaman. Status berubah menjadi "Disetujui".</li>
+                                <li><strong>Pencairan (Berjalan):</strong> Dana diberikan ke anggota. Klik tombol "Cairkan" pada detail pinjaman. Status berubah menjadi "Berjalan".</li>
+                                <li><strong>Angsuran:</strong> Pembayaran cicilan dilakukan melalui menu Pembayaran Angsuran. Saldo pinjaman akan berkurang otomatis.</li>
+                                <li><strong>Lunas:</strong> Jika seluruh pokok dan bunga terbayar, status otomatis berubah menjadi "Lunas".</li>
+                            </ol>
+                            <div class="alert alert-secondary text-dark">
+                                <strong>Tips:</strong> Gunakan menu "Kolektabilitas" untuk memantau kredit macet berdasarkan keterlambatan hari.
+                            </div>
+
+                            <h4 class="mt-4 text-primary"><i class="fe fe-book mr-2"></i>4. Akuntansi & Laporan</h4>
+                            <ul>
+                                <li><strong>Jurnal Otomatis:</strong> Transaksi kas, simpanan, dan pinjaman otomatis menjurnal ke buku besar berdasarkan <em>Mapping COA</em> di Pengaturan.</li>
+                                <li><strong>Laporan Keuangan:</strong>
+                                    <ul>
+                                        <li><em>Neraca (Balance Sheet):</em> Menampilkan posisi aset, kewajiban, dan modal.</li>
+                                        <li><em>Laba Rugi (Profit & Loss):</em> Menampilkan pendapatan dan biaya dalam periode tertentu.</li>
+                                        <li><em>Arus Kas (Cash Flow):</em> Melacak aliran masuk dan keluar uang kas.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Buku Besar:</strong> Detail transaksi per akun untuk audit lebih mendalam.</li>
+                            </ul>
+
+                            <h4 class="mt-4 text-primary"><i class="fe fe-settings mr-2"></i>5. Pengaturan Sistem</h4>
+                            <ul>
+                                <li><strong>Profil Koperasi:</strong> Ubah nama, alamat, logo, dan background aplikasi di tab "Profil Koperasi".</li>
+                                <li><strong>Suku Bunga & Denda:</strong> Atur default bunga pinjaman, biaya admin, dan denda di tab "Pinjaman".</li>
+                                <li><strong>Mapping COA:</strong> <strong>PENTING!</strong> Pastikan akun-akun terhubung dengan benar di tab "Akuntansi" agar laporan keuangan valid. Gunakan fitur "Default COA" jika belum ada akun sama sekali.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
