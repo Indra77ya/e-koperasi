@@ -28,6 +28,9 @@
             <a href="#user-guide" data-toggle="list" class="list-group-item list-group-item-action">
                 <span class="icon mr-3"><i class="fe fe-help-circle"></i></span>Panduan Pengguna
             </a>
+            <a href="#about" data-toggle="list" class="list-group-item list-group-item-action">
+                <span class="icon mr-3"><i class="fe fe-info"></i></span>Tentang Aplikasi
+            </a>
         </div>
     </div>
 
@@ -467,6 +470,66 @@
                                                 </li>
                                             </ul>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About -->
+                <div class="tab-pane fade" id="about">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tentang Aplikasi</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-5">
+                                @if(isset($settings['company_logo']) && $settings['company_logo'])
+                                    <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
+                                @else
+                                    <div class="mb-3">
+                                        <i class="fe fe-command" style="font-size: 4rem; color: #95a5a6;"></i>
+                                    </div>
+                                @endif
+                                <h2 class="mb-1">{{ $settings['company_name'] ?? 'Sistem Informasi Koperasi' }}</h2>
+                                <p class="text-muted">Versi 1.0.0</p>
+                            </div>
+
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <p class="lead text-center">
+                                        Aplikasi pengelolaan data anggota, simpanan, pinjaman, dan akuntansi keuangan berbasis web untuk membantu operasional koperasi secara efisien dan transparan.
+                                    </p>
+
+                                    <hr class="my-5">
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5><i class="fe fe-check-circle text-success mr-2"></i>Fitur Utama</h5>
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2">Manajemen Anggota & Nasabah</li>
+                                                <li class="mb-2">Simpanan & Perhitungan Bunga Otomatis</li>
+                                                <li class="mb-2">Pinjaman, Angsuran & Kolektabilitas</li>
+                                                <li class="mb-2">Akuntansi & Laporan Keuangan</li>
+                                                <li class="mb-2">Manajemen Pengguna (Role-based)</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5><i class="fe fe-code text-info mr-2"></i>Informasi Teknis</h5>
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2"><strong>Framework:</strong> Laravel 5.8</li>
+                                                <li class="mb-2"><strong>Database:</strong> MySQL</li>
+                                                <li class="mb-2"><strong>Frontend:</strong> Bootstrap 4 & Stisla</li>
+                                                <li class="mb-2"><strong>Pengembang:</strong> IT Department</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mt-5">
+                                        <p class="text-muted mb-0">
+                                            &copy; {{ date('Y') }} {{ $settings['company_name'] ?? 'Koperasi' }}. All rights reserved.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
