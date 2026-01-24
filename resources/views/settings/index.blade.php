@@ -537,23 +537,13 @@
                                         </p>
                                     </div>
 
-                                    <hr class="my-5">
-
-                                    <h4 class="mb-3">Manajemen Versi</h4>
-                                    <div class="form-group text-left">
-                                        <label class="form-label">Versi Aplikasi</label>
-                                        <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}">
-                                    </div>
-                                    <div class="form-group text-left">
-                                        <label class="form-label">Catatan Pembaruan (Update Notes)</label>
-                                        <textarea class="form-control" name="app_update_notes" rows="4">{{ $settings['app_update_notes'] ?? '' }}</textarea>
-                                        <small class="text-muted">Tuliskan detail perubahan pada versi ini.</small>
+                                    <div class="text-center mt-4">
+                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#updateVersionModal">
+                                            <i class="fe fe-refresh-cw"></i> Update Versi
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-footer text-right">
-                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                         </div>
                     </div>
                 </div>
@@ -572,6 +562,37 @@
         <form id="seed-coa-form" action="{{ route('accounting.coa.seed') }}" method="POST" style="display: none;">
             @csrf
         </form>
+
+        <!-- Update Version Modal -->
+        <div class="modal fade" id="updateVersionModal" tabindex="-1" role="dialog" aria-labelledby="updateVersionModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="{{ route('settings.update') }}" method="POST">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="updateVersionModalLabel">Update Versi Aplikasi</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Versi Baru</label>
+                                <input type="text" class="form-control" name="app_version" value="{{ $settings['app_version'] ?? '1.0.0' }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Catatan Pembaruan (Update Notes)</label>
+                                <textarea class="form-control" name="app_update_notes" rows="6" placeholder="Tuliskan detail perubahan...">{{ $settings['app_update_notes'] ?? '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Pembaruan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
