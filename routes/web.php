@@ -150,4 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('settings/remove-logo', 'SettingController@removeLogo')->name('settings.remove_logo');
     Route::delete('settings/remove-background', 'SettingController@removeBackground')->name('settings.remove_background');
     Route::post('settings/system-update', 'SettingController@systemUpdate')->name('settings.system_update');
+
+    Route::get('settings/backup', 'SettingController@backup')->name('settings.backup');
+    Route::post('settings/restore', 'SettingController@restore')->name('settings.restore');
 });
