@@ -138,7 +138,37 @@ class SettingController extends Controller
             // Optional: Run migrations if git pull successful
             // Artisan::call('migrate', ['--force' => true]);
 
-            $message = 'System Updated Successfully. Log: ' . implode(" ", $output);
+            // Combine output to string to search
+            $outputString = implode("\n", $output);
+
+            if (stripos($outputString, 'Already up to date') !== false) {
+                return redirect()->back()->with('success', 'Anda sudah berada di versi terbaru.');
+            }
+
+            // Retrieve new version
+            $newVersion = null;
+            $tagOutput = [];
+            $tagReturn = 0;
+            exec('git describe --tags 2>&1', $tagOutput, $tagReturn);
+            if ($tagReturn === 0 && !empty($tagOutput)) {
+                $newVersion = trim($tagOutput[0]);
+            } else {
+                $hashOutput = [];
+                $hashReturn = 0;
+                exec('git rev-parse --short HEAD 2>&1', $hashOutput, $hashReturn);
+                if ($hashReturn === 0 && !empty($hashOutput)) {
+                    $newVersion = trim($hashOutput[0]);
+                }
+            }
+
+            if ($newVersion) {
+                // Update database setting
+                Setting::set('app_version', $newVersion);
+                $message = "Update berhasil. Versi sistem saat ini: " . $newVersion;
+            } else {
+                $message = 'Sistem berhasil diperbarui. Log: ' . implode(" ", $output);
+            }
+
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
