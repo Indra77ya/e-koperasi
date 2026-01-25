@@ -199,22 +199,35 @@ class SettingController extends Controller
         }
 
         // Construct command
+        $errorLog = storage_path('app/backup_errors.log');
         $command = sprintf(
-            'mysqldump --user=%s --password=%s --host=%s --port=%s %s > %s',
+            'mysqldump --user=%s --password=%s --host=%s --port=%s %s > %s 2> %s',
             escapeshellarg($username),
             escapeshellarg($password),
             escapeshellarg($host),
             escapeshellarg($port),
             escapeshellarg($database),
-            escapeshellarg($path)
+            escapeshellarg($path),
+            escapeshellarg($errorLog)
         );
 
-        exec($command . ' 2>&1', $output, $returnVar);
+        exec($command, $output, $returnVar);
 
         if ($returnVar !== 0) {
              if (file_exists($path)) @unlink($path);
-             \Illuminate\Support\Facades\Log::error("Backup failed: " . implode("\n", $output));
+
+             $errorOutput = [];
+             if (file_exists($errorLog)) {
+                 $errorOutput = file($errorLog, FILE_IGNORE_NEW_LINES);
+                 @unlink($errorLog);
+             }
+
+             \Illuminate\Support\Facades\Log::error("Backup failed: " . implode("\n", $errorOutput));
              return redirect()->back()->with('error', 'Gagal melakukan backup database. Cek log untuk detail.');
+        }
+
+        if (file_exists($errorLog)) {
+            @unlink($errorLog);
         }
 
         return response()->download($path)->deleteFileAfterSend(true);
