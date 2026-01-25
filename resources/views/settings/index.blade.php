@@ -564,11 +564,6 @@
                                         </p>
                                     </div>
 
-                                    <div class="text-center mt-4">
-                                        <button type="button" class="btn btn-outline-primary" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin melakukan cek dan update sistem (Git Pull)? Proses ini memerlukan koneksi internet.')) document.getElementById('system-update-form').submit();">
-                                            <i class="fe fe-download-cloud"></i> Cek & Update Pembaruan
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -587,9 +582,6 @@
             @method('DELETE')
         </form>
         <form id="seed-coa-form" action="{{ route('accounting.coa.seed') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
-        <form id="system-update-form" action="{{ route('settings.system_update') }}" method="POST" style="display: none;">
             @csrf
         </form>
         <form id="restore-form" action="{{ route('settings.restore') }}" method="POST" enctype="multipart/form-data" style="display: none;">
