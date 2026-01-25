@@ -340,6 +340,29 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title text-danger">Restore Database</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <i class="fe fe-alert-triangle mr-2"></i> <strong>PERHATIAN!</strong> Tindakan ini akan <strong>menghapus dan menimpa seluruh data</strong> database saat ini dengan data dari file backup. Pastikan Anda telah melakukan backup sebelum melakukan restore.
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Upload File Backup (.sql)</label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="backup_file_input" name="backup_file" required accept=".sql,text/plain,application/sql">
+                                    <label class="custom-file-label">Pilih file backup</label>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="btn btn-danger" id="btn-restore">
+                                    <i class="fe fe-refresh-ccw"></i> Restore Database
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- User Guide -->
@@ -585,6 +608,9 @@
         <form id="system-update-form" action="{{ route('settings.system_update') }}" method="POST" style="display: none;">
             @csrf
         </form>
+        <form id="restore-form" action="{{ route('settings.restore') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+            @csrf
+        </form>
     </div>
 </div>
 @endsection
@@ -597,6 +623,24 @@
             $('.custom-file-input').on('change', function() {
                 var fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            // Handle Restore Button Click
+            $('#btn-restore').on('click', function(e) {
+                e.preventDefault();
+
+                var fileInput = $('#backup_file_input');
+                if (fileInput.get(0).files.length === 0) {
+                    alert('Silakan pilih file backup terlebih dahulu.');
+                    return;
+                }
+
+                if (confirm('APAKAH ANDA YAKIN? \n\nSeluruh data sistem akan DIHAPUS dan digantikan dengan data dari file backup. \n\nTindakan ini tidak dapat dibatalkan!')) {
+                    // Move the file input to the hidden form
+                    var form = $('#restore-form');
+                    fileInput.detach().appendTo(form);
+                    form.submit();
+                }
             });
         });
     });

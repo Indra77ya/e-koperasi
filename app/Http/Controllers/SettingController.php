@@ -219,4 +219,59 @@ class SettingController extends Controller
 
         return response()->download($path)->deleteFileAfterSend(true);
     }
+
+    public function restore(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        $request->validate([
+            'backup_file' => 'required|file|mimetypes:text/plain,application/sql,text/x-sql',
+        ]);
+
+        $file = $request->file('backup_file');
+
+        // Ensure the file is valid and readable
+        if (!$file->isValid()) {
+             return redirect()->back()->with('error', 'File tidak valid.');
+        }
+
+        $path = $file->getRealPath();
+
+        $username = config('database.connections.mysql.username');
+        $password = config('database.connections.mysql.password');
+        $database = config('database.connections.mysql.database');
+        $host = config('database.connections.mysql.host');
+        $port = config('database.connections.mysql.port');
+
+        // Check if mysql client is available
+        $output = [];
+        $returnVar = 0;
+        exec("mysql --version 2>&1", $output, $returnVar);
+        if ($returnVar !== 0) {
+            return redirect()->back()->with('error', 'Fitur restore tidak tersedia (mysql client not found).');
+        }
+
+        // Construct command
+        $command = sprintf(
+            'mysql --user=%s --password=%s --host=%s --port=%s %s < %s',
+            escapeshellarg($username),
+            escapeshellarg($password),
+            escapeshellarg($host),
+            escapeshellarg($port),
+            escapeshellarg($database),
+            escapeshellarg($path)
+        );
+
+        $output = [];
+        $returnVar = 0;
+        exec($command . ' 2>&1', $output, $returnVar);
+
+        if ($returnVar !== 0) {
+             \Illuminate\Support\Facades\Log::error("Restore failed: " . implode("\n", $output));
+             return redirect()->back()->with('error', 'Gagal melakukan restore database. Pesan error: ' . end($output));
+        }
+
+        return redirect()->back()->with('success', 'Database berhasil direstore.');
+    }
 }
