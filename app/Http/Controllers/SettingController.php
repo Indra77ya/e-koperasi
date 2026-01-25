@@ -175,4 +175,48 @@ class SettingController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat update: ' . $e->getMessage());
         }
     }
+
+    public function backup()
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        $filename = "backup-" . date('Y-m-d-H-i-s') . ".sql";
+        $path = storage_path("app/" . $filename);
+
+        $username = config('database.connections.mysql.username');
+        $password = config('database.connections.mysql.password');
+        $database = config('database.connections.mysql.database');
+        $host = config('database.connections.mysql.host');
+        $port = config('database.connections.mysql.port');
+
+        // Check if mysqldump is available
+        $output = [];
+        $returnVar = 0;
+        exec("mysqldump --version 2>&1", $output, $returnVar);
+        if ($returnVar !== 0) {
+            return redirect()->back()->with('error', 'Fitur backup tidak tersedia (mysqldump not found).');
+        }
+
+        // Construct command
+        $command = sprintf(
+            'mysqldump --user=%s --password=%s --host=%s --port=%s %s > %s',
+            escapeshellarg($username),
+            escapeshellarg($password),
+            escapeshellarg($host),
+            escapeshellarg($port),
+            escapeshellarg($database),
+            escapeshellarg($path)
+        );
+
+        exec($command . ' 2>&1', $output, $returnVar);
+
+        if ($returnVar !== 0) {
+             if (file_exists($path)) @unlink($path);
+             \Illuminate\Support\Facades\Log::error("Backup failed: " . implode("\n", $output));
+             return redirect()->back()->with('error', 'Gagal melakukan backup database. Cek log untuk detail.');
+        }
+
+        return response()->download($path)->deleteFileAfterSend(true);
+    }
 }

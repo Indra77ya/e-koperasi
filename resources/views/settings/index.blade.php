@@ -104,6 +104,7 @@
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Loan -->
@@ -144,6 +145,7 @@
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Collectibility -->
@@ -318,6 +320,24 @@
                         </div>
                         <div class="card-footer text-right">
                             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Backup Database</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fe fe-info mr-2"></i> Fitur ini akan mengunduh seluruh database dalam format SQL.
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Backup Data</label>
+                                <p class="text-muted">Unduh salinan database untuk keperluan backup berkala.</p>
+                                <a href="{{ route('settings.backup') }}" class="btn btn-outline-primary">
+                                    <i class="fe fe-download"></i> Download Backup Database (.sql)
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
