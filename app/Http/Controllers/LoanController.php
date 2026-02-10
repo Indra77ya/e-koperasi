@@ -547,6 +547,8 @@ class LoanController extends Controller
                             'debet' => $totalPaid,
                             'kredit' => 0,
                             'saldo' => $saving->saldo,
+                            'ref_type' => get_class($installment),
+                            'ref_id' => $installment->id,
                         ]);
 
                         // Use Savings COA instead of Cash
@@ -590,6 +592,102 @@ class LoanController extends Controller
             return redirect()->back()->with('error', 'Angsuran belum lunas.');
         }
         return view('loans.installments.print', compact('installment'));
+    }
+
+    public function voidPayment($id)
+    {
+        $installment = LoanInstallment::findOrFail($id);
+
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->back()->with('error', 'Hanya Administrator yang diperbolehkan menghapus pembayaran.');
+        }
+
+        if ($installment->status != 'lunas') {
+            return redirect()->back()->with('error', 'Hanya angsuran yang sudah lunas yang bisa dibatalkan.');
+        }
+
+        try {
+            DB::transaction(function () use ($installment) {
+                $loan = $installment->loan;
+
+                // 1. Restore Savings Balance if needed
+                if ($installment->metode_pembayaran == 'tabungan') {
+                    $totalAmount = $installment->total_angsuran + ($installment->denda ?? 0);
+
+                    $saving = null;
+                    if ($loan->anggota_id) {
+                        $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
+                    } elseif ($loan->nasabah_id) {
+                        $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first();
+                    }
+
+                    if ($saving) {
+                        $saving->saldo += $totalAmount;
+                        $saving->save();
+
+                        // Delete Saving History (using new ref columns or fall back to description)
+                        SavingHistory::where('ref_type', get_class($installment))
+                            ->where('ref_id', $installment->id)
+                            ->delete();
+                    }
+                }
+
+                // 2. Delete Journal Entries
+                $installment->journalEntries()->each(function($entry) {
+                    $entry->items()->delete();
+                    $entry->delete();
+                });
+
+                // 3. Handle Indefinite Loan Logic
+                if ($loan->tenor == 0) {
+                    // Check if there is a next installment
+                    $nextInstallment = LoanInstallment::where('pinjaman_id', $loan->id)
+                        ->where('angsuran_ke', $installment->angsuran_ke + 1)
+                        ->first();
+
+                    if ($nextInstallment) {
+                        if ($nextInstallment->status == 'lunas') {
+                            throw new \Exception("Tidak bisa membatalkan angsuran ini karena angsuran berikutnya (#" . $nextInstallment->angsuran_ke . ") sudah lunas. Batalkan angsuran terakhir terlebih dahulu.");
+                        }
+                        $nextInstallment->delete();
+                    }
+
+                    // Restore sisa_pinjaman to previous state
+                    // previous_sisa = current_sisa + principal_paid
+                    $prevSisa = $installment->sisa_pinjaman + $installment->pokok;
+
+                    $installment->update([
+                        'status' => 'belum_lunas',
+                        'tanggal_bayar' => null,
+                        'metode_pembayaran' => null,
+                        'keterangan_pembayaran' => null,
+                        'pokok' => 0, // Reset principal for indefinite until paid again
+                        'total_angsuran' => $installment->bunga, // Total back to just bunga
+                        'sisa_pinjaman' => $prevSisa,
+                    ]);
+
+                } else {
+                    // Fixed Loan
+                    $installment->update([
+                        'status' => 'belum_lunas',
+                        'tanggal_bayar' => null,
+                        'metode_pembayaran' => null,
+                        'keterangan_pembayaran' => null,
+                    ]);
+                }
+
+                // 4. Revert Loan status if it was lunas
+                if ($loan->status == 'lunas') {
+                    $loan->update(['status' => 'berjalan']);
+                }
+            });
+
+            return redirect()->back()->with('success', 'Pembayaran angsuran berhasil dibatalkan.');
+
+        } catch (\Exception $e) {
+            Log::error('Void Payment Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal membatalkan pembayaran: ' . $e->getMessage());
+        }
     }
 
     private function generateSchedule($amount, $tenor, $rate, $type, $unit = 'tahun', $tempo = 'bulanan')
