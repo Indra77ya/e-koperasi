@@ -215,7 +215,13 @@
                                                     @endif
                                                 @elseif($inst->status == 'lunas')
                                                     <span class="text-muted"><i class="fe fe-check"></i> Terbayar</span>
-                                                    <a href="{{ route('loans.installments.print', $inst->id) }}" target="_blank" class="btn btn-xs btn-secondary ml-1"><i class="fe fe-printer"></i></a>
+                                                    <a href="{{ route('loans.installments.print', $inst->id) }}" target="_blank" class="btn btn-xs btn-secondary ml-1" title="Cetak Kuitansi"><i class="fe fe-printer"></i></a>
+                                                    @if(Auth::user()->isAdmin())
+                                                        <form action="{{ route('loans.installments.void', $inst->id) }}" method="POST" class="d-inline ml-1" onsubmit="return confirm('Apakah Anda yakin ingin MEMBATALKAN pembayaran ini? Seluruh jurnal dan mutasi terkait akan dihapus.')">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-xs btn-danger" title="Batalkan Pembayaran"><i class="fe fe-trash-2"></i></button>
+                                                        </form>
+                                                    @endif
                                                 @else
                                                     <span class="text-danger">Macet</span>
                                                 @endif

@@ -33,4 +33,9 @@ class LoanInstallment extends Model
     {
         return $this->belongsTo('App\Models\Loan', 'pinjaman_id');
     }
+
+    public function journalEntries()
+    {
+        return $this->morphMany('App\Models\JournalEntry', 'ref');
+    }
 }

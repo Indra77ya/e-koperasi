@@ -15,7 +15,9 @@ class SavingHistory extends Model
         'keterangan',
         'debet',
         'kredit',
-        'saldo'
+        'saldo',
+        'ref_type',
+        'ref_id',
     ];
 
     /**
@@ -32,5 +34,10 @@ class SavingHistory extends Model
     public function nasabah()
     {
         return $this->belongsTo('App\Models\Nasabah', 'nasabah_id');
+    }
+
+    public function ref()
+    {
+        return $this->morphTo();
     }
 }
