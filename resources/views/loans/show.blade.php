@@ -111,10 +111,7 @@
                         @endif
 
                         @if($loan->status == 'disetujui')
-                            <form action="{{ route('loans.disburse', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cairkan dana dan buat jadwal angsuran?')">
-                                @csrf
-                                <button type="submit" class="btn btn-primary btn-block mt-2">Cairkan Dana</button>
-                            </form>
+                            <button type="button" class="btn btn-primary btn-block mt-2" data-toggle="modal" data-target="#modal-disburse">Cairkan Dana</button>
                         @endif
 
                         @if($loan->status == 'berjalan')
@@ -232,6 +229,33 @@
                         <p class="text-muted text-center">Jadwal angsuran belum dibuat (Menunggu pencairan).</p>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pencairan -->
+    <div class="modal fade" id="modal-disburse" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cairkan Pinjaman</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('loans.disburse', $loan->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>Cairkan dana dan buat jadwal angsuran untuk pinjaman ini?</p>
+                        <div class="form-group">
+                            <label>Tanggal Pencairan</label>
+                            <input type="date" name="tanggal_pencairan" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            <small class="text-muted">Jadwal angsuran akan dihitung mulai dari tanggal ini.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Konfirmasi Pencairan</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -150,8 +150,9 @@ class LoanController extends Controller
 
         $request->validate($rules);
 
+        $loanDate = Carbon::parse($request->tanggal_pengajuan)->format('Ymd');
         $loan = Loan::create([
-            'kode_pinjaman' => 'P-' . date('Ymd') . '-' . rand(100, 999),
+            'kode_pinjaman' => 'P-' . $loanDate . '-' . rand(100, 999),
             'anggota_id' => $request->tipe_peminjam == 'anggota' ? $request->anggota_id : null,
             'nasabah_id' => $request->tipe_peminjam == 'nasabah' ? $request->nasabah_id : null,
             'jenis_pinjaman' => $request->jenis_pinjaman,
@@ -221,11 +222,20 @@ class LoanController extends Controller
              return redirect()->back()->with('error', 'Status pinjaman tidak valid untuk pencairan.');
         }
 
+        $request->validate([
+            'tanggal_pencairan' => 'required|date'
+        ]);
+
+        $disburseDate = Carbon::parse($request->tanggal_pencairan);
+
         try {
-            DB::transaction(function () use ($loan) {
+            DB::transaction(function () use ($loan, $disburseDate) {
                 // Ensure required COAs exist (Self-Healing logic removed to rely on Settings)
 
-                $loan->update(['status' => 'berjalan']);
+                $loan->update([
+                    'status' => 'berjalan',
+                    'tanggal_persetujuan' => $disburseDate // Update to match disbursement date for reporting
+                ]);
 
                 if ($loan->tenor == 0) {
                     // Indefinite Loan: Generate only the 1st installment (Interest Only)
@@ -243,13 +253,13 @@ class LoanController extends Controller
                     // Rate Per Period
                     if ($loan->tempo_angsuran == 'harian') {
                         $ratePerPeriod = $yearlyRate / 365;
-                        $dueDate = now()->addDay();
+                        $dueDate = $disburseDate->copy()->addDay();
                     } elseif ($loan->tempo_angsuran == 'mingguan') {
                         $ratePerPeriod = $yearlyRate / 52;
-                         $dueDate = now()->addWeek();
+                         $dueDate = $disburseDate->copy()->addWeek();
                     } else {
                         $ratePerPeriod = $yearlyRate / 12;
-                        $dueDate = now()->addMonth();
+                        $dueDate = $disburseDate->copy()->addMonth();
                     }
 
                     $interest = $loan->jumlah_pinjaman * $ratePerPeriod;
@@ -270,7 +280,7 @@ class LoanController extends Controller
                     $schedule = $this->generateSchedule($loan->jumlah_pinjaman, $loan->tenor, $loan->suku_bunga, $loan->jenis_bunga, $loan->satuan_bunga, $loan->tempo_angsuran);
 
                     foreach ($schedule as $inst) {
-                        $dueDate = now();
+                        $dueDate = $disburseDate->copy();
                         if ($loan->tempo_angsuran == 'harian') {
                             $dueDate->addDays($inst['month']);
                         } elseif ($loan->tempo_angsuran == 'mingguan') {
@@ -311,7 +321,7 @@ class LoanController extends Controller
                 }
 
                 $this->accountingService->createJournal(
-                    now(),
+                    $disburseDate,
                     $loan->kode_pinjaman,
                     'Pencairan Pinjaman ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
                     $journalItems,
