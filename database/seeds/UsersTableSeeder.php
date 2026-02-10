@@ -20,10 +20,10 @@ class UsersTableSeeder extends Seeder
                 'name' => 'Petugas E-Koperasi',
                 'email' => 'ekoperasi@gmail.com',
                 'password' => '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
-                'role' => 'petugas',
+                'role' => 'admin',
             ]);
         } else {
-            $petugas->update(['role' => 'petugas']);
+            $petugas->update(['role' => 'admin']);
         }
 
         // 2. Administrator User

@@ -21,8 +21,8 @@ class AddRoleAndRefToTables extends Migration
             });
         }
 
-        // Set admin@example.com as admin
-        DB::table('users')->where('email', 'admin@example.com')->update(['role' => 'admin']);
+        // Set default admins
+        DB::table('users')->whereIn('email', ['admin@example.com', 'ekoperasi@gmail.com'])->update(['role' => 'admin']);
 
         // Add ref columns to riwayat_tabungan
         if (!Schema::hasColumn('riwayat_tabungan', 'ref_type')) {

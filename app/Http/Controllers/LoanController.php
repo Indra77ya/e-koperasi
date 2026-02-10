@@ -32,8 +32,11 @@ class LoanController extends Controller
     public function index(Request $request)
     {
         // Auto-repair admin role if missing (ensures migration effect)
-        if (User::where('email', 'admin@example.com')->where('role', '!=', 'admin')->exists()) {
-            User::where('email', 'admin@example.com')->update(['role' => 'admin']);
+        $admins = ['admin@example.com', 'ekoperasi@gmail.com'];
+        foreach ($admins as $email) {
+            if (User::where('email', $email)->where('role', '!=', 'admin')->exists()) {
+                User::where('email', $email)->update(['role' => 'admin']);
+            }
         }
 
         if ($request->ajax()) {
