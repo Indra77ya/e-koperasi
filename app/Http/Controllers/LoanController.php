@@ -31,6 +31,11 @@ class LoanController extends Controller
 
     public function index(Request $request)
     {
+        // Auto-repair admin role if missing (ensures migration effect)
+        if (User::where('email', 'admin@example.com')->where('role', '!=', 'admin')->exists()) {
+            User::where('email', 'admin@example.com')->update(['role' => 'admin']);
+        }
+
         if ($request->ajax()) {
             $loans = Loan::with(['member', 'nasabah'])->select('pinjaman.*');
             return DataTables::of($loans)
