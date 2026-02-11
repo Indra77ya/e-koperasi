@@ -63,6 +63,11 @@ class Loan extends Model
         return $this->hasMany('App\Models\PenagihanLapangan', 'pinjaman_id');
     }
 
+    public function journalEntries()
+    {
+        return $this->morphMany('App\Models\JournalEntry', 'ref');
+    }
+
     // Helper to get days past due based on oldest unpaid installment
     public function getDaysPastDueAttribute()
     {

@@ -100,7 +100,15 @@ class LoanController extends Controller
                     return '-';
                 })
                 ->addColumn('action', function ($loan) {
-                    $btn = '<a href="' . route('loans.show', $loan->id) . '" class="btn btn-sm btn-info">Detail</a>';
+                    $btn = '<a href="' . route('loans.show', $loan->id) . '" class="btn btn-sm btn-info" title="Detail"><i class="fa fa-eye"></i></a>';
+                    if (auth()->user()->isAdmin()) {
+                        $btn .= ' <a href="' . route('loans.edit', $loan->id) . '" class="btn btn-sm btn-primary" title="Edit"><i class="fa fa-pencil"></i></a>';
+                        $btn .= ' <form action="' . route('loans.destroy', $loan->id) . '" method="POST" style="display:inline;" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus pengajuan ini? Semua data terkait akan ikut terhapus.\')">';
+                        $btn .= csrf_field();
+                        $btn .= method_field('DELETE');
+                        $btn .= ' <button type="submit" class="btn btn-sm btn-danger" title="Hapus"><i class="fa fa-trash"></i></button>';
+                        $btn .= '</form>';
+                    }
                     return $btn;
                 })
                 ->rawColumns(['tenor', 'status', 'action'])
@@ -197,6 +205,184 @@ class LoanController extends Controller
     {
         $loan = Loan::with(['member', 'nasabah', 'installments'])->findOrFail($id);
         return view('loans.show', compact('loan'));
+    }
+
+    public function edit($id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if (!auth()->user()->isAdmin()) {
+             return redirect()->back()->with('error', 'Hanya Administrator yang diperbolehkan mengedit pinjaman.');
+        }
+
+        $members = Member::all();
+        $nasabahs = Nasabah::all();
+        $defaults = [
+            'interest_rate' => Setting::get('default_interest_rate', 0),
+            'admin_fee' => Setting::get('default_admin_fee', 0),
+            'penalty' => Setting::get('default_penalty', 0),
+            'limit' => Setting::get('loan_limit', 0),
+        ];
+
+        return view('loans.edit', compact('loan', 'members', 'nasabahs', 'defaults'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->back()->with('error', 'Hanya Administrator yang diperbolehkan mengedit pinjaman.');
+        }
+
+        $rules = [
+            'tipe_peminjam' => 'required|in:anggota,nasabah',
+            'anggota_id' => 'required_if:tipe_peminjam,anggota|nullable|exists:anggota,id',
+            'nasabah_id' => 'required_if:tipe_peminjam,nasabah|nullable|exists:nasabahs,id',
+            'jenis_pinjaman' => 'required',
+            'jumlah_pinjaman' => 'required|numeric|min:0',
+            'suku_bunga' => 'required|numeric|min:0',
+            'satuan_bunga' => 'required|in:tahun,bulan,hari',
+            'tempo_angsuran' => 'required|in:harian,mingguan,bulanan',
+            'jenis_bunga' => 'required|in:flat,efektif,anuitas',
+            'tanggal_pengajuan' => 'required|date',
+            'status' => 'required',
+            'biaya_admin' => 'nullable|numeric|min:0',
+            'denda_keterlambatan' => 'nullable|numeric|min:0',
+        ];
+
+        if (!$request->has('is_indefinite')) {
+            $rules['tenor'] = 'required|integer|min:1';
+        }
+
+        $request->validate($rules);
+
+        $financialFields = ['jumlah_pinjaman', 'tenor', 'suku_bunga', 'satuan_bunga', 'tempo_angsuran', 'jenis_bunga'];
+        $changed = false;
+        foreach ($financialFields as $field) {
+            $newValue = $request->{$field};
+            if ($field == 'tenor' && $request->has('is_indefinite')) {
+                $newValue = 0;
+            }
+            if ($loan->{$field} != $newValue) {
+                $changed = true;
+                break;
+            }
+        }
+
+        try {
+            DB::transaction(function() use ($loan, $request, $changed) {
+                if ($changed && in_array($loan->status, ['berjalan', 'macet', 'lunas'])) {
+                    // Reset to 'disetujui' and clear previous financial impact
+                    foreach ($loan->installments as $installment) {
+                        if ($installment->status == 'lunas' && $installment->metode_pembayaran == 'tabungan') {
+                             $totalAmount = $installment->total_angsuran + ($installment->denda ?? 0);
+                             $saving = null;
+                             if ($loan->anggota_id) { $saving = Saving::where('anggota_id', $loan->anggota_id)->first(); }
+                             elseif ($loan->nasabah_id) { $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first(); }
+                             if ($saving) { $saving->saldo += $totalAmount; $saving->save(); }
+                        }
+                        SavingHistory::where('ref_type', get_class($installment))->where('ref_id', $installment->id)->delete();
+                        $installment->journalEntries()->each(function($entry) { $entry->items()->delete(); $entry->delete(); });
+                    }
+
+                    $loan->journalEntries()->each(function($entry) { $entry->items()->delete(); $entry->delete(); });
+                    $loan->installments()->delete();
+
+                    if ($loan->status == $request->status) {
+                        $loan->status = 'disetujui';
+                    } else {
+                        $loan->status = $request->status;
+                    }
+                } else {
+                    $loan->status = $request->status;
+                }
+
+                $loan->anggota_id = $request->tipe_peminjam == 'anggota' ? $request->anggota_id : null;
+                $loan->nasabah_id = $request->tipe_peminjam == 'nasabah' ? $request->nasabah_id : null;
+                $loan->jenis_pinjaman = $request->jenis_pinjaman;
+                $loan->jumlah_pinjaman = $request->jumlah_pinjaman;
+                $loan->tenor = $request->has('is_indefinite') ? 0 : $request->tenor;
+                $loan->suku_bunga = $request->suku_bunga;
+                $loan->satuan_bunga = $request->satuan_bunga;
+                $loan->tempo_angsuran = $request->tempo_angsuran;
+                $loan->jenis_bunga = $request->jenis_bunga;
+                $loan->biaya_admin = $request->jumlah_pinjaman * (($request->biaya_admin ?? 0) / 100);
+                $loan->denda_keterlambatan = $request->denda_keterlambatan ?? 0;
+                $loan->tanggal_pengajuan = $request->tanggal_pengajuan;
+                $loan->keterangan = $request->keterangan;
+                $loan->save();
+            });
+
+            return redirect()->route('loans.index')->with('success', 'Data pinjaman berhasil diubah.');
+        } catch (\Exception $e) {
+            Log::error('Loan Update Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengubah pinjaman: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->back()->with('error', 'Hanya Administrator yang diperbolehkan menghapus pinjaman.');
+        }
+
+        try {
+            DB::transaction(function () use ($loan) {
+                // 1. Refund savings if installments were paid via tabungan
+                foreach ($loan->installments as $installment) {
+                    if ($installment->status == 'lunas' && $installment->metode_pembayaran == 'tabungan') {
+                        $totalAmount = $installment->total_angsuran + ($installment->denda ?? 0);
+
+                        $saving = null;
+                        if ($loan->anggota_id) {
+                            $saving = Saving::where('anggota_id', $loan->anggota_id)->first();
+                        } elseif ($loan->nasabah_id) {
+                            $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first();
+                        }
+
+                        if ($saving) {
+                            $saving->saldo += $totalAmount;
+                            $saving->save();
+                        }
+                    }
+
+                    // Delete Saving History related to installment
+                    SavingHistory::where('ref_type', get_class($installment))
+                        ->where('ref_id', $installment->id)
+                        ->delete();
+
+                    // Delete Journal Entries related to installment
+                    $installment->journalEntries()->each(function($entry) {
+                        $entry->items()->delete();
+                        $entry->delete();
+                    });
+                }
+
+                // 2. Delete Journal Entries related to Loan (disbursement)
+                $loan->journalEntries()->each(function($entry) {
+                    $entry->items()->delete();
+                    $entry->delete();
+                });
+
+                // 3. Delete other related data
+                $loan->installments()->delete();
+                $loan->collaterals()->delete();
+                $loan->penagihanLogs()->delete();
+                $loan->penagihanLapangan()->delete();
+
+                // 4. Delete the loan itself
+                $loan->delete();
+            });
+
+            return redirect()->route('loans.index')->with('success', 'Pinjaman dan semua data terkait berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            Log::error('Loan Deletion Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus pinjaman: ' . $e->getMessage());
+        }
     }
 
     public function approve($id)
