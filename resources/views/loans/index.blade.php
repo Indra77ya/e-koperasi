@@ -4,6 +4,14 @@
     Data Pinjaman
 @endsection
 
+@section('css')
+<style>
+    .nowrap {
+        white-space: nowrap;
+    }
+</style>
+@endsection
+
 @section('content-app')
     <div class="row">
         <div class="col-md-12">
@@ -53,7 +61,7 @@
                 { data: 'tenor', name: 'tenor' },
                 { data: 'suku_bunga', name: 'suku_bunga' },
                 { data: 'status', name: 'status' },
-                { data: 'action', name: 'action', orderable: false, searchable: false }
+                { data: 'action', name: 'action', orderable: false, searchable: false, className: 'nowrap' }
             ]
         });
     });
