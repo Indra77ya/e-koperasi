@@ -658,6 +658,13 @@
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
             });
 
+            // Auto-download backup if session exists
+            @if(session('backup_to_download'))
+                setTimeout(function() {
+                    window.location.href = "{{ route('settings.download_backup', session('backup_to_download')) }}";
+                }, 1000);
+            @endif
+
             $('#btn-run-reset').on('click', function(e) {
                 var confirmInput = $('#confirm_reset_input').val();
                 var checkboxes = $('input[name="reset_options_ui[]"]:checked');

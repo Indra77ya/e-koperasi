@@ -123,6 +123,22 @@ class SettingController extends Controller
         }, 200, $headers);
     }
 
+    public function downloadBackup($filename)
+    {
+        // Security check: only allow files from backups directory and with .sql extension
+        if (strpos($filename, '..') !== false || substr($filename, -4) !== '.sql') {
+            abort(403);
+        }
+
+        $path = storage_path('app/backups/' . $filename);
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->download($path);
+    }
+
     private function generateBackupSql($targetPath)
     {
         // PHP-based backup fallback since mysqldump might not be available
@@ -313,7 +329,10 @@ class SettingController extends Controller
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             DB::commit();
 
-            return redirect()->back()->with('success', 'Sistem berhasil direset. Backup otomatis telah disimpan di ' . $backupPath);
+            return redirect()->back()->with([
+                'success' => 'Sistem berhasil direset. Backup otomatis telah disimpan di ' . $backupPath,
+                'backup_to_download' => $filename
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal mereset sistem: ' . $e->getMessage());
