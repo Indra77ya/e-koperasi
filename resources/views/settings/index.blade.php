@@ -357,29 +357,28 @@
                                 <i class="fe fe-alert-triangle mr-2"></i> <strong>PERINGATAN:</strong> Tindakan ini akan menghapus data yang Anda pilih secara permanen. Pastikan Anda telah memiliki backup sebelum melanjutkan. Sistem akan melakukan backup otomatis ke folder storage sebelum reset dijalankan.
                             </div>
 
-                            <form action="{{ route('settings.reset') }}" method="POST" id="reset-system-form">
-                                @csrf
+                            <div id="reset-system-ui">
                                 <div class="form-group">
                                     <label class="form-label">Pilih Data yang Akan Dihapus:</label>
                                     <div class="custom-controls-stacked">
                                         <label class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="reset_options[]" value="transactions" checked>
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="transactions" checked>
                                             <span class="custom-control-label">Data Transaksi & Keuangan (Pinjaman, Simpanan, Mutasi, Jurnal, Penagihan)</span>
                                         </label>
                                         <label class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="reset_options[]" value="members">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="members">
                                             <span class="custom-control-label">Data Anggota & Nasabah</span>
                                         </label>
                                         <label class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="reset_options[]" value="coa">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="coa">
                                             <span class="custom-control-label">Data Akuntansi (Chart of Accounts / COA)</span>
                                         </label>
                                         <label class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="reset_options[]" value="users">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="users">
                                             <span class="custom-control-label">Data Pengguna (Kecuali Admin)</span>
                                         </label>
                                         <label class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="reset_options[]" value="settings">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="settings">
                                             <span class="custom-control-label">Pengaturan Sistem (Profil Koperasi, Konfigurasi Bunga, dll)</span>
                                         </label>
                                     </div>
@@ -388,15 +387,15 @@
                                 <div class="form-group mt-4">
                                     <label class="form-label">Konfirmasi Reset</label>
                                     <p class="text-muted small">Ketik <strong>RESET</strong> di bawah ini untuk mengonfirmasi.</p>
-                                    <input type="text" class="form-control" name="confirm_reset" id="confirm_reset_input" placeholder="Ketik RESET" required autocomplete="off">
+                                    <input type="text" class="form-control" id="confirm_reset_input" placeholder="Ketik RESET" required autocomplete="off">
                                 </div>
 
                                 <div class="text-right mt-4">
-                                    <button type="submit" class="btn btn-danger btn-block">
+                                    <button type="button" class="btn btn-danger btn-block" id="btn-run-reset">
                                         <i class="fe fe-refresh-cw mr-2"></i> Jalankan Reset Sistem
                                     </button>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -640,6 +639,11 @@
             @csrf
             <input type="file" id="restore-file-input" name="backup_file" accept=".sql" onchange="if(confirm('PERHATIAN: Anda akan melakukan restore database. \n\nTindakan ini akan MENGHAPUS SELURUH DATA saat ini dan menggantikannya dengan data dari file backup.\n\nApakah Anda yakin ingin melanjutkan?')) { document.getElementById('restore-form').submit(); } else { this.value = ''; }">
         </form>
+        <form id="real-reset-form" action="{{ route('settings.reset') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="confirm_reset" id="hidden_confirm_reset">
+            <div id="hidden_reset_options_container"></div>
+        </form>
     </div>
 </div>
 @endsection
@@ -654,26 +658,32 @@
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
             });
 
-            $('#reset-system-form').on('submit', function(e) {
+            $('#btn-run-reset').on('click', function(e) {
                 var confirmInput = $('#confirm_reset_input').val();
-                var checkboxes = $('input[name="reset_options[]"]:checked');
+                var checkboxes = $('input[name="reset_options_ui[]"]:checked');
 
                 if (checkboxes.length === 0) {
                     alert('Silakan pilih minimal satu kategori data yang akan direset.');
-                    e.preventDefault();
                     return false;
                 }
 
                 if (confirmInput.toUpperCase() !== 'RESET') {
                     alert('Silakan ketik RESET untuk konfirmasi.');
-                    e.preventDefault();
                     return false;
                 }
 
                 if (!confirm('APAKAH ANDA BENAR-BENAR YAKIN?\n\nTindakan ini tidak dapat dibatalkan dan data yang dipilih akan DIHAPUS PERMANEN.')) {
-                    e.preventDefault();
                     return false;
                 }
+
+                // Populate hidden form and submit
+                $('#hidden_confirm_reset').val(confirmInput);
+                $('#hidden_reset_options_container').empty();
+                checkboxes.each(function() {
+                    $('#hidden_reset_options_container').append('<input type="hidden" name="reset_options[]" value="' + $(this).val() + '">');
+                });
+
+                $('#real-reset-form').submit();
             });
         });
     });
