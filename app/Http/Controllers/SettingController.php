@@ -113,60 +113,67 @@ class SettingController extends Controller
 
     public function backup()
     {
-        // PHP-based backup fallback since mysqldump might not be available
-        $tables = DB::select('SHOW TABLES');
-
         $headers = [
             'Content-Type' => 'application/octet-stream',
             'Content-Disposition' => 'attachment; filename="backup_ekoperasi_' . date('Y-m-d_H-i-s') . '.sql"',
         ];
 
-        return response()->stream(function () use ($tables) {
-            echo "-- E-Koperasi Database Backup\n";
-            echo "-- Date: " . date('Y-m-d H:i:s') . "\n\n";
-            echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
-
-            foreach ($tables as $tableObj) {
-                $table = array_values((array)$tableObj)[0];
-
-                echo "-- Table structure for table `$table`\n";
-                echo "DROP TABLE IF EXISTS `$table`;\n";
-
-                $createRow = DB::select("SHOW CREATE TABLE `$table`")[0];
-                // Handle property capitalization diffs
-                $createSql = $createRow->{'Create Table'} ?? $createRow->{'CREATE TABLE'};
-                echo $createSql . ";\n\n";
-
-                echo "-- Dumping data for table `$table`\n";
-
-                // Use cursor to reduce memory usage for large tables
-                $rows = DB::table($table)->cursor();
-
-                $buffer = [];
-                $limit = 100; // Bulk insert size
-
-                foreach ($rows as $row) {
-                    $values = array_map(function ($value) {
-                        if ($value === null) return 'NULL';
-                        return "'" . addslashes($value) . "'";
-                    }, (array)$row);
-
-                    $buffer[] = "(" . implode(", ", $values) . ")";
-
-                    if (count($buffer) >= $limit) {
-                         echo "INSERT INTO `$table` VALUES " . implode(", ", $buffer) . ";\n";
-                         $buffer = [];
-                    }
-                }
-                // Flush remaining buffer
-                if (count($buffer) > 0) {
-                     echo "INSERT INTO `$table` VALUES " . implode(", ", $buffer) . ";\n";
-                }
-                echo "\n";
-            }
-
-            echo "SET FOREIGN_KEY_CHECKS=1;\n";
+        return response()->stream(function () {
+            $this->generateBackupSql('php://output');
         }, 200, $headers);
+    }
+
+    private function generateBackupSql($targetPath)
+    {
+        // PHP-based backup fallback since mysqldump might not be available
+        $tables = DB::select('SHOW TABLES');
+        $handle = fopen($targetPath, 'w');
+
+        fwrite($handle, "-- E-Koperasi Database Backup\n");
+        fwrite($handle, "-- Date: " . date('Y-m-d H:i:s') . "\n\n");
+        fwrite($handle, "SET FOREIGN_KEY_CHECKS=0;\n\n");
+
+        foreach ($tables as $tableObj) {
+            $table = array_values((array)$tableObj)[0];
+
+            fwrite($handle, "-- Table structure for table `$table`\n");
+            fwrite($handle, "DROP TABLE IF EXISTS `$table`;\n");
+
+            $createRow = DB::select("SHOW CREATE TABLE `$table`")[0];
+            // Handle property capitalization diffs
+            $createSql = $createRow->{'Create Table'} ?? $createRow->{'CREATE TABLE'};
+            fwrite($handle, $createSql . ";\n\n");
+
+            fwrite($handle, "-- Dumping data for table `$table`\n");
+
+            // Use cursor to reduce memory usage for large tables
+            $rows = DB::table($table)->cursor();
+
+            $buffer = [];
+            $limit = 100; // Bulk insert size
+
+            foreach ($rows as $row) {
+                $values = array_map(function ($value) {
+                    if ($value === null) return 'NULL';
+                    return "'" . addslashes($value) . "'";
+                }, (array)$row);
+
+                $buffer[] = "(" . implode(", ", $values) . ")";
+
+                if (count($buffer) >= $limit) {
+                     fwrite($handle, "INSERT INTO `$table` VALUES " . implode(", ", $buffer) . ";\n");
+                     $buffer = [];
+                }
+            }
+            // Flush remaining buffer
+            if (count($buffer) > 0) {
+                 fwrite($handle, "INSERT INTO `$table` VALUES " . implode(", ", $buffer) . ";\n");
+            }
+            fwrite($handle, "\n");
+        }
+
+        fwrite($handle, "SET FOREIGN_KEY_CHECKS=1;\n");
+        fclose($handle);
     }
 
     public function restore(Request $request)
@@ -236,6 +243,80 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal restore database: ' . $e->getMessage());
+        }
+    }
+
+    public function reset(Request $request)
+    {
+        $request->validate([
+            'confirm_reset' => 'required|string',
+            'reset_options' => 'required|array',
+        ]);
+
+        if (strtoupper($request->confirm_reset) !== 'RESET') {
+            return redirect()->back()->with('error', 'Konfirmasi reset tidak valid. Silakan ketik RESET.');
+        }
+
+        // 1. Auto Backup
+        $filename = 'pre_reset_backup_' . date('Y-m-d_H-i-s') . '.sql';
+        $directory = storage_path('app/backups');
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+        $backupPath = $directory . '/' . $filename;
+        $this->generateBackupSql($backupPath);
+
+        $options = $request->reset_options;
+
+        DB::beginTransaction();
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+            if (in_array('transactions', $options)) {
+                DB::table('pinjaman')->truncate();
+                DB::table('pinjaman_angsuran')->truncate();
+                DB::table('setoran')->truncate();
+                DB::table('penarikan')->truncate();
+                DB::table('riwayat_tabungan')->truncate();
+                DB::table('bunga_tabungan')->truncate();
+                DB::table('journal_entries')->truncate();
+                DB::table('journal_items')->truncate();
+                DB::table('penagihan_lapangan')->truncate();
+                DB::table('penagihan_log')->truncate();
+                DB::table('jaminan')->truncate();
+                DB::table('notifications')->truncate();
+                DB::table('nasabah_loans')->truncate();
+                // Reset savings balances
+                DB::table('tabungan')->update(['saldo' => 0]);
+            }
+
+            if (in_array('members', $options)) {
+                DB::table('anggota')->truncate();
+                DB::table('nasabahs')->truncate();
+                DB::table('tabungan')->truncate();
+            }
+
+            if (in_array('coa', $options)) {
+                DB::table('chart_of_accounts')->truncate();
+            }
+
+            if (in_array('users', $options)) {
+                // Delete users except admins
+                DB::table('users')->where('role', '!=', 'admin')->where('email', '!=', 'admin@example.com')->delete();
+            }
+
+            if (in_array('settings', $options)) {
+                // Delete settings except app_version and app_update_notes
+                DB::table('settings')->whereNotIn('key', ['app_version', 'app_update_notes'])->delete();
+            }
+
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Sistem berhasil direset. Backup otomatis telah disimpan di ' . $backupPath);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mereset sistem: ' . $e->getMessage());
         }
     }
 }

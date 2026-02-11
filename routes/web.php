@@ -153,4 +153,5 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/backup', 'SettingController@backup')->name('settings.backup');
     Route::post('settings/restore', 'SettingController@restore')->name('settings.restore');
+    Route::post('settings/reset', 'SettingController@reset')->name('settings.reset');
 });
