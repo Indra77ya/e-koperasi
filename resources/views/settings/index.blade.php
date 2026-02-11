@@ -387,7 +387,7 @@
                                 <div class="form-group mt-4">
                                     <label class="form-label">Konfirmasi Reset</label>
                                     <p class="text-muted small">Ketik <strong>RESET</strong> di bawah ini untuk mengonfirmasi.</p>
-                                    <input type="text" class="form-control" id="confirm_reset_input" placeholder="Ketik RESET" required autocomplete="off">
+                                    <input type="text" class="form-control" id="confirm_reset_input" placeholder="Ketik RESET" autocomplete="off">
                                 </div>
 
                                 <div class="text-right mt-4">
