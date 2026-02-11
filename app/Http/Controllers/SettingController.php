@@ -330,7 +330,7 @@ class SettingController extends Controller
             DB::commit();
 
             return redirect()->back()->with([
-                'success' => 'Sistem berhasil direset. Backup otomatis telah disimpan di ' . $backupPath,
+                'success' => 'Sistem berhasil direset. File backup akan segera di download',
                 'backup_to_download' => $filename
             ]);
         } catch (\Exception $e) {
