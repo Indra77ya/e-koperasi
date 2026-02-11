@@ -516,7 +516,7 @@
                                     <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
                                 @endif
                                 <h2 class="mb-1">E-Koperasi</h2>
-                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.1.2' }}</p>
+                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.2.2' }}</p>
                             </div>
 
                             <div class="row justify-content-center">
