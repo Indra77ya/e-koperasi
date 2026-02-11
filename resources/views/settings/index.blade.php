@@ -347,6 +347,57 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title text-danger">Reset Sistem</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <i class="fe fe-alert-triangle mr-2"></i> <strong>PERINGATAN:</strong> Tindakan ini akan menghapus data yang Anda pilih secara permanen. Pastikan Anda telah memiliki backup sebelum melanjutkan. Sistem akan melakukan backup otomatis ke folder storage sebelum reset dijalankan.
+                            </div>
+
+                            <div id="reset-system-ui">
+                                <div class="form-group">
+                                    <label class="form-label">Pilih Data yang Akan Dihapus:</label>
+                                    <div class="custom-controls-stacked">
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="transactions" checked>
+                                            <span class="custom-control-label">Data Transaksi & Keuangan (Pinjaman, Simpanan, Mutasi, Jurnal, Penagihan)</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="members">
+                                            <span class="custom-control-label">Data Anggota & Nasabah</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="coa">
+                                            <span class="custom-control-label">Data Akuntansi (Chart of Accounts / COA)</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="users">
+                                            <span class="custom-control-label">Data Pengguna (Kecuali Admin)</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="reset_options_ui[]" value="settings">
+                                            <span class="custom-control-label">Pengaturan Sistem (Profil Koperasi, Konfigurasi Bunga, dll)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <label class="form-label">Konfirmasi Reset</label>
+                                    <p class="text-muted small">Ketik <strong>RESET</strong> di bawah ini untuk mengonfirmasi.</p>
+                                    <input type="text" class="form-control" id="confirm_reset_input" placeholder="Ketik RESET" autocomplete="off">
+                                </div>
+
+                                <div class="text-right mt-4">
+                                    <button type="button" class="btn btn-danger btn-block" id="btn-run-reset">
+                                        <i class="fe fe-refresh-cw mr-2"></i> Jalankan Reset Sistem
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- User Guide -->
@@ -512,11 +563,8 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center mb-5">
-                                @if(isset($settings['company_logo']) && $settings['company_logo'])
-                                    <img src="{{ asset($settings['company_logo']) }}" alt="Logo" style="max-height: 80px;" class="mb-3">
-                                @endif
                                 <h2 class="mb-1">E-Koperasi</h2>
-                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.2.2' }}</p>
+                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.5.3' }}</p>
                             </div>
 
                             <div class="row justify-content-center">
@@ -588,6 +636,11 @@
             @csrf
             <input type="file" id="restore-file-input" name="backup_file" accept=".sql" onchange="if(confirm('PERHATIAN: Anda akan melakukan restore database. \n\nTindakan ini akan MENGHAPUS SELURUH DATA saat ini dan menggantikannya dengan data dari file backup.\n\nApakah Anda yakin ingin melanjutkan?')) { document.getElementById('restore-form').submit(); } else { this.value = ''; }">
         </form>
+        <form id="real-reset-form" action="{{ route('settings.reset') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="confirm_reset" id="hidden_confirm_reset">
+            <div id="hidden_reset_options_container"></div>
+        </form>
     </div>
 </div>
 @endsection
@@ -600,6 +653,41 @@
             $('.custom-file-input').on('change', function() {
                 var fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            // Auto-download backup if session exists
+            @if(session('backup_to_download'))
+                setTimeout(function() {
+                    window.location.href = "{{ route('settings.download_backup', session('backup_to_download')) }}";
+                }, 1000);
+            @endif
+
+            $('#btn-run-reset').on('click', function(e) {
+                var confirmInput = $('#confirm_reset_input').val();
+                var checkboxes = $('input[name="reset_options_ui[]"]:checked');
+
+                if (checkboxes.length === 0) {
+                    alert('Silakan pilih minimal satu kategori data yang akan direset.');
+                    return false;
+                }
+
+                if (confirmInput.toUpperCase() !== 'RESET') {
+                    alert('Silakan ketik RESET untuk konfirmasi.');
+                    return false;
+                }
+
+                if (!confirm('APAKAH ANDA BENAR-BENAR YAKIN?\n\nTindakan ini tidak dapat dibatalkan dan data yang dipilih akan DIHAPUS PERMANEN.')) {
+                    return false;
+                }
+
+                // Populate hidden form and submit
+                $('#hidden_confirm_reset').val(confirmInput);
+                $('#hidden_reset_options_container').empty();
+                checkboxes.each(function() {
+                    $('#hidden_reset_options_container').append('<input type="hidden" name="reset_options[]" value="' + $(this).val() + '">');
+                });
+
+                $('#real-reset-form').submit();
             });
         });
     });
