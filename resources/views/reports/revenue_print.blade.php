@@ -4,11 +4,14 @@
 @section('date', date('d F Y', strtotime($startDate)) . ' - ' . date('d F Y', strtotime($endDate)))
 
 @section('content')
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="alert alert-info">
-            <strong>Total Pendapatan:</strong> Rp {{ number_format($totalRevenue, 0, ',', '.') }}
-        </div>
+<div class="row mb-5 py-4 border-bottom border-top">
+    <div class="col-6 border-right">
+        <div class="text-muted small mb-1">Periode Laporan</div>
+        <div class="h4 font-weight-bold mb-0 text-info">{{ date('d/m/Y', strtotime($startDate)) }} - {{ date('d/m/Y', strtotime($endDate)) }}</div>
+    </div>
+    <div class="col-6">
+        <div class="text-muted small mb-1">Total Pendapatan (Bunga & Denda)</div>
+        <div class="h4 font-weight-bold mb-0 text-red" style="color: #cd201f !important;">{{ format_rupiah($totalRevenue) }}</div>
     </div>
 </div>
 
@@ -31,7 +34,7 @@
                         <td>{{ $item->account->name }}</td>
                         <td>{{ $item->description ?? $item->journalEntry->description }}</td>
                         <td class="text-right">
-                            Rp {{ number_format($item->credit - $item->debit, 0, ',', '.') }}
+                            {{ format_rupiah($item->credit - $item->debit) }}
                         </td>
                     </tr>
                     @empty

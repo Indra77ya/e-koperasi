@@ -31,9 +31,16 @@
                     </a>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <strong>Total Pendapatan:</strong> Rp {{ number_format($totalRevenue, 0, ',', '.') }}
+            <div class="card-body pt-0">
+                <div class="row mb-5 py-4 border-bottom">
+                    <div class="col-12 col-sm-6 border-right">
+                        <div class="text-muted small mb-1">Periode Laporan</div>
+                        <div class="h4 font-weight-bold mb-0 text-info">{{ date('d/m/Y', strtotime($startDate)) }} - {{ date('d/m/Y', strtotime($endDate)) }}</div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="text-muted small mb-1">Total Pendapatan (Bunga & Denda)</div>
+                        <div class="h4 font-weight-bold mb-0 text-red">{{ format_rupiah($totalRevenue) }}</div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -53,7 +60,7 @@
                                 <td>{{ $item->account->name }}</td>
                                 <td>{{ $item->description ?? $item->journalEntry->description }}</td>
                                 <td class="text-right">
-                                    Rp {{ number_format($item->credit - $item->debit, 0, ',', '.') }}
+                                    {{ format_rupiah($item->credit - $item->debit) }}
                                 </td>
                             </tr>
                             @empty

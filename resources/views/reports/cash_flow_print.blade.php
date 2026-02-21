@@ -4,16 +4,22 @@
 @section('date', date('d F Y', strtotime($startDate)) . ' - ' . date('d F Y', strtotime($endDate)))
 
 @section('content')
-<div class="row mb-3">
-    <div class="col-6">
-        <div class="alert alert-success">
-            <strong>Total Masuk:</strong> Rp {{ number_format($totalIn, 0, ',', '.') }}
-        </div>
+<div class="row mb-5 py-4 border-bottom border-top">
+    <div class="col-3 border-right">
+        <div class="text-muted small mb-1">Total Kas Masuk</div>
+        <div class="h4 font-weight-bold mb-0 text-success">Rp {{ number_format($totalIn, 0, ',', '.') }}</div>
     </div>
-    <div class="col-6">
-        <div class="alert alert-danger">
-            <strong>Total Keluar:</strong> Rp {{ number_format($totalOut, 0, ',', '.') }}
-        </div>
+    <div class="col-3 border-right">
+        <div class="text-muted small mb-1">Total Kas Keluar</div>
+        <div class="h4 font-weight-bold mb-0 text-danger">Rp {{ number_format($totalOut, 0, ',', '.') }}</div>
+    </div>
+    <div class="col-3 border-right">
+        <div class="text-muted small mb-1">Saldo Bersih</div>
+        <div class="h4 font-weight-bold mb-0 text-primary">Rp {{ number_format($totalIn - $totalOut, 0, ',', '.') }}</div>
+    </div>
+    <div class="col-3">
+        <div class="text-muted small mb-1">Periode</div>
+        <div class="h4 font-weight-bold mb-0">{{ date('d/m/Y', strtotime($startDate)) }} - {{ date('d/m/Y', strtotime($endDate)) }}</div>
     </div>
 </div>
 

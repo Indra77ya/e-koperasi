@@ -20,19 +20,31 @@ class ReportController extends Controller
     public function outstanding(Request $request)
     {
         $query = Loan::with(['member', 'nasabah'])
-            ->whereIn('status', ['disetujui', 'dicairkan']);
+            ->whereIn('status', ['disetujui', 'dicairkan', 'berjalan']);
 
         if ($request->has('export')) {
             return $this->exportOutstanding($query->cursor());
         }
 
+        $totals = (clone $query)->select(
+            DB::raw('SUM(jumlah_pinjaman) as total_pokok'),
+            DB::raw('COUNT(*) as total_count')
+        )->first();
+
+        // Summing remaining balance is tricky because it's a dynamic property or requires join
+        $totals->total_remaining = DB::table('pinjaman')
+            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
+            ->whereIn('pinjaman.status', ['disetujui', 'dicairkan', 'berjalan'])
+            ->where('pinjaman_angsuran.status', '!=', 'lunas')
+            ->sum('pinjaman_angsuran.pokok');
+
         $loans = $query->paginate(20);
 
         if ($request->has('print')) {
-            return view('reports.outstanding_print', compact('loans'));
+            return view('reports.outstanding_print', compact('loans', 'totals'));
         }
 
-        return view('reports.outstanding', compact('loans'));
+        return view('reports.outstanding', compact('loans', 'totals'));
     }
 
     public function badDebt(Request $request)
@@ -44,13 +56,24 @@ class ReportController extends Controller
             return $this->exportBadDebt($query->cursor());
         }
 
+        $totals = (clone $query)->select(
+            DB::raw('SUM(jumlah_pinjaman) as total_pokok'),
+            DB::raw('COUNT(*) as total_count')
+        )->first();
+
+        $totals->total_remaining = DB::table('pinjaman')
+            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
+            ->where('pinjaman.status', 'macet')
+            ->where('pinjaman_angsuran.status', '!=', 'lunas')
+            ->sum('pinjaman_angsuran.pokok');
+
         $loans = $query->paginate(20);
 
         if ($request->has('print')) {
-            return view('reports.bad_debt_print', compact('loans'));
+            return view('reports.bad_debt_print', compact('loans', 'totals'));
         }
 
-        return view('reports.bad_debt', compact('loans'));
+        return view('reports.bad_debt', compact('loans', 'totals'));
     }
 
     public function collateral(Request $request)
@@ -61,13 +84,18 @@ class ReportController extends Controller
             return $this->exportCollateral($query->cursor());
         }
 
+        $totals = (clone $query)->select(
+            DB::raw('SUM(nilai_taksasi) as total_value'),
+            DB::raw('COUNT(*) as total_count')
+        )->first();
+
         $collaterals = $query->paginate(20);
 
         if ($request->has('print')) {
-            return view('reports.collateral_print', compact('collaterals'));
+            return view('reports.collateral_print', compact('collaterals', 'totals'));
         }
 
-        return view('reports.collateral', compact('collaterals'));
+        return view('reports.collateral', compact('collaterals', 'totals'));
     }
 
     public function cashFlow(Request $request)
