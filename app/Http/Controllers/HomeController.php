@@ -29,6 +29,9 @@ class HomeController extends Controller
      */
     public function index()
     {
+        // Auto-Sync Indefinite Loans
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
+
         // 1. Total Dana Turun (Disbursed)
         // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
         // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).

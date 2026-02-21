@@ -45,7 +45,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Total Tunggakan</th>
+                                <th>Total Tunggakan (Overdue)</th>
                                 <td class="font-weight-bold text-red">
                                     @php
                                         $tunggakan = \App\Models\LoanInstallment::whereIn('pinjaman_id', $nasabah->pinjaman->pluck('id'))
@@ -65,6 +65,15 @@
                                             (Pokok: {{ format_rupiah($tunggakan->p) }}, Bunga: {{ format_rupiah($tunggakan->b) }}, Admin: {{ format_rupiah($tunggakan->a) }}, Denda: {{ format_rupiah($tunggakan->d) }})
                                         </div>
                                     @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total yang Harus Dibayar</th>
+                                <td class="font-weight-bold text-info">
+                                    {{ format_rupiah($totalOutstanding) }}
+                                    <div class="small text-muted font-weight-normal">
+                                        (Total sisa seluruh pinjaman aktif)
+                                    </div>
                                 </td>
                             </tr>
                             <tr>

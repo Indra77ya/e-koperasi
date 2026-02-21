@@ -19,6 +19,7 @@ class ReportController extends Controller
 
     public function outstanding(Request $request)
     {
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
         $query = Loan::with(['member', 'nasabah'])
             ->whereIn('status', ['disetujui', 'dicairkan', 'berjalan']);
 
@@ -134,6 +135,7 @@ class ReportController extends Controller
 
     public function arrears(Request $request)
     {
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
         $query = Loan::with(['member', 'nasabah', 'installments' => function($q) {
                 $q->where('status', '!=', 'lunas')
                   ->where('tanggal_jatuh_tempo', '<', now());

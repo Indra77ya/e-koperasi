@@ -33,6 +33,8 @@ class SettingController extends Controller
             'default_admin_fee' => 'nullable|numeric|min:0',
             'default_penalty' => 'nullable|numeric|min:0',
             'loan_limit' => 'nullable|numeric|min:0',
+            'periodic_admin_rate' => 'nullable|numeric|min:0',
+            'periodic_admin_interval' => 'nullable|integer|min:1',
             'col_dpk_days' => 'nullable|integer|min:0',
             'col_kl_days' => 'nullable|integer|min:0',
             'col_diragukan_days' => 'nullable|integer|min:0',

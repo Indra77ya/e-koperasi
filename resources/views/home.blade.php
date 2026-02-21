@@ -27,7 +27,22 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-4">
+    <div class="col-12 col-sm-4 col-lg-2">
+        <div class="card">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <span class="stamp stamp-md bg-orange mr-3">
+                        <i class="fe fe-percent"></i>
+                    </span>
+                    <div>
+                        <h4 class="m-0 text-orange"><a href="{{ route('reports.arrears') }}" class="text-orange">{{ format_rupiah($globalArrears->total_bunga ?? 0) }}</a></h4>
+                        <small class="text-muted">Tunggakan Bunga</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4 col-lg-2">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">
@@ -54,7 +69,7 @@
                             $totalTunggakan = ($globalArrears->total_pokok ?? 0) + ($globalArrears->total_bunga ?? 0) + ($globalArrears->total_admin ?? 0) + ($globalArrears->total_denda ?? 0);
                         @endphp
                         <h4 class="m-0 text-red"><a href="{{ route('reports.arrears') }}" class="text-red">{{ format_rupiah($totalTunggakan) }}</a></h4>
-                        <small class="text-muted">Tunggakan Global (P+B+A+D)</small>
+                        <small class="text-muted">Tunggakan Global</small>
                     </div>
                 </div>
             </div>

@@ -211,7 +211,19 @@ class LoanController extends Controller
         return view('loans.show', compact('loan'));
     }
 
-    private function syncIndefiniteInstallments($loan)
+    /**
+     * Sync all active indefinite loans to ensure installments are up to date.
+     */
+    public static function syncAllActiveIndefiniteLoans()
+    {
+        $loans = Loan::where('status', 'berjalan')->where('tenor', 0)->get();
+        $controller = app(self::class);
+        foreach ($loans as $loan) {
+            $controller->syncIndefiniteInstallments($loan);
+        }
+    }
+
+    public function syncIndefiniteInstallments($loan)
     {
         $latest = $loan->installments()->orderBy('angsuran_ke', 'desc')->first();
         if (!$latest) return;
@@ -256,10 +268,12 @@ class LoanController extends Controller
                 $interest = $currentBalance * $ratePerPeriod;
             }
 
-            // Periodic Admin Fee every 6 months
+            // Periodic Admin Fee
             $periodicAdmin = 0;
-            if ($loan->tempo_angsuran == 'bulanan' && $angsuranKe % 6 == 0) {
-                $periodicAdmin = $loan->jumlah_pinjaman * 0.01;
+            $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+            $adminInterval = Setting::get('periodic_admin_interval', 6);
+            if ($loan->tempo_angsuran == 'bulanan' && $angsuranKe % $adminInterval == 0) {
+                $periodicAdmin = $loan->jumlah_pinjaman * $adminRate;
             }
 
             $exists = LoanInstallment::where('pinjaman_id', $loan->id)
@@ -1214,6 +1228,9 @@ class LoanController extends Controller
             return $schedule;
         }
 
+        $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+        $adminInterval = Setting::get('periodic_admin_interval', 6);
+
         if ($type == 'flat') {
             $principal = $amount / $tenor;
             $interest = $amount * $ratePerPeriod;
@@ -1222,8 +1239,8 @@ class LoanController extends Controller
                 $balance -= $principal;
 
                 $periodicAdmin = 0;
-                if ($tempo == 'bulanan' && $i % 6 == 0) {
-                    $periodicAdmin = $amount * 0.01;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
                 }
 
                 $schedule[] = [
@@ -1244,8 +1261,8 @@ class LoanController extends Controller
                 $balance -= $principal;
 
                 $periodicAdmin = 0;
-                if ($tempo == 'bulanan' && $i % 6 == 0) {
-                    $periodicAdmin = $amount * 0.01;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
                 }
 
                 $schedule[] = [
@@ -1272,8 +1289,8 @@ class LoanController extends Controller
                 $balance -= $principal;
 
                 $periodicAdmin = 0;
-                if ($tempo == 'bulanan' && $i % 6 == 0) {
-                    $periodicAdmin = $amount * 0.01;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
                 }
 
                 $schedule[] = [

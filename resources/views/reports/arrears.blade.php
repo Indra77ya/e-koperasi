@@ -88,6 +88,17 @@
                             </tr>
                             @endforelse
                         </tbody>
+                        <tfoot>
+                            <tr class="font-weight-bold bg-light">
+                                <td colspan="2" class="text-center">GRAND TOTAL TUNGGAKAN</td>
+                                <td class="text-right">{{ format_rupiah($totals->total_pokok) }}</td>
+                                <td class="text-right">{{ format_rupiah($totals->total_bunga) }}</td>
+                                <td class="text-right">{{ format_rupiah($totals->total_admin) }}</td>
+                                <td class="text-right">{{ format_rupiah($totals->total_denda) }}</td>
+                                <td class="text-right text-red">{{ format_rupiah(($totals->total_pokok + $totals->total_bunga + $totals->total_admin + $totals->total_denda)) }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <div class="mt-3">
