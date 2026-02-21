@@ -104,6 +104,42 @@ class ReportController extends Controller
         return view('reports.cash_flow', compact('transactions', 'filter', 'startDate', 'endDate', 'totalIn', 'totalOut'));
     }
 
+    public function arrears(Request $request)
+    {
+        $query = Loan::with(['member', 'nasabah', 'installments' => function($q) {
+                $q->where('status', '!=', 'lunas')
+                  ->where('tanggal_jatuh_tempo', '<', now());
+            }])
+            ->whereHas('installments', function($q) {
+                $q->where('status', '!=', 'lunas')
+                  ->where('tanggal_jatuh_tempo', '<', now());
+            });
+
+        if ($request->has('export')) {
+            return $this->exportArrears($query->get());
+        }
+
+        $loans = $query->paginate(20);
+
+        // Sums for the header
+        $totals = DB::table('pinjaman_angsuran')
+            ->where('status', '!=', 'lunas')
+            ->where('tanggal_jatuh_tempo', '<', now())
+            ->select(
+                DB::raw('SUM(pokok) as total_pokok'),
+                DB::raw('SUM(bunga) as total_bunga'),
+                DB::raw('SUM(biaya_admin) as total_admin'),
+                DB::raw('SUM(denda) as total_denda')
+            )
+            ->first();
+
+        if ($request->has('print')) {
+            return view('reports.arrears_print', compact('loans', 'totals'));
+        }
+
+        return view('reports.arrears', compact('loans', 'totals'));
+    }
+
     public function revenue(Request $request)
     {
         $startDate = $request->start_date ?? date('Y-m-01');
@@ -220,5 +256,35 @@ class ReportController extends Controller
                 $item->credit - $item->debit
             ];
         });
+    }
+
+    private function exportArrears($loans)
+    {
+        return response()->stream(function() use ($loans) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['No Pinjaman', 'Nama', 'Pokok', 'Bunga', 'Admin', 'Denda', 'Total Tunggakan']);
+            foreach ($loans as $loan) {
+                $pokok = $loan->installments->sum('pokok');
+                $bunga = $loan->installments->sum('bunga');
+                $admin = $loan->installments->sum('biaya_admin');
+                $denda = $loan->installments->sum('denda');
+                fputcsv($file, [
+                    $loan->kode_pinjaman,
+                    $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-'),
+                    $pokok,
+                    $bunga,
+                    $admin,
+                    $denda,
+                    $pokok + $bunga + $admin + $denda
+                ]);
+            }
+            fclose($file);
+        }, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=tunggakan.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ]);
     }
 }

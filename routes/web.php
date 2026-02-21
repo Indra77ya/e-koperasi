@@ -141,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/collateral', 'ReportController@collateral')->name('reports.collateral');
         Route::get('/cash-flow', 'ReportController@cashFlow')->name('reports.cash_flow');
         Route::get('/revenue', 'ReportController@revenue')->name('reports.revenue');
+        Route::get('/arrears', 'ReportController@arrears')->name('reports.arrears');
     });
 
     Route::get('notifications/mark-all-read', 'NotificationController@markAllAsRead')->name('notifications.readAll');

@@ -94,6 +94,17 @@ class HomeController extends Controller
             ->with(['loan.member', 'loan.nasabah'])
             ->get();
 
+        // 5. Global Arrears (Tunggakan Global)
+        $globalArrears = LoanInstallment::where('status', '!=', 'lunas')
+            ->where('tanggal_jatuh_tempo', '<', Carbon::now())
+            ->select(
+                DB::raw('SUM(pokok) as total_pokok'),
+                DB::raw('SUM(bunga) as total_bunga'),
+                DB::raw('SUM(biaya_admin) as total_admin'),
+                DB::raw('SUM(denda) as total_denda')
+            )
+            ->first();
+
         // Unified Mutation Logic (Savings + Loan Disburse + Loan Repay)
         $today = Carbon::today();
 
@@ -188,7 +199,8 @@ class HomeController extends Controller
             'disbursedTrend',
             'revenueStats',
             'collectibilityStats',
-            'dueToday'
+            'dueToday',
+            'globalArrears'
         ));
     }
 

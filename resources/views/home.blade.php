@@ -27,7 +27,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-8">
+    <div class="col-12 col-sm-4 col-lg-4">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">
@@ -37,6 +37,24 @@
                     <div>
                         <h4 class="m-0"><a href="javascript:void(0)">{{ format_rupiah($totalDisbursed) }}</a></h4>
                         <small class="text-muted">Total Dana Turun (Disbursed)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4 col-lg-4">
+        <div class="card">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <span class="stamp stamp-md bg-red mr-3">
+                        <i class="fe fe-alert-circle"></i>
+                    </span>
+                    <div>
+                        @php
+                            $totalTunggakan = ($globalArrears->total_pokok ?? 0) + ($globalArrears->total_bunga ?? 0) + ($globalArrears->total_admin ?? 0) + ($globalArrears->total_denda ?? 0);
+                        @endphp
+                        <h4 class="m-0 text-red"><a href="{{ route('reports.arrears') }}" class="text-red">{{ format_rupiah($totalTunggakan) }}</a></h4>
+                        <small class="text-muted">Tunggakan Global (P+B+A+D)</small>
                     </div>
                 </div>
             </div>
