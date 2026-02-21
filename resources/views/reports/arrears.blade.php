@@ -19,23 +19,23 @@
                     </a>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-6 col-sm-3">
-                        <div class="text-muted">Total Tunggakan Pokok</div>
-                        <div class="h3 m-0">{{ format_rupiah($totals->total_pokok) }}</div>
+            <div class="card-body pt-0">
+                <div class="row mb-5 py-4 border-bottom">
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Total Tunggakan Pokok</div>
+                        <div class="h4 font-weight-bold mb-0">{{ format_rupiah($totals->total_pokok) }}</div>
+                    </div>
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Total Tunggakan Bunga</div>
+                        <div class="h4 font-weight-bold mb-0">{{ format_rupiah($totals->total_bunga) }}</div>
+                    </div>
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Total Tunggakan Admin</div>
+                        <div class="h4 font-weight-bold mb-0">{{ format_rupiah($totals->total_admin) }}</div>
                     </div>
                     <div class="col-6 col-sm-3">
-                        <div class="text-muted">Total Tunggakan Bunga</div>
-                        <div class="h3 m-0">{{ format_rupiah($totals->total_bunga) }}</div>
-                    </div>
-                    <div class="col-6 col-sm-3">
-                        <div class="text-muted">Total Tunggakan Admin</div>
-                        <div class="h3 m-0">{{ format_rupiah($totals->total_admin) }}</div>
-                    </div>
-                    <div class="col-6 col-sm-3">
-                        <div class="text-muted">Total Keseluruhan</div>
-                        <div class="h3 m-0 text-red">{{ format_rupiah(($totals->total_pokok + $totals->total_bunga + $totals->total_admin + $totals->total_denda)) }}</div>
+                        <div class="text-muted small mb-1">Total Keseluruhan</div>
+                        <div class="h4 font-weight-bold mb-0 text-red">{{ format_rupiah(($totals->total_pokok + $totals->total_bunga + $totals->total_admin + $totals->total_denda)) }}</div>
                     </div>
                 </div>
 
