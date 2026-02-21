@@ -114,11 +114,14 @@
                             <button type="button" class="btn btn-primary btn-block mt-2" data-toggle="modal" data-target="#modal-disburse">Cairkan Dana</button>
                         @endif
 
-                        @if($loan->status == 'berjalan')
+                        @if($loan->status == 'berjalan' || $loan->status == 'macet')
+                            <button type="button" class="btn btn-success btn-block mt-2" id="btn-settle-all">Pelunasan Total</button>
+                            @if($loan->status == 'berjalan')
                             <form action="{{ route('loans.markBadDebt', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai pinjaman ini sebagai MACET?')">
                                 @csrf
                                 <button type="submit" class="btn btn-danger btn-block mt-2">Tandai Macet</button>
                             </form>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -322,6 +325,71 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Bayar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pelunasan Total -->
+    <div class="modal fade" id="modal-settle" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pelunasan Total Pinjaman</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('loans.settle-all', $loan->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Tanggal Pelunasan</label>
+                            <input type="date" name="tanggal_bayar" id="settle-date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Metode Pembayaran</label>
+                            <select name="metode_pembayaran" class="form-control" required>
+                                <option value="tunai">Tunai / Kas</option>
+                                <option value="tabungan">Potong Saldo Tabungan</option>
+                                <option value="transfer">Transfer Bank</option>
+                            </select>
+                        </div>
+
+                        <div class="card bg-light border-0">
+                            <div class="card-body p-3">
+                                <h6 class="mb-3">Rincian Pelunasan:</h6>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Total Sisa Pokok</span>
+                                    <span id="settle-pokok" class="font-weight-bold">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Bunga Berjalan (<span id="settle-days">0</span> hari)</span>
+                                    <span id="settle-bunga" class="font-weight-bold">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Tunggakan Bunga/Denda</span>
+                                    <span id="settle-arrears" class="font-weight-bold">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Biaya Admin</span>
+                                    <span id="settle-admin" class="font-weight-bold">Rp 0</span>
+                                </div>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between">
+                                    <span class="h6 mb-0">Total Harus Dibayar</span>
+                                    <span id="settle-total" class="h6 mb-0 text-primary font-weight-bold">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Keterangan</label>
+                            <textarea name="keterangan_pembayaran" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Konfirmasi Pelunasan</button>
                     </div>
                 </form>
             </div>
@@ -655,6 +723,87 @@
                 }
                 calculateSimulation();
             });
+
+            // Pelunasan Total Logic
+            $('#btn-settle-all').on('click', function() {
+                updateSettlementBreakdown();
+                $('#modal-settle').modal('show');
+            });
+
+            $('#settle-date').on('change', function() {
+                updateSettlementBreakdown();
+            });
+
+            function updateSettlementBreakdown() {
+                var installments = @json($loan->installments->where('status', 'belum_lunas')->values());
+                var payDate = new Date($('#settle-date').val());
+                var loanPersetujuan = new Date('{{ $loan->tanggal_persetujuan }}');
+                var isIndefinite = {{ $loan->tenor == 0 ? 'true' : 'false' }};
+
+                var totalPokok = 0;
+                var totalBunga = 0;
+                var totalArrears = 0;
+                var totalAdmin = 0;
+                var totalDays = 0;
+
+                // For Indefinite, unpaid is always sorted. first installment's sisa_pinjaman is the total pokok.
+                if (isIndefinite && installments.length > 0) {
+                    totalPokok = installments[0].sisa_pinjaman;
+                }
+
+                installments.forEach(function(inst, index) {
+                    if (!isIndefinite) {
+                        totalPokok += parseFloat(inst.pokok);
+                    }
+                    totalAdmin += parseFloat(inst.biaya_admin || 0);
+
+                    var dueDate = new Date(inst.tanggal_jatuh_tempo);
+
+                    // Period Start Date
+                    var startDate;
+                    if (inst.angsuran_ke == 1) {
+                        startDate = loanPersetujuan;
+                    } else {
+                        // We need the previous installment's due date.
+                        // It's tricky to get from this JS array if some were already paid.
+                        // Let's assume the previous one was 1 month ago.
+                        startDate = new Date(dueDate);
+                        startDate.setMonth(startDate.getMonth() - 1);
+                    }
+
+                    if (payDate >= dueDate) {
+                        // Past due, full interest
+                        totalArrears += parseFloat(inst.bunga);
+                        totalArrears += parseFloat(inst.denda || 0);
+                    } else {
+                        // Not yet due
+                        if (payDate > startDate) {
+                            // Current period, prorate
+                            var diffTime = Math.abs(payDate - startDate);
+                            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                            if (diffDays < 30 && diffDays > 0) {
+                                totalBunga += (parseFloat(inst.bunga) / 30) * diffDays;
+                                totalDays = diffDays;
+                            } else if (diffDays >= 30) {
+                                totalBunga += parseFloat(inst.bunga);
+                                totalDays = 30;
+                            }
+                        } else {
+                            // Future period, waive interest
+                        }
+                    }
+                });
+
+                $('#settle-pokok').text('Rp ' + Math.round(totalPokok).toLocaleString('id-ID'));
+                $('#settle-bunga').text('Rp ' + Math.round(totalBunga).toLocaleString('id-ID'));
+                $('#settle-days').text(totalDays);
+                $('#settle-arrears').text('Rp ' + Math.round(totalArrears).toLocaleString('id-ID'));
+                $('#settle-admin').text('Rp ' + Math.round(totalAdmin).toLocaleString('id-ID'));
+
+                var grandTotal = totalPokok + totalBunga + totalArrears + totalAdmin;
+                $('#settle-total').text('Rp ' + Math.round(grandTotal).toLocaleString('id-ID'));
+            }
 
             function calculateSimulation() {
                 var inputAmount = parseFloat($('#pay-amount').val()) || 0;

@@ -653,7 +653,36 @@ class LoanController extends Controller
                 // Indefinite: Input is Principal. Total = Input + Interest + Denda
                 $pokokPaid = $inputAmount;
                 $bungaPaid = $installment->bunga;
-                $totalPaid = $pokokPaid + $bungaPaid + $denda;
+
+                // Proration Logic for Total Settlement
+                if ($pokokPaid >= $installment->sisa_pinjaman) {
+                    $pokokPaid = $installment->sisa_pinjaman; // Cap at outstanding
+
+                    // Determine start date of the current period
+                    $startDate = null;
+                    if ($installment->angsuran_ke == 1) {
+                        $startDate = $installment->loan->tanggal_persetujuan;
+                    } else {
+                        $prev = LoanInstallment::where('pinjaman_id', $installment->pinjaman_id)
+                            ->where('angsuran_ke', $installment->angsuran_ke - 1)
+                            ->first();
+                        $startDate = $prev ? $prev->tanggal_jatuh_tempo : $installment->loan->tanggal_persetujuan;
+                    }
+
+                    if ($startDate) {
+                        $start = Carbon::parse($startDate);
+                        $payDate = Carbon::parse($request->tanggal_bayar);
+                        $days = $start->diffInDays($payDate);
+
+                        if ($days < 30 && $days > 0) {
+                            $bungaPaid = round(($installment->bunga / 30) * $days, 2);
+                        } elseif ($days <= 0) {
+                            $bungaPaid = 0; // Or minimum charge? Let's follow formula.
+                        }
+                    }
+                }
+
+                $totalPaid = $pokokPaid + $bungaPaid + $denda + ($installment->biaya_admin ?? 0);
 
                 // Ensure Principal is non-negative
                 if ($pokokPaid < 0) {
@@ -709,7 +738,8 @@ class LoanController extends Controller
                     'keterangan_pembayaran' => $request->keterangan_pembayaran,
                     'denda' => $denda,
                     'pokok' => $pokokPaid,
-                    'total_angsuran' => $pokokPaid + $bungaPaid + ($installment->biaya_admin ?? 0), // Update total to reflect actual structure (Pokok + Bunga + Admin)
+                    'bunga' => $bungaPaid,
+                    'total_angsuran' => round($pokokPaid + $bungaPaid + ($installment->biaya_admin ?? 0), 2),
                 ]);
 
                 // Check if all installments are paid
@@ -914,7 +944,7 @@ class LoanController extends Controller
                         'metode_pembayaran' => null,
                         'keterangan_pembayaran' => null,
                         'pokok' => 0, // Reset principal for indefinite until paid again
-                        'total_angsuran' => $installment->bunga, // Total back to just bunga
+                        'total_angsuran' => round($installment->bunga + ($installment->biaya_admin ?? 0), 2), // Total back to just bunga + admin
                         'sisa_pinjaman' => $prevSisa,
                     ]);
 
@@ -939,6 +969,211 @@ class LoanController extends Controller
         } catch (\Exception $e) {
             Log::error('Void Payment Failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal membatalkan pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    public function settleAll(Request $request, $id)
+    {
+        $loan = Loan::with('installments')->findOrFail($id);
+
+        if ($loan->status != 'berjalan' && $loan->status != 'macet') {
+            return redirect()->back()->with('error', 'Hanya pinjaman aktif yang bisa dilunasi.');
+        }
+
+        $request->validate([
+            'tanggal_bayar' => 'required|date',
+            'metode_pembayaran' => 'required',
+            'keterangan_pembayaran' => 'nullable|string'
+        ]);
+
+        $payDate = Carbon::parse($request->tanggal_bayar);
+
+        $unpaid = $loan->installments()->where('status', 'belum_lunas')->orderBy('angsuran_ke', 'asc')->get();
+
+        if ($unpaid->isEmpty()) {
+             return redirect()->back()->with('error', 'Tidak ada angsuran yang harus dibayar.');
+        }
+
+        $totalPokok = $unpaid->sum('pokok');
+        // If indefinite, pokok is 0 but we need to pay the remaining balance
+        if ($loan->tenor == 0) {
+            $totalPokok = $unpaid->first()->sisa_pinjaman;
+        }
+
+        $totalBunga = 0;
+        $totalDenda = $unpaid->sum('denda');
+        $totalAdmin = $unpaid->sum('biaya_admin');
+
+        foreach ($unpaid as $inst) {
+            $dueDate = Carbon::parse($inst->tanggal_jatuh_tempo);
+
+            // Determine period start
+            $startDate = null;
+            if ($inst->angsuran_ke == 1) {
+                $startDate = Carbon::parse($loan->tanggal_persetujuan);
+            } else {
+                $prev = LoanInstallment::where('pinjaman_id', $loan->id)
+                    ->where('angsuran_ke', $inst->angsuran_ke - 1)
+                    ->first();
+                $startDate = $prev ? Carbon::parse($prev->tanggal_jatuh_tempo) : Carbon::parse($loan->tanggal_persetujuan);
+            }
+
+            if ($payDate->greaterThanOrEqualTo($dueDate)) {
+                // Already past or exactly on due date, charge full interest for this period
+                $totalBunga += $inst->bunga;
+            } else {
+                // Not yet due, check if it's the current period or future
+                if ($payDate->greaterThan($startDate)) {
+                    // It's the current period, prorate
+                    $days = $startDate->diffInDays($payDate);
+                    if ($days < 30 && $days > 0) {
+                        $totalBunga += round(($inst->bunga / 30) * $days, 2);
+                    } elseif ($days >= 30) {
+                        $totalBunga += $inst->bunga;
+                    }
+                    // if days <= 0, interest is 0 (already handled by initialization)
+                } else {
+                    // Pay date is BEFORE the start of this period.
+                    // This happens for future installments in fixed loans.
+                    // Usually interest for future periods is waived in total settlement.
+                    // So we add 0.
+                }
+            }
+        }
+
+        $totalPaid = $totalPokok + $totalBunga + $totalDenda + $totalAdmin;
+
+        // Check Balance for Tabungan
+        if ($request->metode_pembayaran == 'tabungan') {
+            $checkSaving = null;
+            if ($loan->anggota_id) { $checkSaving = Saving::where('anggota_id', $loan->anggota_id)->first(); }
+            elseif ($loan->nasabah_id) { $checkSaving = Saving::where('nasabah_id', $loan->nasabah_id)->first(); }
+
+            if (!$checkSaving || $checkSaving->saldo < $totalPaid) {
+                return redirect()->back()->with('error', 'Saldo tabungan tidak mencukupi untuk pelunasan ini.');
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($loan, $unpaid, $request, $totalPokok, $totalBunga, $totalDenda, $totalAdmin, $totalPaid, $payDate) {
+
+                // 1. Mark installments as lunas
+                // For Indefinite, we only mark the current one and delete future ones
+                if ($loan->tenor == 0) {
+                    $current = $unpaid->first();
+                    $current->update([
+                        'status' => 'lunas',
+                        'tanggal_bayar' => $payDate,
+                        'metode_pembayaran' => $request->metode_pembayaran,
+                        'keterangan_pembayaran' => $request->keterangan_pembayaran . ' (Pelunasan Total)',
+                        'pokok' => $totalPokok,
+                        'bunga' => $totalBunga,
+                        'total_angsuran' => round($totalPokok + $totalBunga + $totalAdmin, 2),
+                        'sisa_pinjaman' => 0
+                    ]);
+
+                    // Delete future unpaid installments
+                    $loan->installments()->where('status', 'belum_lunas')->where('id', '!=', $current->id)->delete();
+                } else {
+                    // Fixed Loan: Pay everything
+                    foreach ($unpaid as $inst) {
+                        $instDueDate = Carbon::parse($inst->tanggal_jatuh_tempo);
+                        $instStartDate = null;
+                        if ($inst->angsuran_ke == 1) {
+                            $instStartDate = Carbon::parse($loan->tanggal_persetujuan);
+                        } else {
+                            $prev = LoanInstallment::where('pinjaman_id', $loan->id)->where('angsuran_ke', $inst->angsuran_ke - 1)->first();
+                            $instStartDate = $prev ? Carbon::parse($prev->tanggal_jatuh_tempo) : Carbon::parse($loan->tanggal_persetujuan);
+                        }
+
+                        $instBunga = 0;
+                        if ($payDate->greaterThanOrEqualTo($instDueDate)) {
+                            $instBunga = $inst->bunga; // Past due, full interest
+                        } elseif ($payDate->greaterThan($instStartDate)) {
+                            // Current period, prorate
+                            $days = $instStartDate->diffInDays($payDate);
+                            if ($days < 30 && $days > 0) {
+                                $instBunga = round(($inst->bunga / 30) * $days, 2);
+                            } elseif ($days >= 30) {
+                                $instBunga = $inst->bunga;
+                            }
+                        }
+                        // if payDate <= instStartDate, instBunga = 0
+
+                        $inst->update([
+                            'status' => 'lunas',
+                            'tanggal_bayar' => $payDate,
+                            'metode_pembayaran' => $request->metode_pembayaran,
+                            'keterangan_pembayaran' => $request->keterangan_pembayaran . ' (Pelunasan Total)',
+                            'bunga' => $instBunga,
+                            'total_angsuran' => round($inst->pokok + $instBunga + ($inst->biaya_admin ?? 0), 2),
+                            'sisa_pinjaman' => 0
+                        ]);
+                    }
+                }
+
+                $loan->update(['status' => 'lunas']);
+
+                // 2. Savings Mutation
+                $coaCash = Setting::get('coa_cash', '1101');
+                if ($request->metode_pembayaran == 'tabungan') {
+                    $saving = null;
+                    if ($loan->anggota_id) { $saving = Saving::where('anggota_id', $loan->anggota_id)->first(); }
+                    elseif ($loan->nasabah_id) { $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first(); }
+
+                    if ($saving) {
+                        $saving->saldo -= $totalPaid;
+                        $saving->save();
+
+                        SavingHistory::create([
+                            'anggota_id' => $loan->anggota_id,
+                            'nasabah_id' => $loan->nasabah_id,
+                            'tanggal' => $payDate,
+                            'keterangan' => 'Pelunasan Total Pinjaman ' . $loan->kode_pinjaman,
+                            'debet' => $totalPaid,
+                            'kredit' => 0,
+                            'saldo' => $saving->saldo,
+                            'ref_type' => get_class($loan),
+                            'ref_id' => $loan->id,
+                        ]);
+                        $coaCash = Setting::get('coa_savings', '2101');
+                    }
+                }
+
+                // 3. Accounting Journal
+                $coaReceivable = Setting::get('coa_receivable', '1103');
+                $coaInterest = Setting::get('coa_revenue_interest', '4101');
+                $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+                $coaAdmin = Setting::get('coa_revenue_admin', '4102');
+
+                $items = [
+                    ['code' => $coaCash, 'debit' => $totalPaid, 'credit' => 0],
+                    ['code' => $coaReceivable, 'debit' => 0, 'credit' => $totalPokok],
+                ];
+
+                if ($totalBunga > 0) {
+                    $items[] = ['code' => $coaInterest, 'debit' => 0, 'credit' => $totalBunga];
+                }
+                if ($totalAdmin > 0) {
+                    $items[] = ['code' => $coaAdmin, 'debit' => 0, 'credit' => $totalAdmin];
+                }
+                if ($totalDenda > 0) {
+                    $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $totalDenda];
+                }
+
+                $this->accountingService->createJournal(
+                    $payDate,
+                    $loan->kode_pinjaman . '-SETTLE',
+                    'Pelunasan Total ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                    $items,
+                    $loan
+                );
+            });
+
+            return redirect()->route('loans.show', $loan->id)->with('success', 'Pinjaman berhasil dilunasi total.');
+        } catch (\Exception $e) {
+            Log::error('Settlement Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal melakukan pelunasan: ' . $e->getMessage());
         }
     }
 
