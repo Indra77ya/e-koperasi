@@ -31,12 +31,20 @@ class LoanController extends Controller
 
     public function index(Request $request)
     {
+        // Auto-Sync Indefinite Loans
+        self::syncAllActiveIndefiniteLoans();
+
         // Auto-repair admin role if missing (ensures migration effect)
         $admins = ['admin@example.com', 'ekoperasi@gmail.com'];
         foreach ($admins as $email) {
             if (User::where('email', $email)->where('role', '!=', 'admin')->exists()) {
                 User::where('email', $email)->update(['role' => 'admin']);
             }
+        }
+
+        // Auto-repair periodic admin rate if it's missing or lower than 5% (as per user request)
+        if (Setting::get('periodic_admin_rate', 0) < 5) {
+            Setting::set('periodic_admin_rate', 5);
         }
 
         if ($request->ajax()) {
@@ -204,7 +212,7 @@ class LoanController extends Controller
     public function show($id)
     {
         $loan = Loan::with(['member', 'nasabah', 'installments'])->findOrFail($id);
-        if ($loan->status == 'berjalan' && $loan->tenor == 0) {
+        if (in_array($loan->status, ['berjalan', 'macet']) && $loan->tenor == 0) {
             $this->syncIndefiniteInstallments($loan);
             $loan->load('installments');
         }
@@ -216,7 +224,7 @@ class LoanController extends Controller
      */
     public static function syncAllActiveIndefiniteLoans()
     {
-        $loans = Loan::where('status', 'berjalan')->where('tenor', 0)->get();
+        $loans = Loan::whereIn('status', ['berjalan', 'macet'])->where('tenor', 0)->get();
         $controller = app(self::class);
         foreach ($loans as $loan) {
             $controller->syncIndefiniteInstallments($loan);
@@ -225,6 +233,22 @@ class LoanController extends Controller
 
     public function syncIndefiniteInstallments($loan)
     {
+        // 1. Correct existing unpaid installments if periodic admin fee is outdated
+        $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+        $adminInterval = Setting::get('periodic_admin_interval', 6);
+
+        $unpaid = $loan->installments()->where('status', 'belum_lunas')->get();
+        foreach ($unpaid as $installment) {
+            if ($loan->tempo_angsuran == 'bulanan' && $installment->angsuran_ke % $adminInterval == 0) {
+                $expectedAdmin = round($loan->jumlah_pinjaman * $adminRate, 2);
+                if ($installment->biaya_admin != $expectedAdmin) {
+                    $installment->biaya_admin = $expectedAdmin;
+                    $installment->total_angsuran = round($installment->pokok + $installment->bunga + $expectedAdmin, 2);
+                    $installment->save();
+                }
+            }
+        }
+
         $latest = $loan->installments()->orderBy('angsuran_ke', 'desc')->first();
         if (!$latest) return;
 

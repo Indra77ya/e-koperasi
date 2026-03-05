@@ -61,7 +61,7 @@
                         <td class="font-weight-bold text-info">
                             {{ format_rupiah($total_outstanding) }}
                             <div class="small text-muted font-weight-normal">
-                                (Total sisa seluruh pinjaman aktif)
+                                (Total sisa seluruh pinjaman aktif: Pokok + Bunga + Admin + Denda)
                             </div>
                         </td>
                     </tr>

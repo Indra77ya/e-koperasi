@@ -69,8 +69,8 @@ class MemberController extends Controller
 
         $totalOutstanding = 0;
         foreach ($member->loans as $loan) {
-            if (in_array($loan->status, ['berjalan', 'macet'])) {
-                $totalOutstanding += $loan->installments->sum('pokok');
+            if (in_array($loan->status, ['berjalan', 'macet', 'lunas'])) {
+                $totalOutstanding += $loan->remaining_principal;
                 $totalOutstanding += $loan->installments->sum('bunga');
                 $totalOutstanding += $loan->installments->sum('biaya_admin');
                 $totalOutstanding += $loan->installments->sum('denda');
