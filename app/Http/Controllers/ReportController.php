@@ -90,13 +90,17 @@ class ReportController extends Controller
             DB::raw('COUNT(*) as total_count')
         )->first();
 
+        $typeCounts = (clone $query)->select('jenis', DB::raw('COUNT(*) as count'))
+            ->groupBy('jenis')
+            ->get();
+
         $collaterals = $query->paginate(20);
 
         if ($request->has('print')) {
-            return view('reports.collateral_print', compact('collaterals', 'totals'));
+            return view('reports.collateral_print', compact('collaterals', 'totals', 'typeCounts'));
         }
 
-        return view('reports.collateral', compact('collaterals', 'totals'));
+        return view('reports.collateral', compact('collaterals', 'totals', 'typeCounts'));
     }
 
     public function cashFlow(Request $request)

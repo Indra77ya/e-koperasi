@@ -21,13 +21,21 @@
             </div>
             <div class="card-body pt-0">
                 <div class="row mb-5 py-4 border-bottom">
-                    <div class="col-6 col-sm-6 border-right">
+                    <div class="col-6 col-sm-4 border-right">
                         <div class="text-muted small mb-1">Total Nilai Taksasi Jaminan</div>
                         <div class="h4 font-weight-bold mb-0 text-primary">{{ format_rupiah($totals->total_value) }}</div>
                     </div>
-                    <div class="col-6 col-sm-6">
+                    <div class="col-6 col-sm-4 border-right">
                         <div class="text-muted small mb-1">Jumlah Jaminan Terdata</div>
                         <div class="h4 font-weight-bold mb-0">{{ number_format($totals->total_count) }} Unit</div>
+                    </div>
+                    <div class="col-12 col-sm-4 mt-3 mt-sm-0">
+                        <div class="text-muted small mb-1">Rincian Per Jenis</div>
+                        <div class="d-flex flex-wrap" style="gap: 10px;">
+                            @foreach($typeCounts as $type)
+                                <span class="badge badge-info">{{ $type->jenis ?: 'N/A' }}: {{ $type->count }}</span>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 

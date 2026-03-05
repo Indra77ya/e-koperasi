@@ -7,13 +7,21 @@
 <div class="row">
     <div class="col-12">
         <div class="row mb-5 py-4 border-bottom border-top">
-            <div class="col-6 border-right">
+            <div class="col-4 border-right">
                 <div class="text-muted small mb-1">Total Nilai Taksasi Jaminan</div>
                 <div class="h4 font-weight-bold mb-0 text-primary">{{ format_rupiah($totals->total_value) }}</div>
             </div>
-            <div class="col-6">
+            <div class="col-4 border-right">
                 <div class="text-muted small mb-1">Jumlah Jaminan Terdata</div>
                 <div class="h4 font-weight-bold mb-0">{{ number_format($totals->total_count) }} Unit</div>
+            </div>
+            <div class="col-4">
+                <div class="text-muted small mb-1">Rincian Per Jenis</div>
+                <div class="font-weight-bold">
+                    @foreach($typeCounts as $type)
+                        {{ $type->jenis ?: 'N/A' }}: {{ $type->count }}{{ !$loop->last ? ',' : '' }}
+                    @endforeach
+                </div>
             </div>
         </div>
 
