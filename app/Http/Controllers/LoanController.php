@@ -224,7 +224,8 @@ class LoanController extends Controller
      */
     public static function syncAllActiveIndefiniteLoans()
     {
-        $loans = Loan::whereIn('status', ['berjalan', 'macet'])->where('tenor', 0)->get();
+        // Sync ALL active loans to apply periodic admin fee repairs
+        $loans = Loan::whereIn('status', ['berjalan', 'macet'])->get();
         $controller = app(self::class);
         foreach ($loans as $loan) {
             $controller->syncIndefiniteInstallments($loan);
@@ -234,6 +235,7 @@ class LoanController extends Controller
     public function syncIndefiniteInstallments($loan)
     {
         // 1. Correct existing unpaid installments if periodic admin fee is outdated
+        // Applicable to ALL monthly loans (both fixed and indefinite)
         $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
         $adminInterval = Setting::get('periodic_admin_interval', 6);
 
@@ -248,6 +250,8 @@ class LoanController extends Controller
                 }
             }
         }
+
+        if ($loan->tenor != 0) return; // Exit if not indefinite, as we only generate NEW ones for tenor=0
 
         $latest = $loan->installments()->orderBy('angsuran_ke', 'desc')->first();
         if (!$latest) return;

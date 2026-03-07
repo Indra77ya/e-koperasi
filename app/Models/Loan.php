@@ -90,10 +90,9 @@ class Loan extends Model
     public function getRemainingPrincipalAttribute()
     {
         if ($this->tenor == 0) {
-            // Indefinite Loan: Check latest unpaid installment's sisa_pinjaman
-            // If no unpaid installment (should not happen if active), return 0 or check last paid.
+            // Indefinite Loan: Check latest installment's sisa_pinjaman
+            // even if paid, it stores the balance after payment.
             $latest = $this->installments()
-                ->where('status', 'belum_lunas')
                 ->latest('angsuran_ke')
                 ->first();
 
@@ -101,8 +100,7 @@ class Loan extends Model
                 return $latest->sisa_pinjaman;
             }
 
-            // If all paid or none yet (e.g. just disbursed but query runs before installment created - unlikely)
-             return 0;
+            return $this->jumlah_pinjaman;
 
         } else {
             // Fixed Loan

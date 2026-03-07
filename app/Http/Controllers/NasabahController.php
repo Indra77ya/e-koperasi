@@ -74,7 +74,7 @@ class NasabahController extends Controller
 
         $totalOutstanding = 0;
         foreach ($nasabah->loans as $loan) {
-            if (in_array($loan->status, ['berjalan', 'macet', 'lunas'])) {
+            if (in_array($loan->status, ['berjalan', 'macet'])) {
                 $totalOutstanding += $loan->remaining_principal;
                 $totalOutstanding += $loan->installments->sum('bunga');
                 $totalOutstanding += $loan->installments->sum('biaya_admin');

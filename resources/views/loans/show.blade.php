@@ -748,12 +748,12 @@
 
                 // For Indefinite, unpaid is always sorted. first installment's sisa_pinjaman is the total pokok.
                 if (isIndefinite && installments.length > 0) {
-                    totalPokok = installments[0].sisa_pinjaman;
+                    totalPokok = parseFloat(installments[0].sisa_pinjaman || 0);
                 }
 
                 installments.forEach(function(inst, index) {
                     if (!isIndefinite) {
-                        totalPokok += parseFloat(inst.pokok);
+                        totalPokok += parseFloat(inst.pokok || 0);
                     }
                     totalAdmin += parseFloat(inst.biaya_admin || 0);
 
@@ -773,7 +773,7 @@
 
                     if (payDate >= dueDate) {
                         // Past due, full interest
-                        totalArrears += parseFloat(inst.bunga);
+                        totalArrears += parseFloat(inst.bunga || 0);
                         totalArrears += parseFloat(inst.denda || 0);
                     } else {
                         // Not yet due
@@ -783,10 +783,10 @@
                             var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                             if (diffDays < 30 && diffDays > 0) {
-                                totalBunga += (parseFloat(inst.bunga) / 30) * diffDays;
+                                totalBunga += (parseFloat(inst.bunga || 0) / 30) * diffDays;
                                 totalDays = diffDays;
                             } else if (diffDays >= 30) {
-                                totalBunga += parseFloat(inst.bunga);
+                                totalBunga += parseFloat(inst.bunga || 0);
                                 totalDays = 30;
                             }
                         } else {

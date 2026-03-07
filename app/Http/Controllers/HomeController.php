@@ -100,6 +100,9 @@ class HomeController extends Controller
         // 5. Global Arrears (Tunggakan Global)
         $globalArrears = LoanInstallment::where('status', '!=', 'lunas')
             ->where('tanggal_jatuh_tempo', '<', Carbon::now())
+            ->whereHas('loan', function($q) {
+                $q->whereIn('status', ['berjalan', 'macet']);
+            })
             ->select(
                 DB::raw('SUM(pokok) as total_pokok'),
                 DB::raw('SUM(bunga) as total_bunga'),
