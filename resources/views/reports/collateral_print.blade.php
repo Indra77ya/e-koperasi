@@ -33,6 +33,7 @@
                         <th>Nomor</th>
                         <th>Nilai Taksiran</th>
                         <th>Pemilik</th>
+                        <th>Nama Debitur</th>
                         <th>No. Pinjaman</th>
                         <th>Status</th>
                         <th>Keterangan</th>
@@ -45,7 +46,14 @@
                         <td>{{ $col->nomor }}</td>
                         <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
                         <td>{{ $col->pemilik }}</td>
-                        <td>{{ $col->loan ? $col->loan->loan_number : '-' }}</td>
+                        <td>
+                            @if($col->loan)
+                                {{ $col->loan->member ? $col->loan->member->nama : ($col->loan->nasabah ? $col->loan->nasabah->nama : '-') }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $col->loan ? $col->loan->kode_pinjaman : '-' }}</td>
                         <td>
                             @if($col->status == 'disimpan')
                                 <span class="badge badge-success">Disimpan</span>

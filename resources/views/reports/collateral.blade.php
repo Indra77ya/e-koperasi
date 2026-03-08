@@ -47,6 +47,7 @@
                                 <th>Nomor</th>
                                 <th>Nilai Taksiran</th>
                                 <th>Pemilik</th>
+                                <th>Nama Debitur</th>
                                 <th>No. Pinjaman</th>
                                 <th>Status</th>
                                 <th>Keterangan</th>
@@ -59,7 +60,24 @@
                                 <td>{{ $col->nomor }}</td>
                                 <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
                                 <td>{{ $col->pemilik }}</td>
-                                <td>{{ $col->loan ? $col->loan->loan_number : '-' }}</td>
+                                <td>
+                                    @if($col->loan)
+                                        @if($col->loan->member)
+                                            <a href="{{ route('members.show', $col->loan->anggota_id) }}">{{ $col->loan->member->nama }}</a>
+                                        @elseif($col->loan->nasabah)
+                                            <a href="{{ route('nasabahs.show', $col->loan->nasabah_id) }}">{{ $col->loan->nasabah->nama }}</a>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($col->loan)
+                                        <a href="{{ route('loans.show', $col->loan->id) }}">{{ $col->loan->kode_pinjaman }}</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>
                                     @if($col->status == 'disimpan')
                                         <span class="badge badge-success">Disimpan</span>
