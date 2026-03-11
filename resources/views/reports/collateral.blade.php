@@ -19,7 +19,26 @@
                     </a>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body pt-0">
+                <div class="row mb-5 py-4 border-bottom">
+                    <div class="col-6 col-sm-4 border-right">
+                        <div class="text-muted small mb-1">Total Nilai Taksasi Jaminan</div>
+                        <div class="h4 font-weight-bold mb-0 text-primary">{{ format_rupiah($totals->total_value) }}</div>
+                    </div>
+                    <div class="col-6 col-sm-4 border-right">
+                        <div class="text-muted small mb-1">Jumlah Jaminan Terdata</div>
+                        <div class="h4 font-weight-bold mb-0">{{ number_format($totals->total_count) }} Unit</div>
+                    </div>
+                    <div class="col-12 col-sm-4 mt-3 mt-sm-0">
+                        <div class="text-muted small mb-1">Rincian Per Jenis</div>
+                        <div class="d-flex flex-wrap" style="gap: 10px;">
+                            @foreach($typeCounts as $type)
+                                <span class="badge badge-info">{{ $type->jenis ?: 'N/A' }}: {{ $type->count }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered">
                         <thead>
@@ -28,6 +47,7 @@
                                 <th>Nomor</th>
                                 <th>Nilai Taksiran</th>
                                 <th>Pemilik</th>
+                                <th>Nama Debitur</th>
                                 <th>No. Pinjaman</th>
                                 <th>Status</th>
                                 <th>Keterangan</th>
@@ -40,7 +60,24 @@
                                 <td>{{ $col->nomor }}</td>
                                 <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
                                 <td>{{ $col->pemilik }}</td>
-                                <td>{{ $col->loan ? $col->loan->loan_number : '-' }}</td>
+                                <td>
+                                    @if($col->loan)
+                                        @if($col->loan->member)
+                                            <a href="{{ route('members.show', $col->loan->anggota_id) }}">{{ $col->loan->member->nama }}</a>
+                                        @elseif($col->loan->nasabah)
+                                            <a href="{{ route('nasabahs.show', $col->loan->nasabah_id) }}">{{ $col->loan->nasabah->nama }}</a>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($col->loan)
+                                        <a href="{{ route('loans.show', $col->loan->id) }}">{{ $col->loan->kode_pinjaman }}</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>
                                     @if($col->status == 'disimpan')
                                         <span class="badge badge-success">Disimpan</span>

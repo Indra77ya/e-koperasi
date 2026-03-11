@@ -67,8 +67,22 @@ class NasabahController extends Controller
      */
     public function show($id)
     {
-        $nasabah = Nasabah::with('balance')->findOrFail($id);
-        return view('nasabahs.show', compact('nasabah'));
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
+        $nasabah = Nasabah::with(['balance', 'loans.installments' => function($q) {
+            $q->where('status', '!=', 'lunas');
+        }])->findOrFail($id);
+
+        $totalOutstanding = 0;
+        foreach ($nasabah->loans as $loan) {
+            if (in_array($loan->status, ['berjalan', 'macet'])) {
+                $totalOutstanding += $loan->remaining_principal;
+                $totalOutstanding += $loan->installments->sum('bunga');
+                $totalOutstanding += $loan->installments->sum('biaya_admin');
+                $totalOutstanding += $loan->installments->sum('denda');
+            }
+        }
+
+        return view('nasabahs.show', compact('nasabah', 'totalOutstanding'));
     }
 
     /**

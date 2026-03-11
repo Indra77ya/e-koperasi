@@ -29,6 +29,9 @@ class HomeController extends Controller
      */
     public function index()
     {
+        // Auto-Sync Indefinite Loans
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
+
         // 1. Total Dana Turun (Disbursed)
         // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
         // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).
@@ -93,6 +96,20 @@ class HomeController extends Controller
             ->where('status', '!=', 'lunas')
             ->with(['loan.member', 'loan.nasabah'])
             ->get();
+
+        // 5. Global Arrears (Tunggakan Global)
+        $globalArrears = LoanInstallment::where('status', '!=', 'lunas')
+            ->where('tanggal_jatuh_tempo', '<', Carbon::now())
+            ->whereHas('loan', function($q) {
+                $q->whereIn('status', ['berjalan', 'macet']);
+            })
+            ->select(
+                DB::raw('SUM(pokok) as total_pokok'),
+                DB::raw('SUM(bunga) as total_bunga'),
+                DB::raw('SUM(biaya_admin) as total_admin'),
+                DB::raw('SUM(denda) as total_denda')
+            )
+            ->first();
 
         // Unified Mutation Logic (Savings + Loan Disburse + Loan Repay)
         $today = Carbon::today();
@@ -188,7 +205,8 @@ class HomeController extends Controller
             'disbursedTrend',
             'revenueStats',
             'collectibilityStats',
-            'dueToday'
+            'dueToday',
+            'globalArrears'
         ));
     }
 

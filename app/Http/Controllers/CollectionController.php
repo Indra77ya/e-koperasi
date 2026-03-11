@@ -23,6 +23,7 @@ class CollectionController extends Controller
      */
     public function index()
     {
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
         // Counts
         $countLancar = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Lancar')->count();
         $countDPK = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'DPK')->count();

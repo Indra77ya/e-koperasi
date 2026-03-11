@@ -45,6 +45,38 @@
                                 </td>
                             </tr>
                             <tr>
+                                <th>Total Tunggakan (Overdue)</th>
+                                <td class="font-weight-bold text-red">
+                                    @php
+                                        $tunggakan = \App\Models\LoanInstallment::whereIn('pinjaman_id', $nasabah->pinjaman->pluck('id'))
+                                            ->where('status', '!=', 'lunas')
+                                            ->where('tanggal_jatuh_tempo', '<', now())
+                                            ->select(
+                                                DB::raw('SUM(pokok) as p'),
+                                                DB::raw('SUM(bunga) as b'),
+                                                DB::raw('SUM(biaya_admin) as a'),
+                                                DB::raw('SUM(denda) as d')
+                                            )->first();
+                                        $totalTunggakan = ($tunggakan->p ?? 0) + ($tunggakan->b ?? 0) + ($tunggakan->a ?? 0) + ($tunggakan->d ?? 0);
+                                    @endphp
+                                    {{ format_rupiah($totalTunggakan) }}
+                                    @if($totalTunggakan > 0)
+                                        <div class="small text-muted font-weight-normal">
+                                            (Pokok: {{ format_rupiah($tunggakan->p) }}, Bunga: {{ format_rupiah($tunggakan->b) }}, Admin: {{ format_rupiah($tunggakan->a) }}, Denda: {{ format_rupiah($tunggakan->d) }})
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total yang Harus Dibayar</th>
+                                <td class="font-weight-bold text-info">
+                                    {{ format_rupiah($totalOutstanding) }}
+                                    <div class="small text-muted font-weight-normal">
+                                        (Total sisa seluruh pinjaman aktif: Pokok + Bunga + Admin + Denda)
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Status Risiko</th>
                                 <td>
                                     @if($nasabah->status == 'aman')

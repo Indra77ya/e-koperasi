@@ -31,17 +31,23 @@
                     </a>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="alert alert-success">
-                            <strong>Total Masuk:</strong> Rp {{ number_format($totalIn, 0, ',', '.') }}
-                        </div>
+            <div class="card-body pt-0">
+                <div class="row mb-5 py-4 border-bottom">
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Total Kas Masuk</div>
+                        <div class="h4 font-weight-bold mb-0 text-success">Rp {{ number_format($totalIn, 0, ',', '.') }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="alert alert-danger">
-                            <strong>Total Keluar:</strong> Rp {{ number_format($totalOut, 0, ',', '.') }}
-                        </div>
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Total Kas Keluar</div>
+                        <div class="h4 font-weight-bold mb-0 text-danger">Rp {{ number_format($totalOut, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="col-6 col-sm-3 border-right">
+                        <div class="text-muted small mb-1">Saldo Bersih</div>
+                        <div class="h4 font-weight-bold mb-0 text-primary">Rp {{ number_format($totalIn - $totalOut, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="text-muted small mb-1">Periode</div>
+                        <div class="h4 font-weight-bold mb-0">{{ date('d/m/Y', strtotime($startDate)) }} - {{ date('d/m/Y', strtotime($endDate)) }}</div>
                     </div>
                 </div>
 

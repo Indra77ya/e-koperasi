@@ -16,6 +16,7 @@ class LoanInstallment extends Model
         'total_angsuran',
         'pokok',
         'bunga',
+        'biaya_admin',
         'sisa_pinjaman',
         'denda',
         'status',

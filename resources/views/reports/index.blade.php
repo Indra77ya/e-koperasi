@@ -27,6 +27,16 @@
                     <div class="col-md-4 mb-4">
                         <div class="card bg-light border-0">
                             <div class="card-body">
+                                <h5 class="card-title text-red">Tunggakan Pinjaman</h5>
+                                <p class="card-text text-muted">Laporan rincian semua tunggakan nasabah.</p>
+                                <a href="{{ route('reports.arrears') }}" class="btn btn-danger btn-block">Lihat Laporan</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Report Item -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
                                 <h5 class="card-title">Piutang Macet</h5>
                                 <p class="card-text text-muted">Laporan pinjaman dengan status macet.</p>
                                 <a href="{{ route('reports.bad_debt') }}" class="btn btn-primary btn-block">Lihat Laporan</a>

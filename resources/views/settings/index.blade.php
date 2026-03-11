@@ -138,6 +138,20 @@
                                         <input type="number" class="form-control" name="loan_limit" value="{{ $settings['loan_limit'] ?? 0 }}">
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Biaya Admin Periodik (%)</label>
+                                        <input type="number" step="0.01" class="form-control" name="periodic_admin_rate" value="{{ $settings['periodic_admin_rate'] ?? 0 }}">
+                                        <small class="text-muted">Biaya admin yang dikenakan setiap interval tertentu (misal: tiap 6 bulan).</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Interval Admin Periodik (Bulan)</label>
+                                        <input type="number" class="form-control" name="periodic_admin_interval" value="{{ $settings['periodic_admin_interval'] ?? 6 }}">
+                                        <small class="text-muted">Default: 6 Bulan.</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-footer text-right">

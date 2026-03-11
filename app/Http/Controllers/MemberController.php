@@ -62,8 +62,25 @@ class MemberController extends Controller
      */
     public function show($id)
     {
-        $member = Member::with('balance')->findOrFail($id);
-        return view('members.show', ['member' => $member]);
+        \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
+        $member = Member::with(['balance', 'loans.installments' => function($q) {
+            $q->where('status', '!=', 'lunas');
+        }])->findOrFail($id);
+
+        $totalOutstanding = 0;
+        foreach ($member->loans as $loan) {
+            if (in_array($loan->status, ['berjalan', 'macet'])) {
+                $totalOutstanding += $loan->remaining_principal;
+                $totalOutstanding += $loan->installments->sum('bunga');
+                $totalOutstanding += $loan->installments->sum('biaya_admin');
+                $totalOutstanding += $loan->installments->sum('denda');
+            }
+        }
+
+        return view('members.show', [
+            'member' => $member,
+            'total_outstanding' => $totalOutstanding
+        ]);
     }
 
     /**

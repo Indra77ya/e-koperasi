@@ -31,12 +31,20 @@ class LoanController extends Controller
 
     public function index(Request $request)
     {
+        // Auto-Sync Indefinite Loans
+        self::syncAllActiveIndefiniteLoans();
+
         // Auto-repair admin role if missing (ensures migration effect)
         $admins = ['admin@example.com', 'ekoperasi@gmail.com'];
         foreach ($admins as $email) {
             if (User::where('email', $email)->where('role', '!=', 'admin')->exists()) {
                 User::where('email', $email)->update(['role' => 'admin']);
             }
+        }
+
+        // Auto-repair periodic admin rate if it's missing or lower than 5% (as per user request)
+        if (Setting::get('periodic_admin_rate', 0) < 5) {
+            Setting::set('periodic_admin_rate', 5);
         }
 
         if ($request->ajax()) {
@@ -204,7 +212,116 @@ class LoanController extends Controller
     public function show($id)
     {
         $loan = Loan::with(['member', 'nasabah', 'installments'])->findOrFail($id);
+        if (in_array($loan->status, ['berjalan', 'macet']) && $loan->tenor == 0) {
+            $this->syncIndefiniteInstallments($loan);
+            $loan->load('installments');
+        }
         return view('loans.show', compact('loan'));
+    }
+
+    /**
+     * Sync all active indefinite loans to ensure installments are up to date.
+     */
+    public static function syncAllActiveIndefiniteLoans()
+    {
+        // Sync ALL active loans to apply periodic admin fee repairs
+        $loans = Loan::whereIn('status', ['berjalan', 'macet'])->get();
+        $controller = app(self::class);
+        foreach ($loans as $loan) {
+            $controller->syncIndefiniteInstallments($loan);
+        }
+    }
+
+    public function syncIndefiniteInstallments($loan)
+    {
+        // 1. Correct existing unpaid installments if periodic admin fee is outdated
+        // Applicable to ALL monthly loans (both fixed and indefinite)
+        $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+        $adminInterval = Setting::get('periodic_admin_interval', 6);
+
+        $unpaid = $loan->installments()->where('status', 'belum_lunas')->get();
+        foreach ($unpaid as $installment) {
+            if ($loan->tempo_angsuran == 'bulanan' && $installment->angsuran_ke % $adminInterval == 0) {
+                $expectedAdmin = round($loan->jumlah_pinjaman * $adminRate, 2);
+                if ($installment->biaya_admin != $expectedAdmin) {
+                    $installment->biaya_admin = $expectedAdmin;
+                    $installment->total_angsuran = round($installment->pokok + $installment->bunga + $expectedAdmin, 2);
+                    $installment->save();
+                }
+            }
+        }
+
+        if ($loan->tenor != 0) return; // Exit if not indefinite, as we only generate NEW ones for tenor=0
+
+        $latest = $loan->installments()->orderBy('angsuran_ke', 'desc')->first();
+        if (!$latest) return;
+
+        $currentBalance = $latest->sisa_pinjaman;
+        $nextDueDate = Carbon::parse($latest->tanggal_jatuh_tempo);
+        $angsuranKe = $latest->angsuran_ke;
+
+        // While latest due date is in the past, keep generating
+        // We generate up to the NEXT due date that is in the future
+        while ($nextDueDate->isPast()) {
+            $angsuranKe++;
+
+            if ($loan->tempo_angsuran == 'harian') {
+                $nextDueDate->addDay();
+            } elseif ($loan->tempo_angsuran == 'mingguan') {
+                $nextDueDate->addWeek();
+            } else {
+                $nextDueDate->addMonth();
+            }
+
+            $ratePercent = $loan->suku_bunga / 100;
+            if ($loan->satuan_bunga == 'hari') {
+                $yearlyRate = $ratePercent * 365;
+            } elseif ($loan->satuan_bunga == 'bulan') {
+                $yearlyRate = $ratePercent * 12;
+            } else {
+                $yearlyRate = $ratePercent;
+            }
+
+            if ($loan->tempo_angsuran == 'harian') {
+                $ratePerPeriod = $yearlyRate / 365;
+            } elseif ($loan->tempo_angsuran == 'mingguan') {
+                $ratePerPeriod = $yearlyRate / 52;
+            } else {
+                $ratePerPeriod = $yearlyRate / 12;
+            }
+
+            if ($loan->jenis_bunga == 'flat') {
+                $interest = $loan->jumlah_pinjaman * $ratePerPeriod;
+            } else {
+                $interest = $currentBalance * $ratePerPeriod;
+            }
+
+            // Periodic Admin Fee
+            $periodicAdmin = 0;
+            $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+            $adminInterval = Setting::get('periodic_admin_interval', 6);
+            if ($loan->tempo_angsuran == 'bulanan' && $angsuranKe % $adminInterval == 0) {
+                $periodicAdmin = $loan->jumlah_pinjaman * $adminRate;
+            }
+
+            $exists = LoanInstallment::where('pinjaman_id', $loan->id)
+                ->where('angsuran_ke', $angsuranKe)
+                ->exists();
+
+            if (!$exists) {
+                LoanInstallment::create([
+                    'pinjaman_id' => $loan->id,
+                    'angsuran_ke' => $angsuranKe,
+                    'tanggal_jatuh_tempo' => $nextDueDate,
+                    'total_angsuran' => round($interest + $periodicAdmin, 2),
+                    'pokok' => 0,
+                    'bunga' => round($interest, 2),
+                    'biaya_admin' => round($periodicAdmin, 2),
+                    'sisa_pinjaman' => $currentBalance,
+                    'status' => 'belum_lunas',
+                ]);
+            }
+        }
     }
 
     public function edit($id)
@@ -491,6 +608,7 @@ class LoanController extends Controller
                             'total_angsuran' => $inst['total'],
                             'pokok' => $inst['principal'],
                             'bunga' => $inst['interest'],
+                            'biaya_admin' => $inst['admin_fee'] ?? 0,
                             'sisa_pinjaman' => $inst['balance'],
                             'status' => 'belum_lunas',
                         ]);
@@ -577,7 +695,36 @@ class LoanController extends Controller
                 // Indefinite: Input is Principal. Total = Input + Interest + Denda
                 $pokokPaid = $inputAmount;
                 $bungaPaid = $installment->bunga;
-                $totalPaid = $pokokPaid + $bungaPaid + $denda;
+
+                // Proration Logic for Total Settlement
+                if ($pokokPaid >= $installment->sisa_pinjaman) {
+                    $pokokPaid = $installment->sisa_pinjaman; // Cap at outstanding
+
+                    // Determine start date of the current period
+                    $startDate = null;
+                    if ($installment->angsuran_ke == 1) {
+                        $startDate = $installment->loan->tanggal_persetujuan;
+                    } else {
+                        $prev = LoanInstallment::where('pinjaman_id', $installment->pinjaman_id)
+                            ->where('angsuran_ke', $installment->angsuran_ke - 1)
+                            ->first();
+                        $startDate = $prev ? $prev->tanggal_jatuh_tempo : $installment->loan->tanggal_persetujuan;
+                    }
+
+                    if ($startDate) {
+                        $start = Carbon::parse($startDate);
+                        $payDate = Carbon::parse($request->tanggal_bayar);
+                        $days = $start->diffInDays($payDate);
+
+                        if ($days < 30 && $days > 0) {
+                            $bungaPaid = round(($installment->bunga / 30) * $days, 2);
+                        } elseif ($days <= 0) {
+                            $bungaPaid = 0; // Or minimum charge? Let's follow formula.
+                        }
+                    }
+                }
+
+                $totalPaid = $pokokPaid + $bungaPaid + $denda + ($installment->biaya_admin ?? 0);
 
                 // Ensure Principal is non-negative
                 if ($pokokPaid < 0) {
@@ -633,7 +780,8 @@ class LoanController extends Controller
                     'keterangan_pembayaran' => $request->keterangan_pembayaran,
                     'denda' => $denda,
                     'pokok' => $pokokPaid,
-                    'total_angsuran' => $pokokPaid + $bungaPaid, // Update total to reflect actual structure (Pokok + Bunga)
+                    'bunga' => $bungaPaid,
+                    'total_angsuran' => round($pokokPaid + $bungaPaid + ($installment->biaya_admin ?? 0), 2),
                 ]);
 
                 // Check if all installments are paid
@@ -644,78 +792,55 @@ class LoanController extends Controller
                     $loan->update(['status' => 'lunas']);
                 }
 
-                // Indefinite Loan Logic: Create next installment
+                // Indefinite Loan Logic: Handle balance update and ensure next installment exists
                 if ($loan->tenor == 0) {
-                    // Calculate New Balance based on what was just paid
-                    // Previous Balance (Sisa Pinjaman at this installment)
-                    // Note: 'sisa_pinjaman' in DB is the balance AFTER this installment.
-                    // But for Indefinite, we generated it with 'sisa_pinjaman' = full loan amount (because principal was 0).
-                    // So we subtract the newly paid principal from that.
-
                     $prevBalance = $installment->sisa_pinjaman;
                     $newBalance = $prevBalance - $pokokPaid;
 
                     if ($newBalance <= 100) { // Tolerance for rounding
                         $loan->update(['status' => 'lunas']);
-                        // Update this installment to reflect 0 balance
                         $installment->update(['sisa_pinjaman' => 0]);
                     } else {
-                        // Update this installment's sisa_pinjaman to reflect the payment?
-                        // Actually, historically sisa_pinjaman is "Outstanding Principal Remaining".
                         $installment->update(['sisa_pinjaman' => $newBalance]);
+                        // Ensure all FUTURE installments have their balance and interest updated if they were already generated
+                        $futureInstallments = LoanInstallment::where('pinjaman_id', $loan->id)
+                            ->where('angsuran_ke', '>', $installment->angsuran_ke)
+                            ->get();
 
-                        $nextInstallmentNo = $installment->angsuran_ke + 1;
-                        $nextDueDate = Carbon::parse($installment->tanggal_jatuh_tempo);
+                        $tempBalance = $newBalance;
+                        foreach ($futureInstallments as $future) {
+                            $ratePercent = $loan->suku_bunga / 100;
+                            if ($loan->satuan_bunga == 'hari') { $yearlyRate = $ratePercent * 365; }
+                            elseif ($loan->satuan_bunga == 'bulan') { $yearlyRate = $ratePercent * 12; }
+                            else { $yearlyRate = $ratePercent; }
 
-                        if ($loan->tempo_angsuran == 'harian') {
-                            $nextDueDate->addDay();
-                        } elseif ($loan->tempo_angsuran == 'mingguan') {
-                            $nextDueDate->addWeek();
-                        } else {
-                            $nextDueDate->addMonth();
+                            if ($loan->tempo_angsuran == 'harian') { $ratePerPeriod = $yearlyRate / 365; }
+                            elseif ($loan->tempo_angsuran == 'mingguan') { $ratePerPeriod = $yearlyRate / 52; }
+                            else { $ratePerPeriod = $yearlyRate / 12; }
+
+                            if ($loan->jenis_bunga == 'flat') {
+                                $newInterest = $loan->jumlah_pinjaman * $ratePerPeriod;
+                            } else {
+                                $newInterest = $tempBalance * $ratePerPeriod;
+                            }
+
+                            $future->update([
+                                'bunga' => round($newInterest, 2),
+                                'total_angsuran' => round($newInterest + $future->biaya_admin, 2),
+                                'sisa_pinjaman' => $tempBalance
+                            ]);
+                            // tempBalance doesn't change here because future pokok is 0 until paid
                         }
 
-                        $ratePercent = $loan->suku_bunga / 100;
-                         // Normalize Rate
-                        if ($loan->satuan_bunga == 'hari') {
-                            $yearlyRate = $ratePercent * 365;
-                        } elseif ($loan->satuan_bunga == 'bulan') {
-                            $yearlyRate = $ratePercent * 12;
-                        } else {
-                            $yearlyRate = $ratePercent;
-                        }
-
-                        // Rate Per Period
-                        if ($loan->tempo_angsuran == 'harian') {
-                            $ratePerPeriod = $yearlyRate / 365;
-                        } elseif ($loan->tempo_angsuran == 'mingguan') {
-                            $ratePerPeriod = $yearlyRate / 52;
-                        } else {
-                            $ratePerPeriod = $yearlyRate / 12;
-                        }
-
-                        if ($loan->jenis_bunga == 'flat') {
-                            $interest = $loan->jumlah_pinjaman * $ratePerPeriod;
-                        } else {
-                            $interest = $newBalance * $ratePerPeriod;
-                        }
-
-                        LoanInstallment::create([
-                            'pinjaman_id' => $loan->id,
-                            'angsuran_ke' => $nextInstallmentNo,
-                            'tanggal_jatuh_tempo' => $nextDueDate,
-                            'total_angsuran' => round($interest, 2),
-                            'pokok' => 0,
-                            'bunga' => round($interest, 2),
-                            'sisa_pinjaman' => $newBalance, // Carry forward new balance
-                            'status' => 'belum_lunas',
-                        ]);
+                        // If no next installment exists, we should sync again (but sync is usually on show)
+                        $this->syncIndefiniteInstallments($loan);
                     }
                 }
 
-                // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda)
+                // Create Journal: Dr Kas, Cr Piutang (Pokok), Cr Pendapatan Bunga (Bunga), Cr Pendapatan Denda (Denda), Cr Pendapatan Admin (Biaya Admin)
                 $denda = $installment->denda ?? 0;
-                $totalMasuk = $installment->pokok + $installment->bunga + $denda;
+                $biayaAdmin = $installment->biaya_admin ?? 0;
+                $totalMasuk = $installment->pokok + $installment->bunga + $biayaAdmin + $denda;
 
                 $coaCash = Setting::get('coa_cash', '1101');
 
@@ -753,12 +878,17 @@ class LoanController extends Controller
                 $coaReceivable = Setting::get('coa_receivable', '1103');
                 $coaInterest = Setting::get('coa_revenue_interest', '4101');
                 $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+                $coaAdmin = Setting::get('coa_revenue_admin', '4102');
 
                 $items = [
                     ['code' => $coaCash, 'debit' => $totalMasuk, 'credit' => 0], // Kas or Savings (Liability)
                     ['code' => $coaReceivable, 'debit' => 0, 'credit' => $installment->pokok], // Piutang
                     ['code' => $coaInterest, 'debit' => 0, 'credit' => $installment->bunga], // Pendapatan Bunga
                 ];
+
+                if ($biayaAdmin > 0) {
+                    $items[] = ['code' => $coaAdmin, 'debit' => 0, 'credit' => $biayaAdmin]; // Pendapatan Admin
+                }
 
                 if ($denda > 0) {
                     $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $denda]; // Pendapatan Denda
@@ -856,7 +986,7 @@ class LoanController extends Controller
                         'metode_pembayaran' => null,
                         'keterangan_pembayaran' => null,
                         'pokok' => 0, // Reset principal for indefinite until paid again
-                        'total_angsuran' => $installment->bunga, // Total back to just bunga
+                        'total_angsuran' => round($installment->bunga + ($installment->biaya_admin ?? 0), 2), // Total back to just bunga + admin
                         'sisa_pinjaman' => $prevSisa,
                     ]);
 
@@ -881,6 +1011,211 @@ class LoanController extends Controller
         } catch (\Exception $e) {
             Log::error('Void Payment Failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal membatalkan pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    public function settleAll(Request $request, $id)
+    {
+        $loan = Loan::with('installments')->findOrFail($id);
+
+        if ($loan->status != 'berjalan' && $loan->status != 'macet') {
+            return redirect()->back()->with('error', 'Hanya pinjaman aktif yang bisa dilunasi.');
+        }
+
+        $request->validate([
+            'tanggal_bayar' => 'required|date',
+            'metode_pembayaran' => 'required',
+            'keterangan_pembayaran' => 'nullable|string'
+        ]);
+
+        $payDate = Carbon::parse($request->tanggal_bayar);
+
+        $unpaid = $loan->installments()->where('status', 'belum_lunas')->orderBy('angsuran_ke', 'asc')->get();
+
+        if ($unpaid->isEmpty()) {
+             return redirect()->back()->with('error', 'Tidak ada angsuran yang harus dibayar.');
+        }
+
+        $totalPokok = $unpaid->sum('pokok');
+        // If indefinite, pokok is 0 but we need to pay the remaining balance
+        if ($loan->tenor == 0) {
+            $totalPokok = $unpaid->first()->sisa_pinjaman;
+        }
+
+        $totalBunga = 0;
+        $totalDenda = $unpaid->sum('denda');
+        $totalAdmin = $unpaid->sum('biaya_admin');
+
+        foreach ($unpaid as $inst) {
+            $dueDate = Carbon::parse($inst->tanggal_jatuh_tempo);
+
+            // Determine period start
+            $startDate = null;
+            if ($inst->angsuran_ke == 1) {
+                $startDate = Carbon::parse($loan->tanggal_persetujuan);
+            } else {
+                $prev = LoanInstallment::where('pinjaman_id', $loan->id)
+                    ->where('angsuran_ke', $inst->angsuran_ke - 1)
+                    ->first();
+                $startDate = $prev ? Carbon::parse($prev->tanggal_jatuh_tempo) : Carbon::parse($loan->tanggal_persetujuan);
+            }
+
+            if ($payDate->greaterThanOrEqualTo($dueDate)) {
+                // Already past or exactly on due date, charge full interest for this period
+                $totalBunga += $inst->bunga;
+            } else {
+                // Not yet due, check if it's the current period or future
+                if ($payDate->greaterThan($startDate)) {
+                    // It's the current period, prorate
+                    $days = $startDate->diffInDays($payDate);
+                    if ($days < 30 && $days > 0) {
+                        $totalBunga += round(($inst->bunga / 30) * $days, 2);
+                    } elseif ($days >= 30) {
+                        $totalBunga += $inst->bunga;
+                    }
+                    // if days <= 0, interest is 0 (already handled by initialization)
+                } else {
+                    // Pay date is BEFORE the start of this period.
+                    // This happens for future installments in fixed loans.
+                    // Usually interest for future periods is waived in total settlement.
+                    // So we add 0.
+                }
+            }
+        }
+
+        $totalPaid = $totalPokok + $totalBunga + $totalDenda + $totalAdmin;
+
+        // Check Balance for Tabungan
+        if ($request->metode_pembayaran == 'tabungan') {
+            $checkSaving = null;
+            if ($loan->anggota_id) { $checkSaving = Saving::where('anggota_id', $loan->anggota_id)->first(); }
+            elseif ($loan->nasabah_id) { $checkSaving = Saving::where('nasabah_id', $loan->nasabah_id)->first(); }
+
+            if (!$checkSaving || $checkSaving->saldo < $totalPaid) {
+                return redirect()->back()->with('error', 'Saldo tabungan tidak mencukupi untuk pelunasan ini.');
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($loan, $unpaid, $request, $totalPokok, $totalBunga, $totalDenda, $totalAdmin, $totalPaid, $payDate) {
+
+                // 1. Mark installments as lunas
+                // For Indefinite, we only mark the current one and delete future ones
+                if ($loan->tenor == 0) {
+                    $current = $unpaid->first();
+                    $current->update([
+                        'status' => 'lunas',
+                        'tanggal_bayar' => $payDate,
+                        'metode_pembayaran' => $request->metode_pembayaran,
+                        'keterangan_pembayaran' => $request->keterangan_pembayaran . ' (Pelunasan Total)',
+                        'pokok' => $totalPokok,
+                        'bunga' => $totalBunga,
+                        'total_angsuran' => round($totalPokok + $totalBunga + $totalAdmin, 2),
+                        'sisa_pinjaman' => 0
+                    ]);
+
+                    // Delete future unpaid installments
+                    $loan->installments()->where('status', 'belum_lunas')->where('id', '!=', $current->id)->delete();
+                } else {
+                    // Fixed Loan: Pay everything
+                    foreach ($unpaid as $inst) {
+                        $instDueDate = Carbon::parse($inst->tanggal_jatuh_tempo);
+                        $instStartDate = null;
+                        if ($inst->angsuran_ke == 1) {
+                            $instStartDate = Carbon::parse($loan->tanggal_persetujuan);
+                        } else {
+                            $prev = LoanInstallment::where('pinjaman_id', $loan->id)->where('angsuran_ke', $inst->angsuran_ke - 1)->first();
+                            $instStartDate = $prev ? Carbon::parse($prev->tanggal_jatuh_tempo) : Carbon::parse($loan->tanggal_persetujuan);
+                        }
+
+                        $instBunga = 0;
+                        if ($payDate->greaterThanOrEqualTo($instDueDate)) {
+                            $instBunga = $inst->bunga; // Past due, full interest
+                        } elseif ($payDate->greaterThan($instStartDate)) {
+                            // Current period, prorate
+                            $days = $instStartDate->diffInDays($payDate);
+                            if ($days < 30 && $days > 0) {
+                                $instBunga = round(($inst->bunga / 30) * $days, 2);
+                            } elseif ($days >= 30) {
+                                $instBunga = $inst->bunga;
+                            }
+                        }
+                        // if payDate <= instStartDate, instBunga = 0
+
+                        $inst->update([
+                            'status' => 'lunas',
+                            'tanggal_bayar' => $payDate,
+                            'metode_pembayaran' => $request->metode_pembayaran,
+                            'keterangan_pembayaran' => $request->keterangan_pembayaran . ' (Pelunasan Total)',
+                            'bunga' => $instBunga,
+                            'total_angsuran' => round($inst->pokok + $instBunga + ($inst->biaya_admin ?? 0), 2),
+                            'sisa_pinjaman' => 0
+                        ]);
+                    }
+                }
+
+                $loan->update(['status' => 'lunas']);
+
+                // 2. Savings Mutation
+                $coaCash = Setting::get('coa_cash', '1101');
+                if ($request->metode_pembayaran == 'tabungan') {
+                    $saving = null;
+                    if ($loan->anggota_id) { $saving = Saving::where('anggota_id', $loan->anggota_id)->first(); }
+                    elseif ($loan->nasabah_id) { $saving = Saving::where('nasabah_id', $loan->nasabah_id)->first(); }
+
+                    if ($saving) {
+                        $saving->saldo -= $totalPaid;
+                        $saving->save();
+
+                        SavingHistory::create([
+                            'anggota_id' => $loan->anggota_id,
+                            'nasabah_id' => $loan->nasabah_id,
+                            'tanggal' => $payDate,
+                            'keterangan' => 'Pelunasan Total Pinjaman ' . $loan->kode_pinjaman,
+                            'debet' => $totalPaid,
+                            'kredit' => 0,
+                            'saldo' => $saving->saldo,
+                            'ref_type' => get_class($loan),
+                            'ref_id' => $loan->id,
+                        ]);
+                        $coaCash = Setting::get('coa_savings', '2101');
+                    }
+                }
+
+                // 3. Accounting Journal
+                $coaReceivable = Setting::get('coa_receivable', '1103');
+                $coaInterest = Setting::get('coa_revenue_interest', '4101');
+                $coaPenalty = Setting::get('coa_revenue_penalty', '4103');
+                $coaAdmin = Setting::get('coa_revenue_admin', '4102');
+
+                $items = [
+                    ['code' => $coaCash, 'debit' => $totalPaid, 'credit' => 0],
+                    ['code' => $coaReceivable, 'debit' => 0, 'credit' => $totalPokok],
+                ];
+
+                if ($totalBunga > 0) {
+                    $items[] = ['code' => $coaInterest, 'debit' => 0, 'credit' => $totalBunga];
+                }
+                if ($totalAdmin > 0) {
+                    $items[] = ['code' => $coaAdmin, 'debit' => 0, 'credit' => $totalAdmin];
+                }
+                if ($totalDenda > 0) {
+                    $items[] = ['code' => $coaPenalty, 'debit' => 0, 'credit' => $totalDenda];
+                }
+
+                $this->accountingService->createJournal(
+                    $payDate,
+                    $loan->kode_pinjaman . '-SETTLE',
+                    'Pelunasan Total ' . ($loan->member ? $loan->member->nama : $loan->nasabah->nama),
+                    $items,
+                    $loan
+                );
+            });
+
+            return redirect()->route('loans.show', $loan->id)->with('success', 'Pinjaman berhasil dilunasi total.');
+        } catch (\Exception $e) {
+            Log::error('Settlement Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal melakukan pelunasan: ' . $e->getMessage());
         }
     }
 
@@ -921,21 +1256,27 @@ class LoanController extends Controller
             return $schedule;
         }
 
+        $adminRate = Setting::get('periodic_admin_rate', 0) / 100;
+        $adminInterval = Setting::get('periodic_admin_interval', 6);
+
         if ($type == 'flat') {
             $principal = $amount / $tenor;
             $interest = $amount * $ratePerPeriod;
-            $total = $principal + $interest;
 
             for ($i = 1; $i <= $tenor; $i++) {
                 $balance -= $principal;
-                if ($i == $tenor && $balance != 0) {
-                     // Adjust last? For now simple flat.
+
+                $periodicAdmin = 0;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
                 }
+
                 $schedule[] = [
                     'month' => $i,
                     'principal' => round($principal, 2),
                     'interest' => round($interest, 2),
-                    'total' => round($total, 2),
+                    'admin_fee' => round($periodicAdmin, 2),
+                    'total' => round($principal + $interest + $periodicAdmin, 2),
                     'balance' => max(0, round($balance, 2))
                 ];
             }
@@ -945,14 +1286,19 @@ class LoanController extends Controller
 
             for ($i = 1; $i <= $tenor; $i++) {
                 $interest = $balance * $ratePerPeriod;
-                $total = $principal + $interest;
                 $balance -= $principal;
+
+                $periodicAdmin = 0;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
+                }
 
                 $schedule[] = [
                     'month' => $i,
                     'principal' => round($principal, 2),
                     'interest' => round($interest, 2),
-                    'total' => round($total, 2),
+                    'admin_fee' => round($periodicAdmin, 2),
+                    'total' => round($principal + $interest + $periodicAdmin, 2),
                     'balance' => max(0, round($balance, 2))
                 ];
             }
@@ -970,11 +1316,17 @@ class LoanController extends Controller
                 $principal = $pmt - $interest;
                 $balance -= $principal;
 
+                $periodicAdmin = 0;
+                if ($tempo == 'bulanan' && $i % $adminInterval == 0) {
+                    $periodicAdmin = $amount * $adminRate;
+                }
+
                 $schedule[] = [
                     'month' => $i,
                     'principal' => round($principal, 2),
                     'interest' => round($interest, 2),
-                    'total' => round($pmt, 2),
+                    'admin_fee' => round($periodicAdmin, 2),
+                    'total' => round($pmt + $periodicAdmin, 2),
                     'balance' => max(0, round($balance, 2))
                 ];
             }

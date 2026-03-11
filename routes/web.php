@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('loans/installments/{installment}/print', 'LoanController@printReceipt')->name('loans.installments.print');
     Route::post('loans/installments/{installment}/void', 'LoanController@voidPayment')->name('loans.installments.void');
     Route::post('loans/installments/{installment}/penalty', 'LoanController@addPenalty')->name('loans.installments.penalty');
+    Route::post('loans/{loan}/settle-all', 'LoanController@settleAll')->name('loans.settle-all');
     Route::post('loans/{loan}/collaterals/{collateral}/return', 'CollateralController@returnCollateral')->name('loans.collaterals.return');
     Route::resource('loans.collaterals', 'CollateralController');
     Route::resource('loans', 'LoanController');
@@ -141,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/collateral', 'ReportController@collateral')->name('reports.collateral');
         Route::get('/cash-flow', 'ReportController@cashFlow')->name('reports.cash_flow');
         Route::get('/revenue', 'ReportController@revenue')->name('reports.revenue');
+        Route::get('/arrears', 'ReportController@arrears')->name('reports.arrears');
     });
 
     Route::get('notifications/mark-all-read', 'NotificationController@markAllAsRead')->name('notifications.readAll');
