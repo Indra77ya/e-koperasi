@@ -94,7 +94,7 @@ class ReportController extends Controller
             ->groupBy('jenis')
             ->get();
 
-        $collaterals = $query->paginate(20);
+        $collaterals = $query->orderBy('jenis')->get();
 
         if ($request->has('print')) {
             return view('reports.collateral_print', compact('collaterals', 'totals', 'typeCounts'));
