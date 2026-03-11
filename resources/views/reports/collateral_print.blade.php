@@ -26,10 +26,9 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-striped table-bordered">
+            <table class="table table-bordered">
                 <thead>
-                    <tr>
-                        <th>Jenis</th>
+                    <tr class="bg-light">
                         <th>Nomor</th>
                         <th>Nilai Taksiran</th>
                         <th>Pemilik</th>
@@ -40,35 +39,41 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $currentType = null; @endphp
                     @forelse($collaterals as $col)
-                    <tr>
-                        <td>{{ $col->jenis }}</td>
-                        <td>{{ $col->nomor }}</td>
-                        <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
-                        <td>{{ $col->pemilik }}</td>
-                        <td>
-                            @if($col->loan)
-                                {{ $col->loan->member ? $col->loan->member->nama : ($col->loan->nasabah ? $col->loan->nasabah->nama : '-') }}
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>{{ $col->loan ? $col->loan->kode_pinjaman : '-' }}</td>
-                        <td>
-                            @if($col->status == 'disimpan')
-                                <span class="badge badge-success">Disimpan</span>
-                            @elseif($col->status == 'dikembalikan')
-                                <span class="badge badge-secondary">Dikembalikan</span>
-                            @else
-                                {{ ucfirst($col->status) }}
-                            @endif
-                        </td>
-                        <td>{{ $col->keterangan }}</td>
-                    </tr>
+                        @if($currentType !== $col->jenis)
+                            @php $currentType = $col->jenis; @endphp
+                            <tr class="bg-gray-lighter">
+                                <td colspan="7" class="font-weight-bold text-uppercase">{{ $currentType ?: 'LAIN-LAIN' }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td>{{ $col->nomor }}</td>
+                            <td>Rp {{ number_format($col->nilai_taksasi, 0, ',', '.') }}</td>
+                            <td>{{ $col->pemilik }}</td>
+                            <td>
+                                @if($col->loan)
+                                    {{ $col->loan->member ? $col->loan->member->nama : ($col->loan->nasabah ? $col->loan->nasabah->nama : '-') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>{{ $col->loan ? $col->loan->kode_pinjaman : '-' }}</td>
+                            <td>
+                                @if($col->status == 'disimpan')
+                                    <span class="badge badge-success">Disimpan</span>
+                                @elseif($col->status == 'dikembalikan')
+                                    <span class="badge badge-secondary">Dikembalikan</span>
+                                @else
+                                    {{ ucfirst($col->status) }}
+                                @endif
+                            </td>
+                            <td>{{ $col->keterangan }}</td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="text-center">Tidak ada data jaminan.</td>
-                    </tr>
+                        <tr>
+                            <td colspan="7" class="text-center">Tidak ada data jaminan.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
