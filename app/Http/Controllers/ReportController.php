@@ -79,7 +79,8 @@ class ReportController extends Controller
 
     public function collateral(Request $request)
     {
-        $query = Collateral::with(['loan.member', 'loan.nasabah']);
+        $query = Collateral::with(['loan.member', 'loan.nasabah'])
+            ->where('status', 'disimpan');
 
         if ($request->has('export')) {
             return $this->exportCollateral($query->cursor());
