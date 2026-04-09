@@ -85,7 +85,7 @@
                         <thead>
                             <tr>
                                 <th>Peminjam</th>
-                                <th>Kode Pinjaman</th>
+                                <th style="min-width: 150px;">Kode Pinjaman</th>
                                 <th>Jatuh Tempo</th>
                                 <th>Sisa Tagihan</th>
                                 <th>Aksi</th>
@@ -157,7 +157,7 @@
             ajax: "{{ route('collections.reminders-data') }}",
             columns: [
                 { data: 'borrower', name: 'borrower', orderable: false, searchable: false },
-                { data: 'kode_pinjaman', name: 'kode_pinjaman' },
+                { data: 'kode_pinjaman', name: 'kode_pinjaman', className: 'text-nowrap' },
                 { data: 'due_dates', name: 'due_dates', orderable: false, searchable: false },
                 { data: 'remaining_bill', name: 'remaining_bill', orderable: false, searchable: false },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
