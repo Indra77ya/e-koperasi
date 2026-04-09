@@ -31,30 +31,60 @@ class CollectionController extends Controller
         $countDiragukan = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Diragukan')->count();
         $countMacet = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Macet')->count();
 
-        // Reminders: Loans with installment due in next 3 days OR overdue but marked as Lancar
-        $search = $request->get('search');
-        $remindersQuery = Loan::where('status', '!=', 'lunas')
+        // Reminders: We'll use DataTables for this now.
+        return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet'));
+    }
+
+    /**
+     * DataTables for Reminder List
+     */
+    public function remindersData(Request $request)
+    {
+        $query = Loan::where('status', '!=', 'lunas')
             ->whereHas('installments', function ($q) {
                 $q->where('status', 'belum_lunas')
                   ->whereBetween('tanggal_jatuh_tempo', [today(), today()->addDays(3)]);
-            });
+            })
+            ->with(['member', 'nasabah', 'installments']);
 
-        if ($search) {
-            $remindersQuery->where(function($q) use ($search) {
-                $q->where('kode_pinjaman', 'like', "%{$search}%")
-                  ->orWhereHas('member', function($mq) use ($search) {
-                      $mq->where('nama', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('nasabah', function($nq) use ($search) {
-                      $nq->where('nama', 'like', "%{$search}%");
-                  });
-            });
-        }
+        return DataTables::of($query)
+            ->filter(function ($query) use ($request) {
+                if ($request->has('search') && $request->get('search')['value']) {
+                    $search = $request->get('search')['value'];
+                    $query->where(function($q) use ($search) {
+                        $q->where('kode_pinjaman', 'like', "%{$search}%")
+                          ->orWhereHas('member', function($mq) use ($search) {
+                              $mq->where('nama', 'like', "%{$search}%");
+                          })
+                          ->orWhereHas('nasabah', function($nq) use ($search) {
+                              $nq->where('nama', 'like', "%{$search}%");
+                          });
+                    });
+                }
+            })
+            ->addColumn('borrower', function ($loan) {
+                return $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-');
+            })
+            ->addColumn('due_dates', function ($loan) {
+                $html = '';
+                $dueInstallments = $loan->installments
+                    ->where('status', 'belum_lunas')
+                    ->where('tanggal_jatuh_tempo', '<=', today()->addDays(3));
 
-        $reminders = $remindersQuery->with(['member', 'nasabah'])
-            ->paginate(10);
-
-        return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet', 'reminders'));
+                foreach ($dueInstallments as $ins) {
+                    $html .= '<span class="badge badge-warning mr-1">' . $ins->tanggal_jatuh_tempo->format('d/m/Y') . '</span>';
+                }
+                return $html;
+            })
+            ->addColumn('remaining_bill', function ($loan) {
+                $total = $loan->installments->where('status', 'belum_lunas')->sum('total_angsuran');
+                return 'Rp ' . number_format($total, 0, ',', '.');
+            })
+            ->addColumn('action', function ($loan) {
+                return '<a href="'.route('loans.show', $loan->id).'" class="btn btn-sm btn-primary">Detail</a>';
+            })
+            ->rawColumns(['due_dates', 'action'])
+            ->make(true);
     }
 
     /**

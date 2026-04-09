@@ -78,63 +78,23 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Reminder Penagihan (Jatuh Tempo < 3 Hari)</h3>
-                <div class="card-options">
-                    <form action="{{ route('collections.index') }}" method="GET" class="d-flex">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari nama/kode..." value="{{ request('search') }}">
-                            <span class="input-group-append">
-                                <button class="btn btn-sm btn-primary" type="submit">
-                                    <i class="fe fe-search"></i>
-                                </button>
-                                @if(request('search'))
-                                    <a href="{{ route('collections.index') }}" class="btn btn-sm btn-secondary">
-                                        <i class="fe fe-x"></i>
-                                    </a>
-                                @endif
-                            </span>
-                        </div>
-                    </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="reminders-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Peminjam</th>
+                                <th>Kode Pinjaman</th>
+                                <th>Jatuh Tempo</th>
+                                <th>Sisa Tagihan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table card-table table-vcenter text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>Peminjam</th>
-                            <th>Kode Pinjaman</th>
-                            <th>Jatuh Tempo</th>
-                            <th>Sisa Tagihan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($reminders as $loan)
-                            <tr>
-                                <td>{{ $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-') }}</td>
-                                <td>{{ $loan->kode_pinjaman }}</td>
-                                <td>
-                                    @foreach($loan->installments->where('status', 'belum_lunas')->where('tanggal_jatuh_tempo', '<=', now()->addDays(3)) as $ins)
-                                        <span class="badge badge-warning">{{ $ins->tanggal_jatuh_tempo->format('d/m/Y') }}</span>
-                                    @endforeach
-                                </td>
-                                <td>Rp {{ number_format($loan->installments->where('status', 'belum_lunas')->sum('total_angsuran'), 0, ',', '.') }}</td>
-                                <td>
-                                    <a href="{{ route('loans.show', $loan->id) }}" class="btn btn-sm btn-primary">Detail</a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">Tidak ada tagihan mendekati jatuh tempo.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if($reminders->hasPages())
-            <div class="card-footer">
-                {{ $reminders->appends(['search' => request('search')])->links() }}
-            </div>
-            @endif
         </div>
     </div>
 </div>
@@ -191,6 +151,23 @@
 @section('js')
 <script>
     require(['jquery', 'datatables'], function($) {
+        var tableReminders = $('#reminders-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('collections.reminders-data') }}",
+            columns: [
+                { data: 'borrower', name: 'borrower', orderable: false, searchable: false },
+                { data: 'kode_pinjaman', name: 'kode_pinjaman' },
+                { data: 'due_dates', name: 'due_dates', orderable: false, searchable: false },
+                { data: 'remaining_bill', name: 'remaining_bill', orderable: false, searchable: false },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
+            ],
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+            }
+        });
+
         var table = $('#collection-table').DataTable({
             processing: true,
             serverSide: true,
