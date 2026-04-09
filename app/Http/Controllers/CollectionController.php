@@ -38,8 +38,7 @@ class CollectionController extends Controller
                   ->whereBetween('tanggal_jatuh_tempo', [today(), today()->addDays(3)]);
             })
             ->with(['member', 'nasabah'])
-            ->limit(10)
-            ->get();
+            ->paginate(10);
 
         return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet', 'reminders'));
     }

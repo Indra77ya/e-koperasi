@@ -113,6 +113,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($reminders->hasPages())
+            <div class="card-footer">
+                {{ $reminders->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>
