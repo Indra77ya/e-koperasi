@@ -39,11 +39,12 @@ class ReportController extends Controller
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
             ->sum('pinjaman_angsuran.pokok');
 
-        $loans = $query->paginate(20);
-
         if ($request->has('print')) {
+            $loans = $query->get();
             return view('reports.outstanding_print', compact('loans', 'totals'));
         }
+
+        $loans = $query->paginate(20);
 
         return view('reports.outstanding', compact('loans', 'totals'));
     }
@@ -68,11 +69,12 @@ class ReportController extends Controller
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
             ->sum('pinjaman_angsuran.pokok');
 
-        $loans = $query->paginate(20);
-
         if ($request->has('print')) {
+            $loans = $query->get();
             return view('reports.bad_debt_print', compact('loans', 'totals'));
         }
+
+        $loans = $query->paginate(20);
 
         return view('reports.bad_debt', compact('loans', 'totals'));
     }
@@ -129,11 +131,12 @@ class ReportController extends Controller
         $totalIn = (clone $baseQuery)->where('debit', '>', 0)->sum('debit');
         $totalOut = (clone $baseQuery)->where('credit', '>', 0)->sum('credit');
 
-        $transactions = $baseQuery->paginate(50);
-
         if ($request->has('print')) {
+            $transactions = $baseQuery->get();
             return view('reports.cash_flow_print', compact('transactions', 'filter', 'startDate', 'endDate', 'totalIn', 'totalOut'));
         }
+
+        $transactions = $baseQuery->paginate(50);
 
         return view('reports.cash_flow', compact('transactions', 'filter', 'startDate', 'endDate', 'totalIn', 'totalOut'));
     }
@@ -154,6 +157,23 @@ class ReportController extends Controller
             return $this->exportArrears($query->get());
         }
 
+        if ($request->has('print')) {
+            $loans = $query->get();
+            // Sums for the header
+            $totals = DB::table('pinjaman_angsuran')
+                ->where('status', '!=', 'lunas')
+                ->where('tanggal_jatuh_tempo', '<', now())
+                ->select(
+                    DB::raw('SUM(pokok) as total_pokok'),
+                    DB::raw('SUM(bunga) as total_bunga'),
+                    DB::raw('SUM(biaya_admin) as total_admin'),
+                    DB::raw('SUM(denda) as total_denda')
+                )
+                ->first();
+
+            return view('reports.arrears_print', compact('loans', 'totals'));
+        }
+
         $loans = $query->paginate(20);
 
         // Sums for the header
@@ -168,9 +188,6 @@ class ReportController extends Controller
             )
             ->first();
 
-        if ($request->has('print')) {
-            return view('reports.arrears_print', compact('loans', 'totals'));
-        }
 
         return view('reports.arrears', compact('loans', 'totals'));
     }
@@ -196,11 +213,12 @@ class ReportController extends Controller
         // Clone for summation
         $totalRevenue = (clone $baseQuery)->sum(DB::raw('credit - debit')); // Revenue is Credit normal
 
-        $revenues = $baseQuery->paginate(50);
-
         if ($request->has('print')) {
+            $revenues = $baseQuery->get();
             return view('reports.revenue_print', compact('revenues', 'startDate', 'endDate', 'totalRevenue'));
         }
+
+        $revenues = $baseQuery->paginate(50);
 
         return view('reports.revenue', compact('revenues', 'startDate', 'endDate', 'totalRevenue'));
     }
