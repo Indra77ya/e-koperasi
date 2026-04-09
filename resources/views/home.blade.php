@@ -129,6 +129,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($dueToday->hasPages())
+            <div class="card-footer">
+                {{ $dueToday->appends(request()->except('due_page'))->links() }}
+            </div>
+            @endif
         </div>
     </div>
 

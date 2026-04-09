@@ -85,8 +85,6 @@
                             <td class="text-right font-weight-bold">{{ number_format($rowTotal, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
-                </tbody>
-                <tfoot>
                     <tr class="font-weight-bold bg-light">
                         <td colspan="3" class="text-center">TOTAL TUNGGAKAN</td>
                         <td class="text-right">{{ number_format($totalPokok, 0, ',', '.') }}</td>
@@ -95,7 +93,7 @@
                         <td class="text-right">{{ number_format($totalDenda, 0, ',', '.') }}</td>
                         <td class="text-right text-red h5 mb-0" style="color: #cd201f !important;">{{ number_format($grandTotal, 0, ',', '.') }}</td>
                     </tr>
-                </tfoot>
+                </tbody>
             </table>
         </div>
 

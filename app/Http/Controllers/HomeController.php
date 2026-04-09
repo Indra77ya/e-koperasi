@@ -95,7 +95,7 @@ class HomeController extends Controller
         $dueToday = LoanInstallment::whereDate('tanggal_jatuh_tempo', Carbon::today())
             ->where('status', '!=', 'lunas')
             ->with(['loan.member', 'loan.nasabah'])
-            ->get();
+            ->paginate(10, ['*'], 'due_page');
 
         // 5. Global Arrears (Tunggakan Global)
         $globalArrears = LoanInstallment::where('status', '!=', 'lunas')
