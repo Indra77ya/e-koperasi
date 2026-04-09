@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('loans/installments/{installment}/print', 'LoanController@printReceipt')->name('loans.installments.print');
     Route::post('loans/installments/{installment}/void', 'LoanController@voidPayment')->name('loans.installments.void');
     Route::post('loans/installments/{installment}/penalty', 'LoanController@addPenalty')->name('loans.installments.penalty');
+    Route::get('loans/{loan}/print-late-notice', 'LoanController@printLateNotice')->name('loans.print-late-notice');
     Route::post('loans/{loan}/settle-all', 'LoanController@settleAll')->name('loans.settle-all');
     Route::post('loans/{loan}/collaterals/{collateral}/return', 'CollateralController@returnCollateral')->name('loans.collaterals.return');
     Route::resource('loans.collaterals', 'CollateralController');
@@ -107,6 +108,7 @@ Route::middleware(['auth'])->group(function () {
     // Collection / Penagihan
     Route::get('collections', 'CollectionController@index')->name('collections.index');
     Route::get('collections/data', 'CollectionController@data')->name('collections.data');
+    Route::get('collections/print', 'CollectionController@printDC')->name('collections.print');
     Route::post('collections/log', 'CollectionController@storeLog')->name('collections.log.store');
     Route::get('collections/queue', 'CollectionController@fieldQueue')->name('collections.queue');
     Route::post('collections/queue', 'CollectionController@addToFieldQueue')->name('collections.queue.store');
