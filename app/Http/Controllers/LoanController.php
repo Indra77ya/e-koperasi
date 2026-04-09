@@ -649,6 +649,25 @@ class LoanController extends Controller
         }
     }
 
+    /**
+     * Print Late Notice
+     */
+    public function printLateNotice($id)
+    {
+        $loan = Loan::with(['member', 'nasabah', 'installments' => function($q) {
+            $q->where('status', 'belum_lunas')
+              ->where('tanggal_jatuh_tempo', '<', now());
+        }])->findOrFail($id);
+
+        $lateInstallments = $loan->installments;
+
+        if ($lateInstallments->isEmpty()) {
+            return redirect()->back()->with('error', 'Pinjaman ini tidak memiliki angsuran yang terlambat.');
+        }
+
+        return view('loans.print_late_notice', compact('loan', 'lateInstallments'));
+    }
+
     public function markBadDebt($id)
     {
         $loan = Loan::findOrFail($id);

@@ -115,6 +115,9 @@
                         @endif
 
                         @if($loan->status == 'berjalan' || $loan->status == 'macet')
+                            @if($loan->installments->where('status', 'belum_lunas')->where('tanggal_jatuh_tempo', '<', now())->count() > 0)
+                                <a href="{{ route('loans.print-late-notice', $loan->id) }}" target="_blank" class="btn btn-warning btn-block mt-2"><i class="fe fe-printer"></i> Nota Keterlambatan</a>
+                            @endif
                             <button type="button" class="btn btn-success btn-block mt-2" id="btn-settle-all">Pelunasan Total</button>
                             @if($loan->status == 'berjalan')
                             <form action="{{ route('loans.markBadDebt', $loan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai pinjaman ini sebagai MACET?')">
