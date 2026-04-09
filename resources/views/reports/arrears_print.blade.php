@@ -69,8 +69,6 @@
                         <td colspan="7" class="text-center">Tidak ada tunggakan saat ini.</td>
                     </tr>
                     @endforelse
-                </tbody>
-                <tfoot>
                     <tr class="font-weight-bold">
                         <td colspan="2" class="text-center">GRAND TOTAL TUNGGAKAN</td>
                         <td class="text-right">{{ format_rupiah($totals->total_pokok) }}</td>
@@ -79,7 +77,7 @@
                         <td class="text-right">{{ format_rupiah($totals->total_denda) }}</td>
                         <td class="text-right">{{ format_rupiah(($totals->total_pokok + $totals->total_bunga + $totals->total_admin + $totals->total_denda)) }}</td>
                     </tr>
-                </tfoot>
+                </tbody>
             </table>
         </div>
     </div>
