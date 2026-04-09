@@ -62,6 +62,13 @@ class CollectionController extends Controller
             ->addColumn('borrower', function ($loan) {
                 return $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-');
             })
+            ->addColumn('address', function ($loan) {
+                $address = $loan->member ? $loan->member->alamat : ($loan->nasabah ? $loan->nasabah->alamat : '-');
+                return $address;
+            })
+            ->addColumn('area', function ($loan) {
+                return $loan->area;
+            })
             ->editColumn('status', function ($loan) {
                 if ($loan->status == 'diajukan') {
                     return '<span class="badge badge-warning">Diajukan</span>';
@@ -181,6 +188,30 @@ class CollectionController extends Controller
      * Refresh Collectibility Statuses
      * Loops through active loans and updates their status based on overdue days.
      */
+    /**
+     * Print for DC
+     */
+    public function printDC(Request $request)
+    {
+        $status = $request->input('kolektabilitas');
+
+        $query = Loan::with(['member', 'nasabah', 'installments'])
+                     ->where('status', '!=', 'lunas');
+
+        if ($status) {
+            $query->where('kolektabilitas', $status);
+        }
+
+        $loans = $query->get();
+
+        $groupedLoans = $loans->groupBy('area');
+
+        // Sort by area name
+        $groupedLoans = $groupedLoans->sortKeys();
+
+        return view('collections.print_dc', compact('groupedLoans', 'status'));
+    }
+
     public function refreshCollectibility()
     {
         $loans = Loan::where('status', '!=', 'lunas')->get();

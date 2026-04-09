@@ -68,6 +68,22 @@ class Loan extends Model
         return $this->morphMany('App\Models\JournalEntry', 'ref');
     }
 
+    public function getAreaAttribute()
+    {
+        $address = $this->member ? $this->member->alamat : ($this->nasabah ? $this->nasabah->alamat : '');
+        if (!$address) return '-';
+
+        // Simple area detection logic
+        $matches = [];
+        if (preg_match('/(?:Desa|Kel\.|Kelurahan|Dsn\.|Dusun)\s+([^,.\n\r]+)/i', $address, $matches)) {
+            return trim($matches[1]);
+        }
+
+        // Fallback: first part before comma or first line
+        $parts = explode(',', $address);
+        return trim($parts[0]);
+    }
+
     // Helper to get days past due based on oldest unpaid installment
     public function getDaysPastDueAttribute()
     {
