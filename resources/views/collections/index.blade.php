@@ -78,6 +78,23 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Reminder Penagihan (Jatuh Tempo < 3 Hari)</h3>
+                <div class="card-options">
+                    <form action="{{ route('collections.index') }}" method="GET" class="d-flex">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari nama/kode..." value="{{ request('search') }}">
+                            <span class="input-group-append">
+                                <button class="btn btn-sm btn-primary" type="submit">
+                                    <i class="fe fe-search"></i>
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('collections.index') }}" class="btn btn-sm btn-secondary">
+                                        <i class="fe fe-x"></i>
+                                    </a>
+                                @endif
+                            </span>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table card-table table-vcenter text-nowrap">
@@ -115,7 +132,7 @@
             </div>
             @if($reminders->hasPages())
             <div class="card-footer">
-                {{ $reminders->links() }}
+                {{ $reminders->appends(['search' => request('search')])->links() }}
             </div>
             @endif
         </div>

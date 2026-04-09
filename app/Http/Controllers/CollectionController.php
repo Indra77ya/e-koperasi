@@ -21,7 +21,7 @@ class CollectionController extends Controller
     /**
      * Display the collection dashboard.
      */
-    public function index()
+    public function index(Request $request)
     {
         \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
         // Counts
@@ -32,12 +32,26 @@ class CollectionController extends Controller
         $countMacet = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Macet')->count();
 
         // Reminders: Loans with installment due in next 3 days OR overdue but marked as Lancar
-        $reminders = Loan::where('status', '!=', 'lunas')
+        $search = $request->get('search');
+        $remindersQuery = Loan::where('status', '!=', 'lunas')
             ->whereHas('installments', function ($q) {
                 $q->where('status', 'belum_lunas')
                   ->whereBetween('tanggal_jatuh_tempo', [today(), today()->addDays(3)]);
-            })
-            ->with(['member', 'nasabah'])
+            });
+
+        if ($search) {
+            $remindersQuery->where(function($q) use ($search) {
+                $q->where('kode_pinjaman', 'like', "%{$search}%")
+                  ->orWhereHas('member', function($mq) use ($search) {
+                      $mq->where('nama', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('nasabah', function($nq) use ($search) {
+                      $nq->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $reminders = $remindersQuery->with(['member', 'nasabah'])
             ->paginate(10);
 
         return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet', 'reminders'));
