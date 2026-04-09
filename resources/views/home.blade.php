@@ -146,6 +146,7 @@
             <div class="card-header">
                 <h3 class="card-title">Pinjaman Jatuh Tempo Hari Ini ({{ \Carbon\Carbon::today()->format('d M Y') }})</h3>
                 <div class="card-options">
+                    <a href="{{ route('collections.index') }}" class="btn btn-primary btn-sm mr-2">Dashboard Penagihan</a>
                     <span class="tag tag-red">{{ $dueToday->count() }} Tagihan</span>
                 </div>
             </div>
