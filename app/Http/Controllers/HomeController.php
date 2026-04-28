@@ -32,11 +32,12 @@ class HomeController extends Controller
         // Auto-Sync Indefinite Loans
         \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
 
-        // 1. Total Dana Turun (Disbursed)
-        // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
-        // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).
-        $totalDisbursed = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
-            ->sum('jumlah_pinjaman');
+        // 1. Total Dana Turun (Outstanding Principal)
+        // User clarified this should decrease on repayment, representing current outstanding principal.
+        $activeLoans = Loan::whereIn('status', ['berjalan', 'dicairkan', 'macet'])->get();
+        $totalDisbursed = $activeLoans->sum(function($loan) {
+            return $loan->remaining_principal;
+        });
 
         // Generate last 6 months keys
         $months = collect([]);
@@ -79,17 +80,15 @@ class HomeController extends Controller
         });
 
         // 3. Piutang & Kolektabilitas
-        $collectibilityStats = DB::table('pinjaman')
-            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
-            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet'])
-            ->where('pinjaman_angsuran.status', '!=', 'lunas')
-            ->select(
-                'pinjaman.kolektabilitas',
-                DB::raw('COUNT(DISTINCT pinjaman.id) as count_loans'),
-                DB::raw('SUM(pinjaman_angsuran.pokok) as total_outstanding')
-            )
-            ->groupBy('pinjaman.kolektabilitas')
-            ->get();
+        $collectibilityStats = $activeLoans->groupBy('kolektabilitas')->map(function ($group, $key) {
+            return (object) [
+                'kolektabilitas' => $key,
+                'count_loans' => $group->count(),
+                'total_outstanding' => $group->sum(function($loan) {
+                    return $loan->remaining_principal;
+                })
+            ];
+        })->values();
 
         // 4. Pinjaman Jatuh Tempo Hari Ini
         $dueToday = LoanInstallment::whereDate('tanggal_jatuh_tempo', Carbon::today())
