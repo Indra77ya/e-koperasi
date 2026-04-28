@@ -79,7 +79,7 @@ class HomeController extends Controller
         // 3. Piutang & Kolektabilitas
         $collectibilityStats = DB::table('pinjaman')
             ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
-            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet'])
+            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet', 'disetujui'])
             ->where('pinjaman_angsuran.status', '!=', 'lunas')
             ->select(
                 'pinjaman.kolektabilitas',
@@ -89,7 +89,11 @@ class HomeController extends Controller
             ->groupBy('pinjaman.kolektabilitas')
             ->get();
 
-        $totalOutstanding = $collectibilityStats->sum('total_outstanding');
+        $totalOutstanding = DB::table('pinjaman')
+            ->join('pinjaman_angsuran', 'pinjaman.id', '=', 'pinjaman_angsuran.pinjaman_id')
+            ->whereIn('pinjaman.status', ['berjalan', 'dicairkan', 'macet', 'disetujui'])
+            ->where('pinjaman_angsuran.status', '!=', 'lunas')
+            ->sum('pinjaman_angsuran.pokok');
 
         // 4. Pinjaman Jatuh Tempo Hari Ini
         $dueToday = LoanInstallment::whereDate('tanggal_jatuh_tempo', Carbon::today())
