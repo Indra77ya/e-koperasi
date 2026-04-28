@@ -57,7 +57,22 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-4">
+    <div class="col-12 col-sm-4 col-lg-2">
+        <div class="card">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <span class="stamp stamp-md bg-green mr-3">
+                        <i class="fe fe-trending-down"></i>
+                    </span>
+                    <div>
+                        <h4 class="m-0"><a href="{{ route('reports.outstanding') }}" class="text-green">{{ format_rupiah($totalOutstanding) }}</a></h4>
+                        <small class="text-muted">Sisa Pokok (Outstanding)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4 col-lg-2">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">

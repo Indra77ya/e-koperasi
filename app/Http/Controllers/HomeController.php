@@ -91,6 +91,8 @@ class HomeController extends Controller
             ->groupBy('pinjaman.kolektabilitas')
             ->get();
 
+        $totalOutstanding = $collectibilityStats->sum('total_outstanding');
+
         // 4. Pinjaman Jatuh Tempo Hari Ini
         $dueToday = LoanInstallment::whereDate('tanggal_jatuh_tempo', Carbon::today())
             ->where('status', '!=', 'lunas')
@@ -202,6 +204,7 @@ class HomeController extends Controller
         return view('home', compact(
             'mutations',
             'totalDisbursed',
+            'totalOutstanding',
             'disbursedTrend',
             'revenueStats',
             'collectibilityStats',
