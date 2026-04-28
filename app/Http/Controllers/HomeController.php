@@ -32,11 +32,9 @@ class HomeController extends Controller
         // Auto-Sync Indefinite Loans
         \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
 
-        // 1. Total Dana Turun (Disbursed)
-        // User clarified this should be "Total Channeled Funds" (Cumulative Disbursed), not Outstanding.
-        // Include 'berjalan' (active), 'lunas' (paid), 'macet' (bad debt), 'dicairkan' (legacy/synonym).
-        $totalDisbursed = Loan::whereIn('status', ['berjalan', 'dicairkan', 'lunas', 'macet'])
-            ->sum('jumlah_pinjaman');
+        // 1. Total Dana Turun (Now using Outstanding logic per user request)
+        // Previous logic: Cumulative sum of all disbursed loans.
+        // New logic: Sum of unpaid principal from active/bad debt loans.
 
         // Generate last 6 months keys
         $months = collect([]);
@@ -203,7 +201,6 @@ class HomeController extends Controller
 
         return view('home', compact(
             'mutations',
-            'totalDisbursed',
             'totalOutstanding',
             'disbursedTrend',
             'revenueStats',
