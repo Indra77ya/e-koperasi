@@ -251,12 +251,14 @@ class LoanController extends Controller
             }
         }
 
-        if ($loan->tenor != 0) return; // Exit if not indefinite, as we only generate NEW ones for tenor=0
+        if ($loan->tenor != 0 || $loan->status == 'lunas') return; // Exit if not indefinite or already lunas
 
         $latest = $loan->installments()->orderBy('angsuran_ke', 'desc')->first();
         if (!$latest) return;
 
         $currentBalance = $latest->sisa_pinjaman;
+        if ($currentBalance <= 100) return; // Don't generate if balance is zero or negligible
+
         $nextDueDate = Carbon::parse($latest->tanggal_jatuh_tempo);
         $angsuranKe = $latest->angsuran_ke;
 
@@ -819,6 +821,9 @@ class LoanController extends Controller
                     if ($newBalance <= 100) { // Tolerance for rounding
                         $loan->update(['status' => 'lunas']);
                         $installment->update(['sisa_pinjaman' => 0]);
+
+                        // Clean up future installments if any
+                        $loan->installments()->where('status', 'belum_lunas')->where('id', '!=', $installment->id)->delete();
                     } else {
                         $installment->update(['sisa_pinjaman' => $newBalance]);
                         // Ensure all FUTURE installments have their balance and interest updated if they were already generated
