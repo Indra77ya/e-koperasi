@@ -7,27 +7,35 @@
     <!-- Top Stats -->
     <div class="col-6 col-sm-4 col-lg-2">
         <div class="card">
-            <div class="card-body p-3 text-center">
-                <div class="text-right text-green">
-                    &nbsp;
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <span class="stamp stamp-md bg-green mr-3">
+                        <i class="fe fe-calendar"></i>
+                    </span>
+                    <div>
+                        <h4 class="m-0"><a href="javascript:void(0)">{{ $dueToday->count() }}</a></h4>
+                        <small class="text-muted">Jatuh Tempo Hari Ini</small>
+                    </div>
                 </div>
-                <div class="h1 m-0">{{ $dueToday->count() }}</div>
-                <div class="text-muted mb-4">Jatuh Tempo Hari Ini</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-lg-2">
         <div class="card">
-            <div class="card-body p-3 text-center">
-                <div class="text-right text-green">
-                    &nbsp;
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <span class="stamp stamp-md bg-cyan mr-3">
+                        <i class="fe fe-layers"></i>
+                    </span>
+                    <div>
+                        <h4 class="m-0"><a href="javascript:void(0)">{{ count($collectibilityStats) }}</a></h4>
+                        <small class="text-muted">Kat. Kolektabilitas</small>
+                    </div>
                 </div>
-                <div class="h1 m-0">{{ count($collectibilityStats) }}</div>
-                <div class="text-muted mb-4">Kategori Kolektabilitas</div>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-2">
+    <div class="col-6 col-sm-4 col-lg-2">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">
@@ -35,14 +43,14 @@
                         <i class="fe fe-percent"></i>
                     </span>
                     <div>
-                        <h4 class="m-0 text-orange"><a href="{{ route('reports.arrears') }}" class="text-orange">{{ format_rupiah($globalArrears->total_bunga ?? 0) }}</a></h4>
+                        <h4 class="m-0 text-orange"><a href="{{ route('reports.arrears') }}" class="text-orange" title="{{ format_rupiah($globalArrears->total_bunga ?? 0) }}">{{ short_rupiah($globalArrears->total_bunga ?? 0) }}</a></h4>
                         <small class="text-muted">Tunggakan Bunga</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-2">
+    <div class="col-6 col-sm-4 col-lg-3">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">
@@ -50,14 +58,14 @@
                         <i class="fe fe-dollar-sign"></i>
                     </span>
                     <div>
-                        <h4 class="m-0"><a href="javascript:void(0)">{{ format_rupiah($totalDisbursed) }}</a></h4>
-                        <small class="text-muted">Total Dana Turun (Disbursed)</small>
+                        <h4 class="m-0"><a href="javascript:void(0)" title="{{ format_rupiah($totalDisbursed) }}">{{ short_rupiah($totalDisbursed) }}</a></h4>
+                        <small class="text-muted">Dana Turun (Disbursed)</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-4 col-lg-4">
+    <div class="col-12 col-sm-4 col-lg-3">
         <div class="card">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center">
@@ -68,7 +76,7 @@
                         @php
                             $totalTunggakan = ($globalArrears->total_pokok ?? 0) + ($globalArrears->total_bunga ?? 0) + ($globalArrears->total_admin ?? 0) + ($globalArrears->total_denda ?? 0);
                         @endphp
-                        <h4 class="m-0 text-red"><a href="{{ route('reports.arrears') }}" class="text-red">{{ format_rupiah($totalTunggakan) }}</a></h4>
+                        <h4 class="m-0 text-red"><a href="{{ route('reports.arrears') }}" class="text-red" title="{{ format_rupiah($totalTunggakan) }}">{{ short_rupiah($totalTunggakan) }}</a></h4>
                         <small class="text-muted">Tunggakan Global</small>
                     </div>
                 </div>
