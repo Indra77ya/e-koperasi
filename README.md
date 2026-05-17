@@ -1,90 +1,75 @@
 # Sistem Informasi E-Koperasi
 
-Aplikasi manajemen koperasi yang mencakup pengelolaan anggota, simpanan, pinjaman (dengan perhitungan bunga dan denda), serta akuntansi dasar (jurnal, buku besar, neraca, laba rugi).
+Aplikasi manajemen koperasi komprehensif yang dirancang untuk mengelola anggota, nasabah, simpanan, dan pinjaman dengan sistem akuntansi yang terintegrasi.
 
 ## Fitur Utama
-- **Manajemen Anggota & Nasabah**: Pengelolaan data identitas anggota koperasi dan nasabah non-anggota.
-- **Pinjaman**: Pengajuan, persetujuan, pencairan, dan pembayaran angsuran dengan dukungan berbagai metode perhitungan bunga (Flat, Efektif, Anuitas).
-- **Akuntansi**: Chart of Accounts (COA), Jurnal Umum, Buku Besar, Neraca Saldo, Laba Rugi.
-- **Laporan**: Laporan arus kas, pinjaman beredar, pinjaman macet, dan pendapatan.
-- **Manajemen Kolektibilitas**: Pemantauan status kelancaran pembayaran (Lancar, DPK, Macet).
+
+### 🏦 Manajemen Pinjaman & Simpanan
+- **Metode Perhitungan Bunga**: Mendukung bunga Flat, Efektif, dan Anuitas.
+- **Pinjaman Tanpa Tenor (Indefinite)**: Dukungan untuk pinjaman bunga saja dengan pelunasan pokok fleksibel.
+- **Pelunasan Total (Settlement)**: Fitur pelunasan dipercepat dengan perhitungan bunga proporsional (prorate).
+- **Biaya Admin Periodik**: Otomatisasi pembebanan biaya admin secara berkala (default per 6 bulan).
+- **Simpanan Sukarela**: Manajemen setoran dan penarikan tabungan dengan bagi hasil/bunga.
+
+### 📊 Dashboard & Penagihan
+- **Dashboard Penagihan**: Pemantauan real-time dengan fitur live search dan pengelompokan otomatis berdasarkan Area/Desa.
+- **Monitoring Tunggakan**: Perhitungan mendalam untuk tunggakan pokok, bunga, biaya admin, dan denda (penalti).
+- **Cetak Data DC (Debt Collector)**: Laporan khusus untuk petugas lapangan yang dikelompokkan per wilayah tugas.
+- **Nota Keterlambatan**: Pencetakan surat rincian tunggakan resmi untuk diberikan kepada nasabah.
+
+### 📝 Akuntansi & Laporan
+- **General Ledger**: Otomatisasi jurnal umum dari setiap transaksi pinjaman, angsuran, dan tabungan.
+- **Laporan Keuangan**: Neraca Saldo, Laba Rugi, dan Buku Besar.
+- **Laporan Operasional**: Arus Kas, Outstanding Pinjaman, Pinjaman Macet, Pendapatan, dan Laporan Agunan (inventaris jaminan).
+
+### ⚙️ Sistem & Keamanan
+- **Backup & Reset**: Fitur pencadangan database otomatis (SQL) dan utilitas reset data sistem yang selektif.
+- **Manajemen User**: Pengaturan hak akses untuk admin dan staf.
+
+## Screenshots
+
+![Login](./screenshots/Login.png)
+
+![Home](./screenshots/Home.png)
+
+![Bank Interest](./screenshots/Bank%20Interest.png)
+
+![Members](./screenshots/Members.png)
 
 ## Persyaratan Sistem
 
-Sebelum memulai instalasi, pastikan sistem Anda memiliki:
 - **PHP**: Versi 7.2 atau lebih baru.
-- **Composer**: Manajer dependensi PHP.
 - **Database**: MySQL atau MariaDB (Versi 5.7+ direkomendasikan).
 - **Web Server**: Apache atau Nginx.
 
-## Panduan Instalasi Langkah-demi-Langkah
+## Panduan Instalasi
 
-Ikuti langkah-langkah berikut untuk menjalankan aplikasi di lingkungan lokal Anda (Localhost).
-
-### 1. Clone atau Unduh Repositori
-Buka terminal atau command prompt, lalu clone repositori ini ke folder root web server Anda (misalnya `htdocs` di XAMPP atau `/var/www/html` di Linux).
-
+### 1. Clone Repositori
 ```bash
 git clone <url-repository-ini>
-cd nama-folder-project
+cd e-koperasi
 ```
 
-### 2. Instal Dependensi PHP
-Jalankan perintah berikut untuk mengunduh semua pustaka yang dibutuhkan oleh aplikasi:
-
+### 2. Instalasi Dependensi
 ```bash
 composer install
 ```
 
 ### 3. Konfigurasi Environment
-Salin file konfigurasi contoh `.env.example` menjadi `.env`:
-
+Salin file `.env.example` menjadi `.env` dan sesuaikan pengaturan database Anda:
 ```bash
 cp .env.example .env
 ```
-*Jika Anda menggunakan Windows dan tidak memiliki perintah `cp`, Anda bisa menyalin dan menamai ulang file tersebut secara manual melalui File Explorer.*
 
-### 4. Konfigurasi Database
-1. Buka aplikasi manajemen database Anda (seperti phpMyAdmin, DBeaver, atau MySQL Workbench).
-2. Buat database baru (kosong), misalnya dengan nama `e_koperasi`.
-3. Buka file `.env` yang baru saja Anda buat dengan teks editor.
-4. Cari bagian konfigurasi database dan sesuaikan dengan pengaturan Anda:
-
-```ini
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=e_koperasi      <-- Ganti dengan nama database Anda
-DB_USERNAME=root            <-- Ganti dengan username database Anda
-DB_PASSWORD=                <-- Ganti dengan password database Anda
-```
-
-### 5. Generate Application Key
-Generate kunci enkripsi aplikasi Laravel:
-
+### 4. Setup Database & Key
 ```bash
 php artisan key:generate
-```
-
-### 6. Migrasi dan Seeding Database
-Jalankan perintah berikut untuk membuat tabel-tabel di database dan mengisi data awal (data dummy untuk testing):
-
-```bash
 php artisan migrate
 php artisan db:seed
-```
-*Langkah ini akan membuat tabel users, roles, permissions, chart of accounts, serta data contoh untuk nasabah dan pinjaman.*
-
-### 7. Link Storage (Penting untuk Upload File)
-Agar file yang diunggah (seperti foto KTP atau dokumen jaminan) dapat diakses publik, buat symbolic link dari `storage/app/public` ke `public/storage`:
-
-```bash
 php artisan storage:link
 ```
 
-### 8. Jalankan Aplikasi
-Jalankan server pengembangan bawaan Laravel:
-
+### 5. Jalankan Aplikasi
 ```bash
 php artisan serve
 ```
@@ -92,14 +77,15 @@ Akses aplikasi melalui browser di alamat: `http://localhost:8000`
 
 ## Akun Login Default
 
-Gunakan kredensial berikut untuk masuk sebagai administrator:
-
 - **Email**: `ekoperasi@gmail.com`
 - **Password**: `secret`
 
 ## Troubleshooting
 
-- **Error Permission/Izin Folder**: Jika Anda menemui error terkait izin tulis (permission denied), pastikan folder `storage` dan `bootstrap/cache` memiliki izin tulis.
+- **Error Permission/Izin Folder**: Pastikan folder `storage` dan `bootstrap/cache` memiliki izin tulis (writable).
   - Linux/Mac: `chmod -R 775 storage bootstrap/cache`
-- **Tampilan Rusak/CSS Tidak Load**: Pastikan URL aplikasi di `.env` (`APP_URL`) sesuai dengan alamat akses Anda. Contoh: `APP_URL=http://localhost:8000`.
-- **Composer Error**: Jika `composer install` gagal, coba jalankan `composer update` atau pastikan ekstensi PHP yang dibutuhkan (seperti `php-xml`, `php-mbstring`, `php-zip`) sudah aktif.
+- **Tampilan Rusak/CSS Tidak Load**: Pastikan URL aplikasi di `.env` (`APP_URL`) sesuai dengan alamat akses Anda.
+- **Composer Error**: Jika `composer install` gagal, pastikan ekstensi PHP yang dibutuhkan (seperti `php-xml`, `php-mbstring`, `php-zip`) sudah aktif.
+
+---
+© 2024 Sistem Informasi E-Koperasi.
