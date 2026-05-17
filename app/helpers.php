@@ -14,6 +14,42 @@ if ( ! function_exists('format_rupiah'))
     }
 }
 
+if ( ! function_exists('abbreviate_number'))
+{
+    /**
+     * Abbreviate number to K, Jt, M, T
+     *
+     * @param    integer    $number
+     * @return    string
+     */
+    function abbreviate_number($number)
+    {
+        if ($number < 1000000) {
+            return number_format($number, 0, ',', '.');
+        } elseif ($number < 1000000000) {
+            return rtrim(rtrim(number_format($number / 1000000, 1, ',', '.'), '0'), ',') . ' Jt';
+        } elseif ($number < 1000000000000) {
+            return rtrim(rtrim(number_format($number / 1000000000, 2, ',', '.'), '0'), ',') . ' M';
+        } else {
+            return rtrim(rtrim(number_format($number / 1000000000000, 2, ',', '.'), '0'), ',') . ' T';
+        }
+    }
+}
+
+if ( ! function_exists('short_rupiah'))
+{
+    /**
+     * Convert to Short Format Rupiah
+     *
+     * @param    integer    $number
+     * @return    string
+     */
+    function short_rupiah($number)
+    {
+        return 'Rp ' . abbreviate_number($number);
+    }
+}
+
 if ( ! function_exists('religions'))
 {
     /**
