@@ -4,25 +4,25 @@ Aplikasi manajemen koperasi komprehensif yang dirancang untuk mengelola anggota,
 
 ## Fitur Utama
 
-### 🏦 Manajemen Pinjaman & Simpanan
+### Manajemen Pinjaman & Simpanan
 - **Metode Perhitungan Bunga**: Mendukung bunga Flat, Efektif, dan Anuitas.
 - **Pinjaman Tanpa Tenor (Indefinite)**: Dukungan untuk pinjaman bunga saja dengan pelunasan pokok fleksibel.
 - **Pelunasan Total (Settlement)**: Fitur pelunasan dipercepat dengan perhitungan bunga proporsional (prorate).
 - **Biaya Admin Periodik**: Otomatisasi pembebanan biaya admin secara berkala (default per 6 bulan).
 - **Simpanan Sukarela**: Manajemen setoran dan penarikan tabungan dengan bagi hasil/bunga.
 
-### 📊 Dashboard & Penagihan
+### Dashboard & Penagihan
 - **Dashboard Penagihan**: Pemantauan real-time dengan fitur live search dan pengelompokan otomatis berdasarkan Area/Desa.
 - **Monitoring Tunggakan**: Perhitungan mendalam untuk tunggakan pokok, bunga, biaya admin, dan denda (penalti).
 - **Cetak Data DC (Debt Collector)**: Laporan khusus untuk petugas lapangan yang dikelompokkan per wilayah tugas.
 - **Nota Keterlambatan**: Pencetakan surat rincian tunggakan resmi untuk diberikan kepada nasabah.
 
-### 📝 Akuntansi & Laporan
+### Akuntansi & Laporan
 - **General Ledger**: Otomatisasi jurnal umum dari setiap transaksi pinjaman, angsuran, dan tabungan.
 - **Laporan Keuangan**: Neraca Saldo, Laba Rugi, dan Buku Besar.
 - **Laporan Operasional**: Arus Kas, Outstanding Pinjaman, Pinjaman Macet, Pendapatan, dan Laporan Agunan (inventaris jaminan).
 
-### ⚙️ Sistem & Keamanan
+### Sistem & Keamanan
 - **Backup & Reset**: Fitur pencadangan database otomatis (SQL) dan utilitas reset data sistem yang selektif.
 - **Manajemen User**: Pengaturan hak akses untuk admin dan staf.
 
