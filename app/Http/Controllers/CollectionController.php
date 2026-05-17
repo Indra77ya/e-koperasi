@@ -25,11 +25,11 @@ class CollectionController extends Controller
     {
         \App\Http\Controllers\LoanController::syncAllActiveIndefiniteLoans();
         // Counts
-        $countLancar = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Lancar')->count();
-        $countDPK = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'DPK')->count();
-        $countKL = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Kurang Lancar')->count();
-        $countDiragukan = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Diragukan')->count();
-        $countMacet = Loan::where('status', '!=', 'lunas')->where('kolektabilitas', 'Macet')->count();
+        $countLancar = Loan::where('kolektabilitas', 'Lancar')->count();
+        $countDPK = Loan::where('kolektabilitas', 'DPK')->count();
+        $countKL = Loan::where('kolektabilitas', 'Kurang Lancar')->count();
+        $countDiragukan = Loan::where('kolektabilitas', 'Diragukan')->count();
+        $countMacet = Loan::where('kolektabilitas', 'Macet')->count();
 
         // Reminders: We'll use DataTables for this now.
         return view('collections.index', compact('countLancar', 'countDPK', 'countKL', 'countDiragukan', 'countMacet'));
@@ -94,8 +94,7 @@ class CollectionController extends Controller
     {
         $status = $request->input('kolektabilitas');
 
-        $query = Loan::with(['member', 'nasabah', 'installments'])
-                     ->where('status', '!=', 'lunas');
+        $query = Loan::with(['member', 'nasabah', 'installments']);
 
         if ($status) {
             $query->where('kolektabilitas', $status);
@@ -238,8 +237,7 @@ class CollectionController extends Controller
     {
         $status = $request->input('kolektabilitas');
 
-        $query = Loan::with(['member', 'nasabah', 'installments'])
-                     ->where('status', '!=', 'lunas');
+        $query = Loan::with(['member', 'nasabah', 'installments']);
 
         if ($status) {
             $query->where('kolektabilitas', $status);
@@ -257,7 +255,7 @@ class CollectionController extends Controller
 
     public function refreshCollectibility()
     {
-        $loans = Loan::where('status', '!=', 'lunas')->get();
+        $loans = Loan::all();
         $countUpdated = 0;
 
         // Fetch thresholds from settings
