@@ -23,7 +23,8 @@ Aplikasi manajemen koperasi komprehensif yang dirancang untuk mengelola anggota,
 - **Laporan Operasional**: Arus Kas, Outstanding Pinjaman, Pinjaman Macet, Pendapatan, dan Laporan Agunan (inventaris jaminan).
 
 ### Sistem & Keamanan
-- **Backup & Reset**: Fitur pencadangan database otomatis (SQL) dan utilitas reset data sistem yang selektif.
+- **Backup & Restore**: Fitur pencadangan komprehensif dalam format ZIP yang mencakup database dan seluruh file (gambar, foto, dokumen).
+- **Reset Sistem**: Utilitas reset data sistem yang selektif dengan fitur backup otomatis sebelum proses dijalankan.
 - **Manajemen User**: Pengaturan hak akses untuk admin dan staf.
 
 ## Screenshots
