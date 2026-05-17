@@ -115,20 +115,21 @@ class SettingController extends Controller
 
     public function backup()
     {
-        $headers = [
-            'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="backup_ekoperasi_' . date('Y-m-d_H-i-s') . '.sql"',
-        ];
+        $filename = 'backup_ekoperasi_' . date('Y-m-d_H-i-s') . '.zip';
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip');
 
-        return response()->stream(function () {
-            $this->generateBackupSql('php://output');
-        }, 200, $headers);
+        try {
+            $this->generateBackupZip($tempFile);
+            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membuat backup: ' . $e->getMessage());
+        }
     }
 
     public function downloadBackup($filename)
     {
-        // Security check: only allow files from backups directory and with .sql extension
-        if (strpos($filename, '..') !== false || substr($filename, -4) !== '.sql') {
+        // Security check: only allow files from backups directory and with .sql or .zip extension
+        if (strpos($filename, '..') !== false || (substr($filename, -4) !== '.sql' && substr($filename, -4) !== '.zip')) {
             abort(403);
         }
 
@@ -139,6 +140,43 @@ class SettingController extends Controller
         }
 
         return response()->download($path);
+    }
+
+    private function generateBackupZip($zipPath)
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
+            throw new \Exception("Gagal membuka file ZIP untuk menulis.");
+        }
+
+        // 1. Add SQL Dump
+        $sqlFile = tempnam(sys_get_temp_dir(), 'sql');
+        $this->generateBackupSql($sqlFile);
+        $zip->addFile($sqlFile, 'database.sql');
+
+        // 2. Add Public Files (Images, Documents, etc.)
+        $publicPath = storage_path('app/public');
+        if (file_exists($publicPath)) {
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($publicPath),
+                \RecursiveIteratorIterator::LEAVES_ONLY
+            );
+
+            foreach ($files as $name => $file) {
+                // Skip directories (they would be added automatically)
+                if (!$file->isDir()) {
+                    // Get real and relative path for current file
+                    $filePath = $file->getRealPath();
+                    $relativePath = 'files/' . substr($filePath, strlen($publicPath) + 1);
+
+                    // Add current file to archive
+                    $zip->addFile($filePath, $relativePath);
+                }
+            }
+        }
+
+        $zip->close();
+        unlink($sqlFile);
     }
 
     private function generateBackupSql($targetPath)
@@ -205,26 +243,30 @@ class SettingController extends Controller
         }
 
         $file = $request->file('backup_file');
-
         $extension = strtolower($file->getClientOriginalExtension());
-        if ($extension !== 'sql') {
-             return redirect()->back()->with('error', 'Format file harus .sql');
+
+        if ($extension !== 'sql' && $extension !== 'zip') {
+             return redirect()->back()->with('error', 'Format file harus .sql atau .zip');
         }
 
         ini_set('memory_limit', '512M');
         set_time_limit(600);
 
-        $path = $file->getRealPath();
-        $content = file_get_contents($path);
+        if ($extension === 'sql') {
+            return $this->restoreSql($file->getRealPath());
+        } else {
+            return $this->restoreZip($file->getRealPath());
+        }
+    }
 
+    private function restoreSql($path)
+    {
+        $content = file_get_contents($path);
         DB::disableQueryLog();
         DB::beginTransaction();
         try {
              DB::unprepared("SET FOREIGN_KEY_CHECKS=0;");
 
-             // Robust SQL Parser to handle multi-statements
-             // This iterates over the content character by character to safely split by ';'
-             // while respecting single quotes to avoid splitting SQL strings containing semicolons.
              $len = strlen($content);
              $start = 0;
              $inQuote = false;
@@ -232,7 +274,6 @@ class SettingController extends Controller
              for ($i = 0; $i < $len; $i++) {
                  $char = $content[$i];
 
-                 // Toggle quote state (handling escaped quotes)
                  if ($char === "'" && ($i === 0 || $content[$i-1] !== '\\')) {
                      $inQuote = !$inQuote;
                  }
@@ -246,7 +287,6 @@ class SettingController extends Controller
                  }
              }
 
-             // Execute any remaining query
              if ($start < $len) {
                  $query = substr($content, $start);
                  if (trim($query) !== '') {
@@ -255,13 +295,84 @@ class SettingController extends Controller
              }
 
              DB::unprepared("SET FOREIGN_KEY_CHECKS=1;");
-
              DB::commit();
              return redirect()->back()->with('success', 'Database berhasil direstore.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal restore database: ' . $e->getMessage());
         }
+    }
+
+    private function restoreZip($zipPath)
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath) !== TRUE) {
+            return redirect()->back()->with('error', 'Gagal membuka file ZIP.');
+        }
+
+        $tempDir = storage_path('app/temp_restore_' . time());
+        mkdir($tempDir, 0755, true);
+        $zip->extractTo($tempDir);
+        $zip->close();
+
+        $sqlFile = $tempDir . '/database.sql';
+        if (!file_exists($sqlFile)) {
+            $this->deleteDirectory($tempDir);
+            return redirect()->back()->with('error', 'File database.sql tidak ditemukan dalam ZIP.');
+        }
+
+        // 1. Restore Database
+        $restoreResult = $this->restoreSql($sqlFile);
+
+        // Check if restoreSql was successful by checking session flash
+        if (session('error')) {
+            $this->deleteDirectory($tempDir);
+            return $restoreResult;
+        }
+
+        // 2. Restore Files
+        $filesSrc = $tempDir . '/files';
+        if (file_exists($filesSrc)) {
+            $publicPath = storage_path('app/public');
+
+            // Clear existing files
+            $this->deleteDirectory($publicPath, true); // keep the directory itself
+
+            // Copy files
+            $this->copyDirectory($filesSrc, $publicPath);
+        }
+
+        $this->deleteDirectory($tempDir);
+        return redirect()->back()->with('success', 'Database dan file berhasil direstore.');
+    }
+
+    private function deleteDirectory($dir, $keepRoot = false)
+    {
+        if (!file_exists($dir)) return true;
+        if (!is_dir($dir)) return unlink($dir);
+
+        foreach (scandir($dir) as $item) {
+            if ($item == '.' || $item == '..') continue;
+            if (!$this->deleteDirectory($dir . DIRECTORY_SEPARATOR . $item)) return false;
+        }
+
+        return $keepRoot ? true : rmdir($dir);
+    }
+
+    private function copyDirectory($src, $dst)
+    {
+        if (!file_exists($dst)) mkdir($dst, 0755, true);
+        $dir = opendir($src);
+        while (false !== ($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..')) {
+                if (is_dir($src . '/' . $file)) {
+                    $this->copyDirectory($src . '/' . $file, $dst . '/' . $file);
+                } else {
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
     }
 
     public function reset(Request $request)
@@ -276,13 +387,13 @@ class SettingController extends Controller
         }
 
         // 1. Auto Backup
-        $filename = 'pre_reset_backup_' . date('Y-m-d_H-i-s') . '.sql';
+        $filename = 'pre_reset_backup_' . date('Y-m-d_H-i-s') . '.zip';
         $directory = storage_path('app/backups');
         if (!file_exists($directory)) {
             mkdir($directory, 0755, true);
         }
         $backupPath = $directory . '/' . $filename;
-        $this->generateBackupSql($backupPath);
+        $this->generateBackupZip($backupPath);
 
         $options = $request->reset_options;
 

@@ -342,20 +342,20 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 border-right">
-                                    <h4>Backup Database</h4>
-                                    <p class="text-muted">Unduh salinan database lengkap (struktur dan data) dalam format SQL. Gunakan fitur ini secara berkala untuk mengamankan data Anda.</p>
+                                    <h4>Backup Sistem</h4>
+                                    <p class="text-muted">Unduh salinan database dan file (gambar/dokumen) dalam format ZIP. Gunakan fitur ini secara berkala untuk mengamankan data Anda.</p>
                                     <a href="{{ route('settings.backup') }}" class="btn btn-outline-primary">
-                                        <i class="fe fe-download"></i> Download Backup (.sql)
+                                        <i class="fe fe-download"></i> Download Backup (.zip)
                                     </a>
                                 </div>
                                 <div class="col-md-6">
-                                    <h4>Restore Database</h4>
+                                    <h4>Restore Sistem</h4>
                                     <p class="text-danger">
                                         <i class="fe fe-alert-triangle"></i> <strong>PERINGATAN:</strong>
-                                        Proses ini akan <strong>MENIMPA SELURUH DATA</strong> sistem dengan data dari file backup. Tindakan ini tidak dapat dibatalkan.
+                                        Proses ini akan <strong>MENIMPA SELURUH DATA</strong> (database & file) dengan data dari file backup. Tindakan ini tidak dapat dibatalkan.
                                     </p>
                                     <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('restore-file-input').click();">
-                                        <i class="fe fe-upload"></i> Upload & Restore (.sql)
+                                        <i class="fe fe-upload"></i> Upload & Restore (.zip)
                                     </button>
                                 </div>
                             </div>
@@ -648,7 +648,7 @@
         </form>
         <form id="restore-form" action="{{ route('settings.restore') }}" method="POST" enctype="multipart/form-data" style="display: none;">
             @csrf
-            <input type="file" id="restore-file-input" name="backup_file" accept=".sql" onchange="if(confirm('PERHATIAN: Anda akan melakukan restore database. \n\nTindakan ini akan MENGHAPUS SELURUH DATA saat ini dan menggantikannya dengan data dari file backup.\n\nApakah Anda yakin ingin melanjutkan?')) { document.getElementById('restore-form').submit(); } else { this.value = ''; }">
+            <input type="file" id="restore-file-input" name="backup_file" accept=".sql,.zip" onchange="if(confirm('PERHATIAN: Anda akan melakukan restore sistem (database & file). \n\nTindakan ini akan MENGHAPUS SELURUH DATA saat ini dan menggantikannya dengan data dari file backup.\n\nApakah Anda yakin ingin melanjutkan?')) { document.getElementById('restore-form').submit(); } else { this.value = ''; }">
         </form>
         <form id="real-reset-form" action="{{ route('settings.reset') }}" method="POST" style="display: none;">
             @csrf
