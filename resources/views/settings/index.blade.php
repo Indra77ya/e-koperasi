@@ -578,7 +578,7 @@
                         <div class="card-body">
                             <div class="text-center mb-5">
                                 <h2 class="mb-1">E-Koperasi</h2>
-                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '1.13.8' }}</p>
+                                <p class="text-muted">Versi {{ $settings['app_version'] ?? '2.4.10' }}</p>
                             </div>
 
                             <div class="row justify-content-center">
