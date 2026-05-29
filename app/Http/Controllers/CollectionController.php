@@ -100,7 +100,9 @@ class CollectionController extends Controller
             $query->where('kolektabilitas', $status);
         }
 
-        return DataTables::of($query)
+        $loans = $query->get();
+
+        return DataTables::of($loans)
             ->addColumn('borrower', function ($loan) {
                 return $loan->member ? $loan->member->nama : ($loan->nasabah ? $loan->nasabah->nama : '-');
             })

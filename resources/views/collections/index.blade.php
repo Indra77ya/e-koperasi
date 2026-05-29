@@ -179,9 +179,9 @@
             },
             columns: [
                 { data: 'kode_pinjaman', name: 'kode_pinjaman' },
-                { data: 'borrower', name: 'borrower', orderable: false, searchable: false },
-                { data: 'address', name: 'address', orderable: false, searchable: false },
-                { data: 'area', name: 'area', name: 'area' },
+                { data: 'borrower', name: 'borrower' },
+                { data: 'address', name: 'address' },
+                { data: 'area', name: 'area' },
                 { data: 'status', name: 'status' },
                 { data: 'kolektabilitas', name: 'kolektabilitas' },
                 { data: 'overdue_days', name: 'overdue_days', orderable: false, searchable: false },
