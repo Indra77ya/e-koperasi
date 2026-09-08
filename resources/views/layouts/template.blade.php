@@ -172,7 +172,11 @@
                 -webkit-overflow-scrolling: touch;
                 margin-bottom: 0;
                 border-radius: 6px;
-                overflow-x: auto !important;
+                overflow-x: auto;
+            }
+            .table-responsive:has(.dataTables_wrapper),
+            .table-responsive > .dataTables_wrapper {
+                overflow-x: visible !important;
             }
             .table {
                 width: 100% !important;
@@ -192,6 +196,10 @@
             }
             .dataTables_wrapper {
                 padding: 0.5rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow-x: visible !important;
             }
             .dataTables_wrapper .dataTables_length {
                 display: none !important;
@@ -201,6 +209,8 @@
                 text-align: left !important;
                 margin-bottom: 0.75rem !important;
                 width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
             }
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
@@ -208,20 +218,38 @@
                 flex-direction: column !important;
                 align-items: stretch !important;
                 margin-bottom: 0 !important;
-                font-size: 0.85rem !important;
+                font-size: 0.8rem !important;
                 font-weight: 600 !important;
                 color: #495057 !important;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
                 margin-left: 0 !important;
                 margin-top: 0.35rem !important;
-                font-size: 0.875rem !important;
-                padding: 0.45rem 0.65rem !important;
-                border-radius: 6px !important;
-                border: 1px solid rgba(0, 40, 100, 0.12) !important;
+                font-size: 0.9rem !important;
+                padding: 0.5rem 0.75rem !important;
+                border-radius: 8px !important;
+                border: 1px solid #dbe2ea !important;
+                background-color: #fcfcfc !important;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+                transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
                 box-sizing: border-box !important;
                 display: block !important;
+                outline: none !important;
+            }
+            .dataTables_wrapper .dataTables_filter input:focus {
+                border-color: #467fcf !important;
+                background-color: #ffffff !important;
+                box-shadow: 0 0 0 3px rgba(70, 127, 207, 0.15) !important;
+            }
+            .dataTables_wrapper table.dataTable,
+            .dataTables_wrapper .table {
+                display: block !important;
+                width: 100% !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
             .dataTables_wrapper .dataTables_paginate {
                 float: none !important;
@@ -230,6 +258,8 @@
                 flex-wrap: wrap !important;
                 gap: 2px !important;
                 margin-top: 0.75rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             .dataTables_wrapper .dataTables_paginate .paginate_button {
                 padding: 0.25rem 0.5rem !important;
@@ -241,6 +271,8 @@
                 text-align: center !important;
                 margin-bottom: 0.5rem !important;
                 font-size: 0.8rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             /* Mobile Modals */
