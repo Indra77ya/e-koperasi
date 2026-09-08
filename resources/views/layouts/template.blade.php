@@ -122,18 +122,27 @@
             }
             .card-header {
                 padding: 0.75rem 0.85rem;
-                flex-wrap: wrap;
+                flex-direction: column;
+                align-items: flex-start !important;
                 gap: 0.5rem;
             }
             .card-title {
                 font-size: 1rem;
+                width: 100%;
+                margin-bottom: 0.25rem;
             }
             .card-options {
-                margin-left: 0;
+                margin-left: 0 !important;
                 width: 100%;
                 display: flex;
-                justify-content: flex-end;
-                gap: 0.5rem;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 0.35rem;
+            }
+            .card-options .btn {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
             }
 
             /* Touch-friendly DataTables and Tables */
@@ -141,39 +150,67 @@
                 -webkit-overflow-scrolling: touch;
                 margin-bottom: 0;
                 border-radius: 6px;
+                overflow-x: auto !important;
+            }
+            .table {
+                width: 100% !important;
             }
             .table th, .table td {
                 padding: 0.5rem 0.65rem;
-                font-size: 0.85rem;
+                font-size: 0.825rem;
                 vertical-align: middle;
             }
-            .table .btn-group, .table .btn-sm {
-                padding: 0.25rem 0.5rem;
-                font-size: 0.8rem;
+            .table th {
+                white-space: nowrap;
+                font-size: 0.775rem;
+                letter-spacing: 0.02em;
+            }
+            .table td .badge, .table td .tag, .table .btn-group, .table .btn-sm {
                 white-space: nowrap;
             }
             .dataTables_wrapper {
                 padding: 0.5rem;
             }
-            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_length {
+                display: none !important;
+            }
             .dataTables_wrapper .dataTables_filter {
-                float: none;
-                text-align: left;
-                margin-bottom: 0.5rem;
+                float: none !important;
+                text-align: left !important;
+                margin-bottom: 0.75rem !important;
+                width: 100% !important;
+            }
+            .dataTables_wrapper .dataTables_filter label {
+                width: 100% !important;
+                display: flex !important;
+                align-items: center;
+                margin-bottom: 0;
+                font-size: 0.85rem;
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
-                margin-left: 0 !important;
+                margin-left: 0.5rem !important;
+                font-size: 0.85rem !important;
+                padding: 0.35rem 0.5rem !important;
             }
             .dataTables_wrapper .dataTables_paginate {
-                float: none;
-                text-align: center;
-                margin-top: 0.75rem;
+                float: none !important;
+                display: flex !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 2px !important;
+                margin-top: 0.75rem !important;
+            }
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.8rem !important;
+                margin: 0 !important;
             }
             .dataTables_wrapper .dataTables_info {
-                float: none;
-                text-align: center;
-                margin-bottom: 0.5rem;
+                float: none !important;
+                text-align: center !important;
+                margin-bottom: 0.5rem !important;
+                font-size: 0.8rem !important;
             }
 
             /* Mobile Modals */
