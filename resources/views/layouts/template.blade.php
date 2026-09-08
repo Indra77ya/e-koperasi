@@ -206,18 +206,21 @@
             }
             .dataTables_wrapper .dataTables_filter {
                 float: none !important;
-                text-align: left !important;
+                text-align: center !important;
                 margin-bottom: 0.75rem !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
+                padding: 0 0.5rem !important;
             }
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
                 display: flex !important;
                 flex-direction: column !important;
-                align-items: stretch !important;
-                margin-bottom: 0 !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                margin: 0 auto !important;
                 font-size: 0.8rem !important;
                 font-weight: 600 !important;
                 color: #495057 !important;
@@ -226,8 +229,8 @@
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
-                margin-left: 0 !important;
-                margin-top: 0.35rem !important;
+                max-width: 100% !important;
+                margin: 0.35rem auto 0 auto !important;
                 font-size: 0.9rem !important;
                 padding: 0.5rem 0.75rem !important;
                 border-radius: 8px !important;
@@ -238,6 +241,7 @@
                 box-sizing: border-box !important;
                 display: block !important;
                 outline: none !important;
+                text-align: left !important;
             }
             .dataTables_wrapper .dataTables_filter input:focus {
                 border-color: #467fcf !important;
