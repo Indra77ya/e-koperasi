@@ -200,7 +200,11 @@
                 float: none !important;
                 text-align: left !important;
                 margin-bottom: 0.75rem !important;
-                width: 100% !important;
+                width: auto !important;
+                max-width: 250px !important;
+                position: sticky !important;
+                left: 0 !important;
+                z-index: 5 !important;
             }
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
@@ -214,6 +218,7 @@
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
+                max-width: 100% !important;
                 margin-left: 0 !important;
                 margin-top: 0.35rem !important;
                 font-size: 0.875rem !important;
