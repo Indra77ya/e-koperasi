@@ -24,7 +24,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped" id="loans-table">
+                        <table class="table card-table table-vcenter text-nowrap datatable" id="loans-table">
                             <thead>
                                 <tr>
                                     <th>Kode</th>

@@ -51,8 +51,40 @@
     <link href="{{ asset('plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet" />
     <script src="{{ asset('plugins/bootstrap-datepicker/plugin.js') }}"></script>
 
-    <!-- Custom Mobile Responsive Styles -->
+    <!-- Custom DataTables & Mobile Responsive Styles -->
     <style>
+        /* Base DataTables Search Styling */
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
+            margin-bottom: 0.75rem;
+        }
+        .dataTables_wrapper .dataTables_filter label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 40, 100, 0.12);
+            box-sizing: border-box;
+            display: inline-block;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            background-color: #ffffff;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #206bc4;
+            outline: 0;
+            box-shadow: 0 0 0 2px rgba(32, 107, 196, 0.25);
+        }
+
         @media (max-width: 767.98px) {
             /* Mobile Header Enhancements */
             .header .container {
@@ -257,25 +289,25 @@
             }
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: flex-start !important;
-                gap: 0.5rem !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.35rem !important;
                 margin-bottom: 0 !important;
-                font-size: 0.85rem !important;
+                font-size: 0.875rem !important;
                 font-weight: 600 !important;
                 color: #495057 !important;
             }
             .dataTables_wrapper .dataTables_filter input {
-                flex: 1 !important;
-                max-width: 220px !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 margin-left: 0 !important;
                 font-size: 0.875rem !important;
-                padding: 0.35rem 0.65rem !important;
+                padding: 0.45rem 0.75rem !important;
                 border-radius: 6px !important;
                 border: 1px solid rgba(0, 40, 100, 0.12) !important;
                 box-sizing: border-box !important;
-                display: inline-block !important;
+                display: block !important;
             }
             .dataTables_wrapper .dataTables_paginate {
                 float: none !important;
