@@ -81,6 +81,30 @@ Akses aplikasi melalui browser di alamat: `http://localhost:8000`
 - **Email**: `ekoperasi@gmail.com`
 - **Password**: `secret`
 
+## Panduan Optimasi Performa (Agar Aplikasi Cepat & Tidak Lemot)
+
+Untuk memastikan aplikasi berjalan dengan kecepatan maksimal pada lingkungan server/production:
+
+### 1. Jalankan Perintah Caching Laravel
+Di cPanel Terminal atau SSH VPS Anda, jalankan perintah berikut:
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+*Catatan: Jika ada perubahan file `.env` atau `routes`, jalankan `php artisan config:clear` terlebih dahulu.*
+
+### 2. Jalankan Migration Indexing Database
+Jalankan perintah migration berikut untuk menambahkan index pada kolom-kolom database yang sering dicari (`status`, `jatuh_tempo`, `anggota_id`, `nasabah_id`):
+```bash
+php artisan migrate
+```
+
+### 3. Aktifkan OPcache PHP di Server Hosting
+Pastikan ekstensi **PHP OPcache** diaktifkan melalui cPanel (Select PHP Version -> Extensions -> centang `opcache`). Ini mengompresi dan menyimpan bytecode PHP langsung di memory RAM server.
+
+---
+
 ## Troubleshooting
 
 - **Error Permission/Izin Folder**: Pastikan folder `storage` dan `bootstrap/cache` memiliki izin tulis (writable).
