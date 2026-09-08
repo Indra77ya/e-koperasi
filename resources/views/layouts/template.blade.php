@@ -136,13 +136,35 @@
                 width: 100%;
                 display: flex;
                 flex-wrap: wrap;
-                align-items: center;
+                align-items: stretch;
                 justify-content: flex-start;
+                gap: 0.5rem;
+            }
+            .card-options form {
+                width: 100% !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
                 gap: 0.35rem;
+            }
+            .card-options form label {
+                margin-right: 0 !important;
+                margin-bottom: 0.15rem !important;
+                font-weight: 600;
+                font-size: 0.85rem;
+            }
+            .card-options form input,
+            .card-options form select {
+                width: 100% !important;
+                margin-right: 0 !important;
+                margin-bottom: 0.35rem !important;
             }
             .card-options .btn {
                 font-size: 0.8rem;
-                padding: 0.3rem 0.6rem;
+                padding: 0.35rem 0.75rem;
+                width: 100% !important;
+                margin-left: 0 !important;
+                text-align: center;
+                justify-content: center;
             }
 
             /* Touch-friendly DataTables and Tables */
