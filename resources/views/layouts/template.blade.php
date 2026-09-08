@@ -183,15 +183,23 @@
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
                 display: flex !important;
-                align-items: center;
-                margin-bottom: 0;
-                font-size: 0.85rem;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                margin-bottom: 0 !important;
+                font-size: 0.85rem !important;
+                font-weight: 600 !important;
+                color: #495057 !important;
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
-                margin-left: 0.5rem !important;
-                font-size: 0.85rem !important;
-                padding: 0.35rem 0.5rem !important;
+                margin-left: 0 !important;
+                margin-top: 0.35rem !important;
+                font-size: 0.875rem !important;
+                padding: 0.45rem 0.65rem !important;
+                border-radius: 6px !important;
+                border: 1px solid rgba(0, 40, 100, 0.12) !important;
+                box-sizing: border-box !important;
+                display: block !important;
             }
             .dataTables_wrapper .dataTables_paginate {
                 float: none !important;
