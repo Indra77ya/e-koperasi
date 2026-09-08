@@ -191,42 +191,38 @@
                 white-space: nowrap;
             }
             .dataTables_wrapper {
-                padding: 0.5rem;
+                padding: 0.75rem 0.85rem;
             }
             .dataTables_wrapper .dataTables_length {
                 display: none !important;
             }
-            .dataTables_filter,
             .dataTables_wrapper .dataTables_filter {
                 float: none !important;
                 text-align: left !important;
                 margin-bottom: 0.75rem !important;
-                width: auto !important;
-                max-width: 250px !important;
+                width: 100% !important;
             }
-            .dataTables_filter label,
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 0.5rem !important;
                 margin-bottom: 0 !important;
                 font-size: 0.85rem !important;
                 font-weight: 600 !important;
                 color: #495057 !important;
             }
-            .dataTables_filter input,
             .dataTables_wrapper .dataTables_filter input {
-                width: 100% !important;
-                max-width: 100% !important;
+                flex: 1 !important;
+                max-width: 220px !important;
                 margin-left: 0 !important;
-                margin-top: 0.35rem !important;
                 font-size: 0.875rem !important;
-                padding: 0.45rem 0.65rem !important;
+                padding: 0.35rem 0.65rem !important;
                 border-radius: 6px !important;
                 border: 1px solid rgba(0, 40, 100, 0.12) !important;
                 box-sizing: border-box !important;
-                display: block !important;
+                display: inline-block !important;
             }
             .dataTables_wrapper .dataTables_paginate {
                 float: none !important;
@@ -311,31 +307,36 @@
 @yield('js')
 <script>
 (function() {
-    function setupDtFilterRelocation($) {
+    function setupDtDomRestructuring($) {
         if (!$) return;
         $(document).on('init.dt', function(e, settings) {
             var api = new $.fn.dataTable.Api(settings);
+            var $table = $(api.table().node());
             var $wrapper = $(api.table().container());
-            var $responsive = $wrapper.closest('.table-responsive');
-            if ($responsive.length) {
-                var $filter = $wrapper.find('.dataTables_filter');
-                if ($filter.length) {
-                    $filter.insertBefore($responsive);
-                }
+            var $parentResponsive = $wrapper.parent('.table-responsive');
+
+            // If table is not already wrapped in .table-responsive inside wrapper
+            if ($table.parent('.table-responsive').length === 0) {
+                $table.wrap('<div class="table-responsive"></div>');
+            }
+
+            // Unwrap wrapper if it was nested inside an outer .table-responsive
+            if ($parentResponsive.length) {
+                $wrapper.unwrap();
             }
         });
     }
 
     if (typeof window.jQuery !== 'undefined') {
-        setupDtFilterRelocation(window.jQuery);
+        setupDtDomRestructuring(window.jQuery);
     } else if (typeof require !== 'undefined') {
         require(['jquery'], function($) {
-            setupDtFilterRelocation($);
+            setupDtDomRestructuring($);
         });
     } else {
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.jQuery !== 'undefined') {
-                setupDtFilterRelocation(window.jQuery);
+                setupDtDomRestructuring(window.jQuery);
             }
         });
     }
