@@ -78,6 +78,8 @@
             display: inline-block;
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
             background-color: #ffffff;
+            width: 200px;
+            max-width: 220px;
         }
         .dataTables_wrapper .dataTables_filter input:focus {
             border-color: #206bc4;
@@ -300,7 +302,7 @@
             }
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
-                max-width: 100% !important;
+                max-width: 240px !important;
                 margin-left: 0 !important;
                 font-size: 0.875rem !important;
                 padding: 0.45rem 0.75rem !important;
