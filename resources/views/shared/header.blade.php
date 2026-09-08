@@ -7,9 +7,9 @@
                 @endif
                 {{ \App\Models\Setting::get('company_name', __('app_name')) }}
             </a>
-            <div class="d-flex order-lg-2 ml-auto">
-                <div class="dropdown d-none d-md-flex">
-                    <a class="nav-link icon" data-toggle="dropdown">
+            <div class="d-flex order-lg-2 ml-auto align-items-center">
+                <div class="dropdown d-flex">
+                    <a class="nav-link icon p-2" data-toggle="dropdown" href="javascript:void(0)" aria-label="Notifikasi">
                         <i class="fe fe-bell"></i>
                         @if(isset($headerAlerts) && $headerAlerts['total_alerts'] > 0)
                             <span class="nav-unread"></span>
@@ -102,7 +102,7 @@
                     </div>
                 </div>
             </div>
-            <a href="#" class="header-toggler d-lg-none ml-3 ml-lg-0" data-toggle="collapse" data-target="#headerMenuCollapse">
+            <a href="#" class="header-toggler d-lg-none ml-2 ml-lg-0" data-toggle="collapse" data-target="#headerMenuCollapse" aria-label="Toggle navigation">
                 <span class="header-toggler-icon"></span>
             </a>
         </div>

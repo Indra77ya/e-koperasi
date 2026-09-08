@@ -51,6 +51,186 @@
     <link href="{{ asset('plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css') }}" rel="stylesheet" />
     <script src="{{ asset('plugins/bootstrap-datepicker/plugin.js') }}"></script>
 
+    <!-- Custom Mobile Responsive Styles -->
+    <style>
+        @media (max-width: 767.98px) {
+            /* Mobile Header Enhancements */
+            .header .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .header-brand {
+                max-width: 55%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 1rem;
+            }
+            .header-brand-img {
+                height: 1.75rem !important;
+                margin-right: 0.3rem;
+            }
+            .header-toggler {
+                width: 2.25rem;
+                height: 2.25rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                border: 1px solid #e9ecef;
+                background-color: #f8f9fa;
+            }
+
+            /* Nav collapse menu on mobile */
+            #headerMenuCollapse {
+                background: #fff;
+                border-bottom: 1px solid rgba(0, 40, 100, 0.12);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            #headerMenuCollapse .nav-tabs {
+                padding: 0.5rem 0;
+            }
+            #headerMenuCollapse .nav-link {
+                padding: 0.65rem 1rem;
+                border-radius: 6px;
+                font-weight: 500;
+            }
+            #headerMenuCollapse .dropdown-menu {
+                border: none;
+                background-color: #f8f9fa;
+                box-shadow: none;
+                margin-top: 0;
+                padding-left: 1rem;
+            }
+            #headerMenuCollapse .dropdown-item {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            /* Responsive Cards & Padding */
+            .page-header {
+                margin-bottom: 0.75rem;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .card {
+                margin-bottom: 0.75rem;
+            }
+            .card-body {
+                padding: 0.85rem;
+            }
+            .card-header {
+                padding: 0.75rem 0.85rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .card-title {
+                font-size: 1rem;
+            }
+            .card-options {
+                margin-left: 0;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.5rem;
+            }
+
+            /* Touch-friendly DataTables and Tables */
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 0;
+                border-radius: 6px;
+            }
+            .table th, .table td {
+                padding: 0.5rem 0.65rem;
+                font-size: 0.85rem;
+                vertical-align: middle;
+            }
+            .table .btn-group, .table .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+            .dataTables_wrapper {
+                padding: 0.5rem;
+            }
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter {
+                float: none;
+                text-align: left;
+                margin-bottom: 0.5rem;
+            }
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+            }
+            .dataTables_wrapper .dataTables_paginate {
+                float: none;
+                text-align: center;
+                margin-top: 0.75rem;
+            }
+            .dataTables_wrapper .dataTables_info {
+                float: none;
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+            /* Mobile Modals */
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            .modal-content {
+                border-radius: 8px;
+            }
+            .modal-header {
+                padding: 0.75rem 1rem;
+            }
+            .modal-body {
+                padding: 0.85rem;
+                max-height: calc(100vh - 160px);
+                overflow-y: auto;
+            }
+            .modal-footer {
+                padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .modal-footer .btn {
+                flex: 1 1 auto;
+            }
+
+            /* Forms & Form Groups on Mobile */
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            .form-control, .custom-select {
+                font-size: 0.9rem;
+                height: auto;
+                padding: 0.45rem 0.65rem;
+            }
+
+            /* Stamp card fixes */
+            .stamp {
+                width: 2.25rem;
+                height: 2.25rem;
+                line-height: 2.25rem;
+                font-size: 0.9rem;
+            }
+
+            /* Utility helpers for mobile stack */
+            .mobile-stack {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .mobile-stack > * {
+                width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+
     @yield('css')
 </head>
 <body class="">
