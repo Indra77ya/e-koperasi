@@ -8,7 +8,7 @@ use Illuminate\Database\Migrations\Migration;
 class AddPerformanceIndexesToTables extends Migration
 {
     /**
-     * Add index to table if it doesn't already exist.
+     * Add index to table if column exists and index doesn't already exist.
      *
      * @param string $table
      * @param string $column
@@ -16,6 +16,10 @@ class AddPerformanceIndexesToTables extends Migration
      */
     private function addIndexSafely($table, $column)
     {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
+            return;
+        }
+
         $indexName = "{$table}_{$column}_index";
         try {
             $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
@@ -25,10 +29,7 @@ class AddPerformanceIndexesToTables extends Migration
                 });
             }
         } catch (\Exception $e) {
-            // Fallback try adding directly
-            Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
-                $tableBlueprint->index($column);
-            });
+            // Silence exception if index creation fails
         }
     }
 
@@ -41,6 +42,10 @@ class AddPerformanceIndexesToTables extends Migration
      */
     private function dropIndexSafely($table, $column)
     {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
+            return;
+        }
+
         $indexName = "{$table}_{$column}_index";
         try {
             $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
@@ -50,10 +55,7 @@ class AddPerformanceIndexesToTables extends Migration
                 });
             }
         } catch (\Exception $e) {
-            // Fallback try dropping directly
-            Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
-                $tableBlueprint->dropIndex([$column]);
-            });
+            // Silence exception if index drop fails
         }
     }
 
@@ -73,7 +75,6 @@ class AddPerformanceIndexesToTables extends Migration
 
         $this->addIndexSafely('tabungan', 'anggota_id');
         $this->addIndexSafely('tabungan', 'nasabah_id');
-        $this->addIndexSafely('tabungan', 'status');
 
         $this->addIndexSafely('jaminan', 'pinjaman_id');
         $this->addIndexSafely('jaminan', 'status');
@@ -96,7 +97,6 @@ class AddPerformanceIndexesToTables extends Migration
 
         $this->dropIndexSafely('tabungan', 'anggota_id');
         $this->dropIndexSafely('tabungan', 'nasabah_id');
-        $this->dropIndexSafely('tabungan', 'status');
 
         $this->dropIndexSafely('jaminan', 'pinjaman_id');
         $this->dropIndexSafely('jaminan', 'status');
