@@ -88,15 +88,19 @@ Akses aplikasi melalui browser di alamat: `http://localhost:8000`
 - **Tampilan Rusak/CSS Tidak Load**: Pastikan URL aplikasi di `.env` (`APP_URL`) sesuai dengan alamat akses Anda.
 - **Composer Error**: Jika `composer install` gagal, pastikan ekstensi PHP yang dibutuhkan (seperti `php-xml`, `php-mbstring`, `php-zip`) sudah aktif.
 - **SQLSTATE[08004] [1040] Too many connections**: Terjadi ketika batas koneksi simultan ke MySQL/MariaDB telah tercapai.
-  - Naikkan nilai `max_connections` di konfigurasi database (`my.cnf` / `my.ini`):
-    ```ini
-    [mysqld]
-    max_connections = 250
-    wait_timeout = 60
-    interactive_timeout = 60
-    ```
-  - Periksa query gantung/sleeping connections via MySQL CLI: `SHOW PROCESSLIST;` atau `KILL <id_proses>;`.
-  - Gunakan `persistent => false` pada `config/database.php` jika menggunakan persistent connections.
+  - **Sisi Server Database**:
+    - Naikkan nilai `max_connections` di konfigurasi database (`my.cnf` / `my.ini`):
+      ```ini
+      [mysqld]
+      max_connections = 250
+      wait_timeout = 60
+      interactive_timeout = 60
+      ```
+    - Periksa query gantung/sleeping connections via MySQL CLI: `SHOW PROCESSLIST;` atau `KILL <id_proses>;`.
+  - **Sisi Kode & Konfigurasi Laravel**:
+    - Pastikan `PDO::ATTR_PERSISTENT => false` aktif pada `config/database.php` agar koneksi ditutup secara otomatis saat request selesai.
+    - Hindari penggunaan driver `database` untuk session/cache jika beban tinggi; gunakan `file` atau `redis` pada `.env` (`SESSION_DRIVER=file`, `CACHE_DRIVER=file`).
+    - Gunakan `DB::disconnect('mysql')` pada perintah latar belakang (background jobs / artisan commands) setelah operasi query selesai untuk melepas koneksi.
 
 ---
 © 2024 Sistem Informasi E-Koperasi.
