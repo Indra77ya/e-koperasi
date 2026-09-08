@@ -196,16 +196,15 @@
             .dataTables_wrapper .dataTables_length {
                 display: none !important;
             }
+            .dataTables_filter,
             .dataTables_wrapper .dataTables_filter {
                 float: none !important;
                 text-align: left !important;
                 margin-bottom: 0.75rem !important;
                 width: auto !important;
                 max-width: 250px !important;
-                position: sticky !important;
-                left: 0 !important;
-                z-index: 5 !important;
             }
+            .dataTables_filter label,
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
                 display: flex !important;
@@ -216,6 +215,7 @@
                 font-weight: 600 !important;
                 color: #495057 !important;
             }
+            .dataTables_filter input,
             .dataTables_wrapper .dataTables_filter input {
                 width: 100% !important;
                 max-width: 100% !important;
@@ -309,4 +309,36 @@
     @yield('content')
 </body>
 @yield('js')
+<script>
+(function() {
+    function setupDtFilterRelocation($) {
+        if (!$) return;
+        $(document).on('init.dt', function(e, settings) {
+            var api = new $.fn.dataTable.Api(settings);
+            var $wrapper = $(api.table().container());
+            var $responsive = $wrapper.closest('.table-responsive');
+            if ($responsive.length) {
+                var $filter = $wrapper.find('.dataTables_filter');
+                if ($filter.length) {
+                    $filter.insertBefore($responsive);
+                }
+            }
+        });
+    }
+
+    if (typeof window.jQuery !== 'undefined') {
+        setupDtFilterRelocation(window.jQuery);
+    } else if (typeof require !== 'undefined') {
+        require(['jquery'], function($) {
+            setupDtFilterRelocation($);
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.jQuery !== 'undefined') {
+                setupDtFilterRelocation(window.jQuery);
+            }
+        });
+    }
+})();
+</script>
 </html>
