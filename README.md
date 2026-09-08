@@ -87,6 +87,16 @@ Akses aplikasi melalui browser di alamat: `http://localhost:8000`
   - Linux/Mac: `chmod -R 775 storage bootstrap/cache`
 - **Tampilan Rusak/CSS Tidak Load**: Pastikan URL aplikasi di `.env` (`APP_URL`) sesuai dengan alamat akses Anda.
 - **Composer Error**: Jika `composer install` gagal, pastikan ekstensi PHP yang dibutuhkan (seperti `php-xml`, `php-mbstring`, `php-zip`) sudah aktif.
+- **SQLSTATE[08004] [1040] Too many connections**: Terjadi ketika batas koneksi simultan ke MySQL/MariaDB telah tercapai.
+  - Naikkan nilai `max_connections` di konfigurasi database (`my.cnf` / `my.ini`):
+    ```ini
+    [mysqld]
+    max_connections = 250
+    wait_timeout = 60
+    interactive_timeout = 60
+    ```
+  - Periksa query gantung/sleeping connections via MySQL CLI: `SHOW PROCESSLIST;` atau `KILL <id_proses>;`.
+  - Gunakan `persistent => false` pada `config/database.php` jika menggunakan persistent connections.
 
 ---
 © 2024 Sistem Informasi E-Koperasi.
