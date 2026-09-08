@@ -20,8 +20,8 @@ class AddPerformanceIndexesToTables extends Migration
 
         Schema::table('pinjaman_angsuran', function (Blueprint $table) {
             $table->index('pinjaman_id');
-            $table->index('jatuh_tempo');
-            $table->index('status_bayar');
+            $table->index('tanggal_jatuh_tempo');
+            $table->index('status');
         });
 
         Schema::table('tabungan', function (Blueprint $table) {
@@ -51,8 +51,8 @@ class AddPerformanceIndexesToTables extends Migration
 
         Schema::table('pinjaman_angsuran', function (Blueprint $table) {
             $table->dropIndex(['pinjaman_id']);
-            $table->dropIndex(['jatuh_tempo']);
-            $table->dropIndex(['status_bayar']);
+            $table->dropIndex(['tanggal_jatuh_tempo']);
+            $table->dropIndex(['status']);
         });
 
         Schema::table('tabungan', function (Blueprint $table) {
