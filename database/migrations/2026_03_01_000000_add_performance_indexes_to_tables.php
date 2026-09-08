@@ -1,11 +1,62 @@
 <?php
 
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class AddPerformanceIndexesToTables extends Migration
 {
+    /**
+     * Add index to table if it doesn't already exist.
+     *
+     * @param string $table
+     * @param string $column
+     * @return void
+     */
+    private function addIndexSafely($table, $column)
+    {
+        $indexName = "{$table}_{$column}_index";
+        try {
+            $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
+            if (empty($indexes)) {
+                Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
+                    $tableBlueprint->index($column);
+                });
+            }
+        } catch (\Exception $e) {
+            // Fallback try adding directly
+            Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
+                $tableBlueprint->index($column);
+            });
+        }
+    }
+
+    /**
+     * Drop index from table if it exists.
+     *
+     * @param string $table
+     * @param string $column
+     * @return void
+     */
+    private function dropIndexSafely($table, $column)
+    {
+        $indexName = "{$table}_{$column}_index";
+        try {
+            $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
+            if (!empty($indexes)) {
+                Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
+                    $tableBlueprint->dropIndex([$column]);
+                });
+            }
+        } catch (\Exception $e) {
+            // Fallback try dropping directly
+            Schema::table($table, function (Blueprint $tableBlueprint) use ($column) {
+                $tableBlueprint->dropIndex([$column]);
+            });
+        }
+    }
+
     /**
      * Run the migrations.
      *
@@ -13,28 +64,20 @@ class AddPerformanceIndexesToTables extends Migration
      */
     public function up()
     {
-        Schema::table('pinjaman', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('tanggal_pengajuan');
-        });
+        $this->addIndexSafely('pinjaman', 'status');
+        $this->addIndexSafely('pinjaman', 'tanggal_pengajuan');
 
-        Schema::table('pinjaman_angsuran', function (Blueprint $table) {
-            $table->index('pinjaman_id');
-            $table->index('tanggal_jatuh_tempo');
-            $table->index('status');
-        });
+        $this->addIndexSafely('pinjaman_angsuran', 'pinjaman_id');
+        $this->addIndexSafely('pinjaman_angsuran', 'tanggal_jatuh_tempo');
+        $this->addIndexSafely('pinjaman_angsuran', 'status');
 
-        Schema::table('tabungan', function (Blueprint $table) {
-            $table->index('anggota_id');
-            $table->index('nasabah_id');
-            $table->index('status');
-        });
+        $this->addIndexSafely('tabungan', 'anggota_id');
+        $this->addIndexSafely('tabungan', 'nasabah_id');
+        $this->addIndexSafely('tabungan', 'status');
 
-        Schema::table('jaminan', function (Blueprint $table) {
-            $table->index('pinjaman_id');
-            $table->index('status');
-            $table->index('jenis');
-        });
+        $this->addIndexSafely('jaminan', 'pinjaman_id');
+        $this->addIndexSafely('jaminan', 'status');
+        $this->addIndexSafely('jaminan', 'jenis');
     }
 
     /**
@@ -44,27 +87,19 @@ class AddPerformanceIndexesToTables extends Migration
      */
     public function down()
     {
-        Schema::table('pinjaman', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-            $table->dropIndex(['tanggal_pengajuan']);
-        });
+        $this->dropIndexSafely('pinjaman', 'status');
+        $this->dropIndexSafely('pinjaman', 'tanggal_pengajuan');
 
-        Schema::table('pinjaman_angsuran', function (Blueprint $table) {
-            $table->dropIndex(['pinjaman_id']);
-            $table->dropIndex(['tanggal_jatuh_tempo']);
-            $table->dropIndex(['status']);
-        });
+        $this->dropIndexSafely('pinjaman_angsuran', 'pinjaman_id');
+        $this->dropIndexSafely('pinjaman_angsuran', 'tanggal_jatuh_tempo');
+        $this->dropIndexSafely('pinjaman_angsuran', 'status');
 
-        Schema::table('tabungan', function (Blueprint $table) {
-            $table->dropIndex(['anggota_id']);
-            $table->dropIndex(['nasabah_id']);
-            $table->dropIndex(['status']);
-        });
+        $this->dropIndexSafely('tabungan', 'anggota_id');
+        $this->dropIndexSafely('tabungan', 'nasabah_id');
+        $this->dropIndexSafely('tabungan', 'status');
 
-        Schema::table('jaminan', function (Blueprint $table) {
-            $table->dropIndex(['pinjaman_id']);
-            $table->dropIndex(['status']);
-            $table->dropIndex(['jenis']);
-        });
+        $this->dropIndexSafely('jaminan', 'pinjaman_id');
+        $this->dropIndexSafely('jaminan', 'status');
+        $this->dropIndexSafely('jaminan', 'jenis');
     }
 }
