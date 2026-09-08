@@ -88,23 +88,76 @@
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             }
             #headerMenuCollapse .nav-tabs {
-                padding: 0.5rem 0;
+                border-bottom: none !important;
+                padding: 0.5rem 0.75rem !important;
+                gap: 0.25rem !important;
+            }
+            #headerMenuCollapse .nav-item {
+                width: 100% !important;
+                margin-bottom: 0.25rem !important;
             }
             #headerMenuCollapse .nav-link {
-                padding: 0.65rem 1rem;
-                border-radius: 6px;
-                font-weight: 500;
+                padding: 0.65rem 0.85rem !important;
+                border-radius: 8px !important;
+                border: none !important;
+                font-weight: 500 !important;
+                font-size: 0.925rem !important;
+                color: #495057 !important;
+                display: flex !important;
+                align-items: center !important;
+                transition: all 0.2s ease !important;
+            }
+            #headerMenuCollapse .nav-link i {
+                font-size: 1.1rem !important;
+                margin-right: 0.65rem !important;
+                width: 1.25rem !important;
+                text-align: center !important;
+                color: #6c757d !important;
+            }
+            #headerMenuCollapse .nav-link:hover {
+                background-color: #f1f5f9 !important;
+                color: #206bc4 !important;
+            }
+            #headerMenuCollapse .nav-link.active {
+                background-color: #e8f1fd !important;
+                color: #206bc4 !important;
+                font-weight: 600 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            #headerMenuCollapse .nav-link.active i {
+                color: #206bc4 !important;
             }
             #headerMenuCollapse .dropdown-menu {
-                border: none;
-                background-color: #f8f9fa;
-                box-shadow: none;
-                margin-top: 0;
-                padding-left: 1rem;
+                border: none !important;
+                background-color: #f8fafc !important;
+                box-shadow: none !important;
+                margin: 0.25rem 0 0.5rem 0 !important;
+                padding: 0.35rem 0 0.35rem 0.85rem !important;
+                border-left: 3px solid #206bc4 !important;
+                border-radius: 0 8px 8px 0 !important;
             }
             #headerMenuCollapse .dropdown-item {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
+                padding: 0.5rem 0.85rem !important;
+                font-size: 0.875rem !important;
+                font-weight: 500 !important;
+                color: #475569 !important;
+                border-radius: 6px !important;
+                transition: background-color 0.15s ease !important;
+            }
+            #headerMenuCollapse .dropdown-item:hover {
+                background-color: #e2e8f0 !important;
+                color: #1e293b !important;
+            }
+            #headerMenuCollapse .dropdown-item.active,
+            #headerMenuCollapse .dropdown-item:active {
+                background-color: #206bc4 !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+            #headerMenuCollapse .dropdown-divider {
+                margin: 0.35rem 0 !important;
+                border-top: 1px solid #e2e8f0 !important;
             }
 
             /* Responsive Cards & Padding */
@@ -191,7 +244,7 @@
                 white-space: nowrap;
             }
             .dataTables_wrapper {
-                padding: 0.5rem;
+                padding: 0.75rem 0.85rem;
             }
             .dataTables_wrapper .dataTables_length {
                 display: none !important;
@@ -204,24 +257,25 @@
             }
             .dataTables_wrapper .dataTables_filter label {
                 width: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 0.5rem !important;
                 margin-bottom: 0 !important;
                 font-size: 0.85rem !important;
                 font-weight: 600 !important;
                 color: #495057 !important;
             }
             .dataTables_wrapper .dataTables_filter input {
-                width: 100% !important;
+                flex: 1 !important;
+                max-width: 220px !important;
                 margin-left: 0 !important;
-                margin-top: 0.35rem !important;
                 font-size: 0.875rem !important;
-                padding: 0.45rem 0.65rem !important;
+                padding: 0.35rem 0.65rem !important;
                 border-radius: 6px !important;
                 border: 1px solid rgba(0, 40, 100, 0.12) !important;
                 box-sizing: border-box !important;
-                display: block !important;
+                display: inline-block !important;
             }
             .dataTables_wrapper .dataTables_paginate {
                 float: none !important;
@@ -304,4 +358,41 @@
     @yield('content')
 </body>
 @yield('js')
+<script>
+(function() {
+    function setupDtDomRestructuring($) {
+        if (!$) return;
+        $(document).on('init.dt', function(e, settings) {
+            var api = new $.fn.dataTable.Api(settings);
+            var $table = $(api.table().node());
+            var $wrapper = $(api.table().container());
+            var $parentResponsive = $wrapper.parent('.table-responsive');
+
+            // If table is not already wrapped in .table-responsive inside wrapper
+            if ($table.parent('.table-responsive').length === 0) {
+                $table.wrap('<div class="table-responsive"></div>');
+            }
+
+            // Unwrap wrapper if it was nested inside an outer .table-responsive
+            if ($parentResponsive.length) {
+                $wrapper.unwrap();
+            }
+        });
+    }
+
+    if (typeof window.jQuery !== 'undefined') {
+        setupDtDomRestructuring(window.jQuery);
+    } else if (typeof require !== 'undefined') {
+        require(['jquery'], function($) {
+            setupDtDomRestructuring($);
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.jQuery !== 'undefined') {
+                setupDtDomRestructuring(window.jQuery);
+            }
+        });
+    }
+})();
+</script>
 </html>
