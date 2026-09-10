@@ -391,6 +391,7 @@
 <body class="">
     @yield('content')
 </body>
+@stack('scripts')
 @yield('js')
 <script>
 (function() {

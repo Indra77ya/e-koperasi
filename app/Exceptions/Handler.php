@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Session\TokenMismatchException;
 
 class Handler extends ExceptionHandler
 {
@@ -46,6 +47,14 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($exception instanceof TokenMismatchException) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Page expired or CSRF token mismatch.'], 419);
+            }
+
+            return redirect()->route('login')->with('error', 'Sesi Anda telah berakhir atau halaman kedaluwarsa. Silakan coba login kembali.');
+        }
+
         return parent::render($request, $exception);
     }
 }

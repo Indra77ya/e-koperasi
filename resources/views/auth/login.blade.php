@@ -12,6 +12,15 @@
                         @endif
                         <div class="display-4 font-weight-bold">{{ \App\Models\Setting::get('company_name', __('app_name')) }}</div>
                     </div>
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     <form class="card" method="POST" action="{{ route('login') }}">
                         @csrf
 
@@ -48,4 +57,52 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function refreshToken() {
+        fetch('{{ route('login') }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            return response.text();
+        })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newToken = doc.querySelector('input[name="_token"]');
+            var metaToken = doc.querySelector('meta[name="csrf-token"]');
+
+            if (newToken) {
+                document.querySelectorAll('input[name="_token"]').forEach(function(input) {
+                    input.value = newToken.value;
+                });
+            }
+            if (metaToken) {
+                var currentMetaToken = document.querySelector('meta[name="csrf-token"]');
+                if (currentMetaToken) {
+                    currentMetaToken.setAttribute('content', metaToken.getAttribute('content'));
+                }
+            }
+        })
+        .catch(function(err) {
+            console.error('Failed to refresh CSRF token:', err);
+        });
+    }
+
+    // Refresh token every 15 minutes (900,000 ms)
+    setInterval(refreshToken, 900000);
+
+    // Refresh token when tab becomes visible again
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            refreshToken();
+        }
+    });
+});
+</script>
+@endpush
 @endsection
